@@ -1,0 +1,10 @@
+{
+	"id": "shiki-highlighter-fork-by-bmcyver",
+	"name": "Shiki Highlighter",
+	"version": "0.1.0",
+	"minAppVersion": "1.10.0",
+	"description": "Highlight code blocks with Shiki.",
+	"author": "bmcyver",
+	"authorUrl": "https://github.com/bmcyver",
+	"isDesktopOnly": false
+}

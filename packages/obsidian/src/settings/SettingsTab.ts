@@ -1,6 +1,6 @@
-import { PluginSettingTab, Setting, Platform, Notice, normalizePath } from 'obsidian';
+import { PluginSettingTab, Setting } from 'obsidian';
 import type ShikiPlugin from 'packages/obsidian/src/main';
-import { OBSIDIAN_THEME_IDENTIFIER } from 'packages/obsidian/src/themes/ThemeMapper';
+import { THEME_DISPLAY_NAMES } from 'packages/obsidian/src/themes/ThemeRegistry';
 import { CollapseStyle, FrameType } from 'packages/obsidian/src/settings/Settings';
 
 export class ShikiSettingsTab extends PluginSettingTab {
@@ -15,11 +15,7 @@ export class ShikiSettingsTab extends PluginSettingTab {
 	display(): void {
 		this.containerEl.empty();
 
-		const themes = {
-			[OBSIDIAN_THEME_IDENTIFIER]: 'Obsidian built-in (both)',
-			'one-dark-pro': 'One Dark Pro (dark)',
-			'one-light': 'One Light (light)',
-		};
+		const themes = THEME_DISPLAY_NAMES;
 
 		new Setting(this.containerEl).setName('All setting changes require a reload of the highlighter').addButton(button => {
 			button
@@ -34,7 +30,7 @@ export class ShikiSettingsTab extends PluginSettingTab {
 
 		new Setting(this.containerEl)
 			.setName('Inline Syntax Highlighting')
-			.setDesc('Enables syntax highlighting for inline code blocks via `{lang} code`.')
+			.setDesc('Enables syntax highlighting for inline code blocks via `code{:lang}`.')
 			.addToggle(toggle => {
 				toggle.setValue(this.plugin.settings.inlineHighlighting).onChange(async value => {
 					this.plugin.settings.inlineHighlighting = value;

@@ -1,4 +1,4 @@
-import { debounce, loadPrism, Plugin, TFile, type MarkdownPostProcessor } from 'obsidian';
+import { debounce, loadPrism, Plugin, TFile } from 'obsidian';
 import { CodeBlock } from 'packages/obsidian/src/CodeBlock';
 import { createCm6Plugin, SHIKI_INLINE_REGEX } from 'packages/obsidian/src/codemirror/Cm6_ViewPlugin';
 import { DEFAULT_SETTINGS, type Settings } from 'packages/obsidian/src/settings/Settings';
@@ -6,7 +6,7 @@ import { ShikiSettingsTab } from 'packages/obsidian/src/settings/SettingsTab';
 import { filterHighlightAllPlugin, type PrismWithFilterHighlightAll } from 'packages/obsidian/src/PrismPlugin';
 import { CodeHighlighter } from 'packages/obsidian/src/Highlighter';
 import { InlineCodeBlock } from 'packages/obsidian/src/InlineCodeBlock';
-import { OBSIDIAN_THEME_IDENTIFIER } from 'packages/obsidian/src/themes/ThemeMapper';
+import { OBSIDIAN_THEME_IDENTIFIER, VALID_THEME_IDS } from 'packages/obsidian/src/themes/ThemeRegistry';
 
 import 'packages/obsidian/src/styles.css';
 import 'virtual:ec-styles.css';
@@ -24,7 +24,6 @@ export default class ShikiPlugin extends Plugin {
 		await Promise.all(promises);
 	}
 
-	codeBlockProcessors: MarkdownPostProcessor[] = [];
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -151,12 +150,12 @@ export default class ShikiPlugin extends Plugin {
 		this.registerMarkdownPostProcessor(async (el, ctx) => {
 			const inlineCodes = el.findAll(':not(pre) > code');
 			for (const codeElm of inlineCodes) {
-				const match = SHIKI_INLINE_REGEX.exec(codeElm.textContent ?? ''); // format: `{lang} code`
+				const match = SHIKI_INLINE_REGEX.exec(codeElm.textContent ?? ''); // format: `code{:lang}`
 				if (!match) {
 					continue;
 				}
 
-				const codeBlock = new InlineCodeBlock(this, codeElm, match[2], match[1], ctx);
+				const codeBlock = new InlineCodeBlock(this, codeElm, match[1], match[2], ctx);
 
 				ctx.addChild(codeBlock);
 			}
@@ -195,40 +194,17 @@ export default class ShikiPlugin extends Plugin {
 	async loadSettings(): Promise<void> {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as Settings;
 
-		// migrate the theme to darkTheme and lightTheme
-		if (this.settings.theme !== undefined) {
-			this.settings.darkTheme = this.settings.theme;
-			this.settings.lightTheme = this.settings.theme;
-			this.settings.theme = undefined;
-		}
-
-		// Clean up legacy custom folders from settings file
-		let legacyCleaned = false;
-		if ('customThemeFolder' in this.settings) {
-			delete (this.settings as any).customThemeFolder;
-			legacyCleaned = true;
-		}
-		if ('customLanguageFolder' in this.settings) {
-			delete (this.settings as any).customLanguageFolder;
-			legacyCleaned = true;
-		}
-		if ('disabledLanguages' in this.settings) {
-			delete (this.settings as any).disabledLanguages;
-			legacyCleaned = true;
-		}
-
-		// Validate and migrate theme settings to one of the 3 supported themes (obsidian-theme, one-dark-pro, one-light)
-		const VALID_THEMES = new Set([OBSIDIAN_THEME_IDENTIFIER, 'one-dark-pro', 'one-light']);
-		if (!VALID_THEMES.has(this.settings.darkTheme)) {
+		let needsSave = false;
+		if (!VALID_THEME_IDS.has(this.settings.darkTheme)) {
 			this.settings.darkTheme = OBSIDIAN_THEME_IDENTIFIER;
-			legacyCleaned = true;
+			needsSave = true;
 		}
-		if (!VALID_THEMES.has(this.settings.lightTheme)) {
+		if (!VALID_THEME_IDS.has(this.settings.lightTheme)) {
 			this.settings.lightTheme = OBSIDIAN_THEME_IDENTIFIER;
-			legacyCleaned = true;
+			needsSave = true;
 		}
 
-		if (legacyCleaned) {
+		if (needsSave) {
 			await this.saveSettings();
 		}
 	}

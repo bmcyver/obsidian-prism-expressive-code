@@ -1,4 +1,4 @@
-import { OBSIDIAN_THEME_IDENTIFIER } from 'packages/obsidian/src/themes/ThemeMapper';
+import { OBSIDIAN_THEME_IDENTIFIER } from 'packages/obsidian/src/themes/ThemeRegistry';
 
 export enum FrameType {
 	Code = 'code',
@@ -15,10 +15,6 @@ export enum CollapseStyle {
 }
 
 export interface Settings {
-	/**
-	 * Old theme setting, from before we had separate light/dark theme settings. Will me migrated on load.
-	 */
-	theme: string | undefined;
 	darkTheme: string;
 	lightTheme: string;
 	preferThemeColors: boolean;
@@ -30,7 +26,6 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-	theme: undefined,
 	darkTheme: OBSIDIAN_THEME_IDENTIFIER,
 	lightTheme: OBSIDIAN_THEME_IDENTIFIER,
 	preferThemeColors: true,

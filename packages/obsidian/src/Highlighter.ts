@@ -5,18 +5,9 @@ import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
 import { ThemeMapper } from 'packages/obsidian/src/themes/ThemeMapper';
 import { toDom } from 'hast-util-to-dom';
 import { createEcEngineConfig } from 'packages/ec-core/src/Config';
-import { ALIAS_TO_LANG, ESSENTIAL_LANGUAGES, ALL_ALIASES } from 'packages/ec-core/src/LanguageRegistry';
-
-// some languages break obsidian's `registerMarkdownCodeBlockProcessor`, so we blacklist them
-const LANGUAGE_BLACKLIST = new Set(['c++', 'c#', 'f#', 'mermaid']);
-
-// some languages are considered "special" by shiki.isSpecialLang
-const LANGUAGE_SPECIAL = new Set(['plaintext', 'txt', 'text', 'plain', 'ansi']);
-
-export const ESSENTIAL_THEMES = {
-	'one-dark-pro': () => import('shiki/themes/one-dark-pro.mjs'),
-	'one-light': () => import('shiki/themes/one-light.mjs'),
-};
+import { ALIAS_TO_LANG, ESSENTIAL_LANGUAGES } from 'packages/ec-core/src/LanguageRegistry';
+import { THEME_IMPORTS } from 'packages/obsidian/src/themes/ThemeRegistry';
+import { LANGUAGE_BLACKLIST, SUPPORTED_LANGUAGES } from 'packages/obsidian/src/languages/LanguageRegistry';
 
 export let sharedHighlighter: HighlighterCore | undefined;
 
@@ -48,7 +39,7 @@ export class CodeHighlighter {
 		await this.loadEC();
 		await this.loadShiki();
 
-		this.supportedLanguages = [...Object.keys(ESSENTIAL_LANGUAGES), ...ALL_ALIASES, ...LANGUAGE_SPECIAL];
+		this.supportedLanguages = SUPPORTED_LANGUAGES;
 	}
 
 	async unload(): Promise<void> {
@@ -84,7 +75,7 @@ export class CodeHighlighter {
 
 	async loadShiki(): Promise<void> {
 		this.shiki = await createHighlighterCore({
-			themes: Object.values(ESSENTIAL_THEMES),
+			themes: Object.values(THEME_IMPORTS),
 			langs: Object.values(ESSENTIAL_LANGUAGES),
 			engine: createOnigurumaEngine(import('shiki/wasm')),
 		});

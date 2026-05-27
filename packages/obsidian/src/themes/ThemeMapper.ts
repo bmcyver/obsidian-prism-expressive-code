@@ -2,9 +2,7 @@ import { type ThemeRegistration } from 'shiki/core';
 import type * as hast_types from 'hast';
 import { OBSIDIAN_THEME } from 'packages/ec-core/src/ObsidianTheme';
 import type ShikiPlugin from 'packages/obsidian/src/main';
-import { ESSENTIAL_THEMES } from 'packages/obsidian/src/Highlighter';
-
-export const OBSIDIAN_THEME_IDENTIFIER = 'obsidian-theme';
+import { OBSIDIAN_THEME_IDENTIFIER, THEME_IMPORTS } from 'packages/obsidian/src/themes/ThemeRegistry';
 
 export class ThemeMapper {
 	plugin: ShikiPlugin;
@@ -19,11 +17,11 @@ export class ThemeMapper {
 	}
 
 	private async loadEssentialTheme(activeTheme: string): Promise<ThemeRegistration> {
-		const themeLoader = ESSENTIAL_THEMES[activeTheme as keyof typeof ESSENTIAL_THEMES];
+		const themeLoader = THEME_IMPORTS[activeTheme];
 		if (themeLoader) {
 			return (await themeLoader()).default as ThemeRegistration;
 		}
-		return (await ESSENTIAL_THEMES['one-dark-pro']()).default as ThemeRegistration;
+		return (await THEME_IMPORTS['one-dark-pro']()).default as ThemeRegistration;
 	}
 
 	async getThemeForEC(): Promise<ThemeRegistration> {

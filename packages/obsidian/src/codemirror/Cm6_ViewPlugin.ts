@@ -5,9 +5,9 @@ import { type SyntaxNode } from '@lezer/common';
 import { syntaxTree } from '@codemirror/language';
 import { Cm6_Util } from 'packages/obsidian/src/codemirror/Cm6_Util';
 import { type ThemedToken } from 'shiki';
-import { editorLivePreviewField } from 'obsidian';
+import { debounce, editorLivePreviewField } from 'obsidian';
 
-export const SHIKI_INLINE_REGEX = /^\{([^\s]+)\} (.*)/i; // format: `{lang} code`
+export const SHIKI_INLINE_REGEX = /^(.*)\{:([a-zA-Z0-9_\-+#]+)\}$/; // format: `code{:lang}`
 
 enum DecorationUpdateType {
 	Insert,
@@ -23,7 +23,10 @@ interface InsertDecoration {
 	lang: string;
 	content: string;
 	hideLang?: boolean;
-	hideTo?: number;
+	codeStart?: number;
+	codeEnd?: number;
+	hideStart?: number;
+	hideEnd?: number;
 }
 
 interface RemoveDecoration {
@@ -39,9 +42,12 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 			decorations: DecorationSet;
 			view: EditorView;
 
-			updateTimer: number | null = null;
 			pendingDocChanged = false;
 			updateFn: () => Promise<void>;
+
+			debouncedDocChangedUpdate: (() => void) & { cancel(): void };
+			debouncedViewportUpdate: (() => void) & { cancel(): void };
+			debouncedCompositionEndUpdate: (() => void) & { cancel(): void };
 
 			constructor(view: EditorView) {
 				this.view = view;
@@ -52,6 +58,36 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 					return this.updateWidgets(this.view);
 				};
 				plugin.activeCm6Plugins.add(this.updateFn);
+
+				this.debouncedDocChangedUpdate = debounce(
+					() => {
+						const docChanged = this.pendingDocChanged;
+						this.pendingDocChanged = false;
+						void this.updateWidgets(this.view, docChanged);
+					},
+					300,
+					true,
+				);
+
+				this.debouncedViewportUpdate = debounce(
+					() => {
+						const docChanged = this.pendingDocChanged;
+						this.pendingDocChanged = false;
+						void this.updateWidgets(this.view, docChanged);
+					},
+					150,
+					true,
+				);
+
+				this.debouncedCompositionEndUpdate = debounce(
+					() => {
+						const docChanged = this.pendingDocChanged;
+						this.pendingDocChanged = false;
+						void this.updateWidgets(this.view, docChanged);
+					},
+					100,
+					true,
+				);
 			}
 
 			/**
@@ -75,9 +111,9 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 					this.view = update.view;
 					this.pendingDocChanged = this.pendingDocChanged || update.docChanged;
 
-					if (this.updateTimer !== null) {
-						window.clearTimeout(this.updateTimer);
-					}
+					this.debouncedDocChangedUpdate.cancel();
+					this.debouncedViewportUpdate.cancel();
+					this.debouncedCompositionEndUpdate.cancel();
 
 					if (update.view.composing) {
 						// Don't update widgets while composing, it breaks IME input
@@ -85,18 +121,28 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 					}
 
 					// Debounce to prevent constant re-rendering during fast typing or rapid scrolling
-					const delay = update.docChanged ? 300 : 150;
-					this.updateTimer = window.setTimeout(() => {
-						const docChanged = this.pendingDocChanged;
-						this.pendingDocChanged = false;
-						void this.updateWidgets(this.view, docChanged);
-					}, delay);
+					if (update.docChanged) {
+						this.debouncedDocChangedUpdate();
+					} else {
+						this.debouncedViewportUpdate();
+					}
 				}
 			}
 
 			isLivePreview(state: EditorState): boolean {
 				// @ts-ignore some strange private field not being assignable
 				return state.field(editorLivePreviewField);
+			}
+
+			isCodeBlockNode(node: SyntaxNode): boolean {
+				let curr: typeof node | null = node;
+				while (curr) {
+					if (curr.type.name?.toLowerCase().includes('codeblock')) {
+						return true;
+					}
+					curr = curr.parent;
+				}
+				return false;
 			}
 
 			getExpandedViewportRange(view: EditorView): { from: number; to: number } {
@@ -112,18 +158,7 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 				while (from > 0) {
 					const line = view.state.doc.lineAt(from);
 					const node = tree.resolveInner(line.from, 1);
-
-					let isCodeBlock = false;
-					let curr: typeof node | null = node;
-					while (curr) {
-						if (curr.type.name?.toLowerCase().includes('codeblock')) {
-							isCodeBlock = true;
-							break;
-						}
-						curr = curr.parent;
-					}
-
-					if (!isCodeBlock) {
+					if (!this.isCodeBlockNode(node)) {
 						break;
 					}
 					from = Math.max(0, line.from - 1);
@@ -134,18 +169,7 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 				while (to < docLength) {
 					const line = view.state.doc.lineAt(to);
 					const node = tree.resolveInner(line.to, -1);
-
-					let isCodeBlock = false;
-					let curr: typeof node | null = node;
-					while (curr) {
-						if (curr.type.name?.toLowerCase().includes('codeblock')) {
-							isCodeBlock = true;
-							break;
-						}
-						curr = curr.parent;
-					}
-
-					if (!isCodeBlock) {
+					if (!this.isCodeBlockNode(node)) {
 						break;
 					}
 					to = Math.min(docLength, line.to + 1);
@@ -196,8 +220,8 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 						if (props.has('inline-code')) {
 							const content = Cm6_Util.getContent(view.state, node.from, node.to);
 
-							if (content.startsWith('{') && plugin.settings.inlineHighlighting) {
-								const match = content.match(SHIKI_INLINE_REGEX); // format: `{lang} code`
+							if (content.endsWith('}') && plugin.settings.inlineHighlighting) {
+								const match = content.match(SHIKI_INLINE_REGEX); // format: `code{:lang}`
 								if (match) {
 									const hasSelectionOverlap = Cm6_Util.checkSelectionAndRangeOverlap(view.state.selection, node.from - 1, node.to + 1);
 
@@ -205,10 +229,13 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 										type: DecorationUpdateType.Insert,
 										from: node.from,
 										to: node.to,
-										lang: match[1],
-										content: match[2],
+										lang: match[2],
+										content: match[1],
 										hideLang: this.isLivePreview(view.state) && !hasSelectionOverlap,
-										hideTo: node.from + match[1].length + 3, // hide `{lang} `
+										codeStart: node.from,
+										codeEnd: node.from + match[1].length,
+										hideStart: node.from + match[1].length,
+										hideEnd: node.to,
 									});
 								}
 							} else {
@@ -271,7 +298,7 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 					if (node.type === DecorationUpdateType.Remove) {
 						return { type: DecorationUpdateType.Remove as const, from: node.from, to: node.to };
 					} else {
-						const decorations = await this.buildDecorations(node.hideTo ?? node.from, node.to, node.lang, node.content);
+						const decorations = await this.buildDecorations(node.codeStart ?? node.from, node.codeEnd ?? node.to, node.lang, node.content);
 						return { type: DecorationUpdateType.Insert as const, node, decorations };
 					}
 				});
@@ -290,9 +317,9 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 					} else {
 						const { node, decorations } = result;
 						removeRanges.push({ from: node.from, to: node.to });
-						if (node.hideLang) {
+						if (node.hideLang && node.hideStart !== undefined && node.hideEnd !== undefined) {
 							// add the decoration that hides the language tag
-							decorations.unshift(Decoration.replace({}).range(node.from, node.hideTo));
+							decorations.unshift(Decoration.replace({}).range(node.hideStart, node.hideEnd));
 						}
 						// add the highlight decorations
 						newDecorationsList.push(...decorations);
@@ -420,26 +447,21 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 			 */
 			destroy(): void {
 				this.decorations = Decoration.none;
-				if (this.updateTimer !== null) {
-					window.clearTimeout(this.updateTimer);
-					this.updateTimer = null;
-				}
+				this.debouncedDocChangedUpdate.cancel();
+				this.debouncedViewportUpdate.cancel();
+				this.debouncedCompositionEndUpdate.cancel();
 				plugin.activeCm6Plugins.delete(this.updateFn);
 			}
 		},
 		{
 			decorations: v => v.decorations,
 			eventHandlers: {
-				compositionend(event, view) {
-					if (this.updateTimer !== null) {
-						window.clearTimeout(this.updateTimer);
-					}
+				compositionend(_event, _view) {
 					this.pendingDocChanged = true;
-					this.updateTimer = window.setTimeout(() => {
-						const docChanged = this.pendingDocChanged;
-						this.pendingDocChanged = false;
-						void this.updateWidgets(view, docChanged);
-					}, 100);
+					this.debouncedDocChangedUpdate.cancel();
+					this.debouncedViewportUpdate.cancel();
+					this.debouncedCompositionEndUpdate.cancel();
+					this.debouncedCompositionEndUpdate();
 				},
 			},
 		},

@@ -2,9 +2,9 @@ import path from 'node:path';
 import { builtinModules } from 'node:module';
 import { defineConfig, type UserConfig } from 'vite';
 import { ExpressiveCodeEngine } from '@expressive-code/core';
-import manifest from './manifest.json' with { type: 'json' };
 import { createCssVariableThemeBundle, createEcEngineConfig, EC_VIRTUAL_SETTINGS } from './packages/ec-core/src/Config';
-import oneDarkPro from './packages/obsidian/src/themes/one-dark-pro.mjs';
+import oneDarkPro from 'shiki/themes/one-dark-pro.mjs';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const entryFile = 'packages/obsidian/src/main.ts';
 const EC_RUNTIME_MODULE_ID = 'virtual:ec-runtime';
@@ -18,7 +18,7 @@ function expressiveCodeBundlePlugin() {
 	const getBundle = async (): Promise<{ runtimeModule: string; styles: string }> => {
 		if (!bundlePromise) {
 			bundlePromise = (async () => {
-				const cssVariableTheme = createCssVariableThemeBundle(oneDarkPro);
+				const cssVariableTheme = createCssVariableThemeBundle(oneDarkPro as any);
 				const ec = new ExpressiveCodeEngine(
 					createEcEngineConfig({
 						theme: cssVariableTheme.theme,
@@ -67,14 +67,16 @@ function expressiveCodeBundlePlugin() {
 	};
 }
 
-
 export default defineConfig(({ mode }) => {
 	const prod = mode === 'production';
-	const outDir = prod ? 'dist/' : `exampleVault/.obsidian/plugins/${manifest.id}/`;
+	const outDir = 'dist/'
 
 	return {
 		plugins: [
 			expressiveCodeBundlePlugin(),
+			nodePolyfills({
+				include: ['path', 'url', 'process'],
+			}),
 		],
 		resolve: {
 			alias: {

@@ -1,6 +1,6 @@
 import { InlineStyleAnnotation, definePlugin, type ExpressiveCodePlugin } from '@expressive-code/core';
 
-import { flattenTokens, getStyleForPrismTypes, type FlatToken } from './PrismUtils';
+import { flattenTokens, getStyleForPrismTypes, LANGUAGE_ALIASES, type FlatToken } from './PrismUtils';
 
 export function customPluginPrism(options: { getPrism: () => any }): ExpressiveCodePlugin {
 	const { getPrism } = options;
@@ -27,7 +27,8 @@ export function customPluginPrism(options: { getPrism: () => any }): ExpressiveC
 				}
 
 				const rawLanguage = codeBlock.language;
-				const lowerLang = rawLanguage.toLowerCase();
+				let lowerLang = rawLanguage.toLowerCase();
+				lowerLang = LANGUAGE_ALIASES[lowerLang] || lowerLang;
 				const grammar = prism.languages[lowerLang];
 
 				const finalGrammar = grammar || prism.languages.plaintext || prism.languages.text;

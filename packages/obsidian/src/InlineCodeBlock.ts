@@ -1,19 +1,10 @@
-import { type MarkdownPostProcessorContext, MarkdownRenderChild } from 'obsidian';
+import { type MarkdownPostProcessorContext } from 'obsidian';
 import type ShikiPlugin from 'packages/obsidian/src/main';
+import { BaseCodeBlock } from 'packages/obsidian/src/BaseCodeBlock';
 
-export class InlineCodeBlock extends MarkdownRenderChild {
-	plugin: ShikiPlugin;
-	source: string;
-	language: string;
-	ctx: MarkdownPostProcessorContext;
-
+export class InlineCodeBlock extends BaseCodeBlock {
 	constructor(plugin: ShikiPlugin, containerEl: HTMLElement, source: string, language: string, ctx: MarkdownPostProcessorContext) {
-		super(containerEl);
-
-		this.plugin = plugin;
-		this.source = source;
-		this.language = language;
-		this.ctx = ctx;
+		super(plugin, containerEl, source, language, ctx);
 	}
 
 	private async render(): Promise<void> {
@@ -42,18 +33,11 @@ export class InlineCodeBlock extends MarkdownRenderChild {
 
 	public onload(): void {
 		super.onload();
-
-		this.plugin.addActiveCodeBlock(this);
-
 		void this.render();
 	}
 
 	public onunload(): void {
 		super.onunload();
-
-		this.plugin.removeActiveCodeBlock(this);
-
-		this.containerEl.empty();
 		this.containerEl.innerText = 'unloaded shiki inline code block';
 	}
 }

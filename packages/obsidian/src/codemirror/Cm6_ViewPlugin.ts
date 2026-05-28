@@ -363,44 +363,6 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 			}
 
 			/**
-			 * Removes all decorations at a given node.
-			 *
-			 * @param from
-			 * @param to
-			 */
-			removeDecoration(from: number, to: number): void {
-				this.decorations = this.decorations.update({
-					filterFrom: from,
-					filterTo: to,
-					filter: (_from3, _to3, _decoration) => {
-						return false;
-					},
-				});
-			}
-
-			/**
-			 * Adds a widget at a given node if it does not exist yet.
-			 *
-			 * @param from
-			 * @param to
-			 * @param newDecorations
-			 */
-			addDecoration(from: number, to: number, newDecorations: Range<Decoration>[]): void {
-				// check if the decoration already exists and only add it if it does not exist
-				if (Cm6_Util.existsDecorationBetween(this.decorations, from, to)) {
-					return;
-				}
-
-				if (newDecorations.length === 0) {
-					return;
-				}
-
-				this.decorations = this.decorations.update({
-					add: newDecorations,
-				});
-			}
-
-			/**
 			 * Builds mark decorations for a given range, laguage and content.
 			 *
 			 * @param from

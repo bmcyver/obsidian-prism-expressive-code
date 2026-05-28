@@ -1,19 +1,16 @@
 {
-	"name": "shiki-highlighter",
-	"version": "0.7.7",
-	"description": "Highlight code blocks with Shiki.",
+	"name": "obsidian-prism-expressive-code",
+	"version": "0.2.0",
+	"description": "An Obsidian plugin that provides syntax highlighting using Prism and Expressive Code.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "vite build --mode=development --watch",
 		"build": "pnpm typecheck && vite build --mode=production",
 		"typecheck": "tsc -noEmit -skipLibCheck",
 		"format": "prettier --write packages/**",
-		"lint": "eslint --max-warnings=0 packages/**",
-		"check": "pnpm format:check && pnpm typecheck && pnpm lint",
-		"check:fix": "pnpm format && pnpm typecheck && pnpm lint:fix"
+		"lint": "eslint --max-warnings=0 packages/**"
 	},
-	"keywords": [],
-	"author": "Moritz Jung",
+	"author": "bmcyver",
 	"license": "MIT",
 	"devDependencies": {
 		"@codemirror/language": "^6.12.3",
@@ -33,9 +30,11 @@
 		"obsidian": "latest",
 		"prettier": "^3.8.3",
 		"prismjs": "^1.30.0",
+		"shiki": "^4.1.0",
 		"tslib": "^2.8.1",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.59.4",
-		"vite": "^8.0.13"
+		"vite": "^8.0.14",
+		"vite-plugin-node-polyfills": "^0.28.0"
 	}
 }

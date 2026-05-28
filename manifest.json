@@ -1,9 +1,9 @@
 {
-	"id": "shiki-highlighter-fork-by-bmcyver",
-	"name": "Shiki Highlighter",
-	"version": "0.1.0",
+	"id": "obsidian-prism-expressive-code",
+	"name": "Obsidian Prism Expressive Code",
+	"version": "0.2.0",
 	"minAppVersion": "1.10.0",
-	"description": "Highlight code blocks with Shiki.",
+	"description": "An Obsidian plugin that provides syntax highlighting using Prism and Expressive Code.",
 	"author": "bmcyver",
 	"authorUrl": "https://github.com/bmcyver",
 	"isDesktopOnly": false

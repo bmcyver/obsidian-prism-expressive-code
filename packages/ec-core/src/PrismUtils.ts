@@ -1,3 +1,7 @@
+export const LANGUAGE_ALIASES: Record<string, string> = {
+	zsh: 'bash',
+};
+
 // A mapping from Prism token types to TextMate scopes for theme matching
 export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
 	// Standard core tokens

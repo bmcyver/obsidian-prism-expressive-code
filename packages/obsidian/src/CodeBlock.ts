@@ -1,20 +1,12 @@
-import { type MarkdownPostProcessorContext, MarkdownRenderChild } from 'obsidian';
+import { type MarkdownPostProcessorContext } from 'obsidian';
 import type ShikiPlugin from 'packages/obsidian/src/main';
+import { BaseCodeBlock } from 'packages/obsidian/src/BaseCodeBlock';
 
-export class CodeBlock extends MarkdownRenderChild {
-	plugin: ShikiPlugin;
-	source: string;
-	language: string;
-	ctx: MarkdownPostProcessorContext;
+export class CodeBlock extends BaseCodeBlock {
 	cachedMetaString: string;
 
 	constructor(plugin: ShikiPlugin, containerEl: HTMLElement, source: string, language: string, ctx: MarkdownPostProcessorContext) {
-		super(containerEl);
-
-		this.plugin = plugin;
-		this.source = source;
-		this.language = language;
-		this.ctx = ctx;
+		super(plugin, containerEl, source, language, ctx);
 		this.cachedMetaString = '';
 	}
 
@@ -63,19 +55,12 @@ export class CodeBlock extends MarkdownRenderChild {
 
 	public onload(): void {
 		super.onload();
-
-		this.plugin.addActiveCodeBlock(this);
-
 		this.cachedMetaString = this.getMetaString();
 		void this.render(this.cachedMetaString);
 	}
 
 	public onunload(): void {
 		super.onunload();
-
-		this.plugin.removeActiveCodeBlock(this);
-
-		this.containerEl.empty();
 		this.containerEl.innerText = 'unloaded shiki code block';
 	}
 }

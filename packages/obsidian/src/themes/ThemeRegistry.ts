@@ -8,12 +8,12 @@ export const THEMES: ThemeDefinition[] = [
 	{
 		id: 'one-dark-pro',
 		displayName: 'One Dark Pro (dark)',
-		import: () => import('./one-dark-pro.mjs'),
+		import: () => import('shiki/themes/one-dark-pro.mjs'),
 	},
 	{
 		id: 'one-light',
 		displayName: 'One Light (light)',
-		import: () => import('./one-light.mjs'),
+		import: () => import('shiki/themes/one-light.mjs'),
 	},
 ];
 

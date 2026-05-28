@@ -1,11 +1,12 @@
 import { debounce, loadPrism, Plugin, TFile } from 'obsidian';
-import { CodeBlock } from 'packages/obsidian/src/CodeBlock';
 import { createCm6Plugin, SHIKI_INLINE_REGEX } from 'packages/obsidian/src/codemirror/Cm6_ViewPlugin';
 import { DEFAULT_SETTINGS, type Settings } from 'packages/obsidian/src/settings/Settings';
 import { ShikiSettingsTab } from 'packages/obsidian/src/settings/SettingsTab';
 import { filterHighlightAllPlugin, type PrismWithFilterHighlightAll } from 'packages/obsidian/src/PrismPlugin';
 import { CodeHighlighter } from 'packages/obsidian/src/Highlighter';
+import { CodeBlock } from 'packages/obsidian/src/CodeBlock';
 import { InlineCodeBlock } from 'packages/obsidian/src/InlineCodeBlock';
+import { BaseCodeBlock } from 'packages/obsidian/src/BaseCodeBlock';
 import { VALID_THEME_IDS } from 'packages/obsidian/src/themes/ThemeRegistry';
 
 import 'packages/obsidian/src/styles.css';
@@ -14,10 +15,11 @@ import 'virtual:ec-runtime';
 
 export default class ShikiPlugin extends Plugin {
 	highlighter!: CodeHighlighter;
-	activeCodeBlocks!: Map<string, (CodeBlock | InlineCodeBlock)[]>;
+	activeCodeBlocks!: Map<string, Set<BaseCodeBlock>>;
 	settings!: Settings;
 	loadedSettings!: Settings;
 	activeCm6Plugins = new Set<() => Promise<void>>();
+	lastDarkMode = false;
 
 	async updateCm6Plugins(): Promise<void> {
 		const promises = Array.from(this.activeCm6Plugins).map(fn => fn());
@@ -31,6 +33,7 @@ export default class ShikiPlugin extends Plugin {
 
 		this.highlighter = new CodeHighlighter(this);
 		this.activeCodeBlocks = new Map();
+		this.lastDarkMode = this.app.isDarkMode();
 
 		this.app.workspace.onLayoutReady(async () => {
 			try {
@@ -59,14 +62,26 @@ export default class ShikiPlugin extends Plugin {
 		// this is a workaround for the fact that obsidian does not rerender the code block
 		// when the start line with the language changes, and we need that for the EC meta string
 		this.registerEvent(
-			this.app.vault.on('modify', async file => {
-				// sleep 0 so that the code block context is updated before we rerender
-				await sleep(100);
-
+			this.app.metadataCache.on('changed', file => {
 				if (file instanceof TFile) {
 					if (this.activeCodeBlocks.has(file.path)) {
 						for (const codeBlock of this.activeCodeBlocks.get(file.path)!) {
 							void codeBlock.rerenderOnNoteChange();
+						}
+					}
+				}
+			}),
+		);
+
+		this.registerEvent(
+			this.app.vault.on('rename', (file, oldPath) => {
+				if (file instanceof TFile) {
+					if (this.activeCodeBlocks.has(oldPath)) {
+						const blocks = this.activeCodeBlocks.get(oldPath)!;
+						this.activeCodeBlocks.delete(oldPath);
+						this.activeCodeBlocks.set(file.path, blocks);
+						for (const block of blocks) {
+							block.currentFilePath = file.path;
 						}
 					}
 				}
@@ -83,7 +98,11 @@ export default class ShikiPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.workspace.on('css-change', () => {
-				debouncedReload();
+				const currentDarkMode = this.app.isDarkMode();
+				if (currentDarkMode !== this.lastDarkMode) {
+					this.lastDarkMode = currentDarkMode;
+					debouncedReload();
+				}
 			}),
 		);
 
@@ -97,6 +116,7 @@ export default class ShikiPlugin extends Plugin {
 	}
 
 	async reloadHighlighter(): Promise<void> {
+		this.lastDarkMode = this.app.isDarkMode();
 		await this.highlighter.unload();
 
 		this.loadedSettings = structuredClone(this.settings);
@@ -165,26 +185,23 @@ export default class ShikiPlugin extends Plugin {
 		void this.highlighter.unload();
 	}
 
-	addActiveCodeBlock(codeBlock: CodeBlock | InlineCodeBlock): void {
-		const filePath = codeBlock.ctx.sourcePath;
+	addActiveCodeBlock(codeBlock: BaseCodeBlock): void {
+		const filePath = codeBlock.currentFilePath;
 
 		if (!this.activeCodeBlocks.has(filePath)) {
-			this.activeCodeBlocks.set(filePath, [codeBlock]);
+			this.activeCodeBlocks.set(filePath, new Set([codeBlock]));
 		} else {
-			this.activeCodeBlocks.get(filePath)!.push(codeBlock);
+			this.activeCodeBlocks.get(filePath)!.add(codeBlock);
 		}
 	}
 
-	removeActiveCodeBlock(codeBlock: CodeBlock | InlineCodeBlock): void {
-		const filePath = codeBlock.ctx.sourcePath;
+	removeActiveCodeBlock(codeBlock: BaseCodeBlock): void {
+		const filePath = codeBlock.currentFilePath;
 
 		if (this.activeCodeBlocks.has(filePath)) {
-			const list = this.activeCodeBlocks.get(filePath)!;
-			const index = list.indexOf(codeBlock);
-			if (index !== -1) {
-				list.splice(index, 1);
-			}
-			if (list.length === 0) {
+			const set = this.activeCodeBlocks.get(filePath)!;
+			set.delete(codeBlock);
+			if (set.size === 0) {
 				this.activeCodeBlocks.delete(filePath);
 			}
 		}

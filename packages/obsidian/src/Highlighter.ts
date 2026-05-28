@@ -18,7 +18,7 @@ export interface TokensResult {
 	tokens: ThemedToken[][];
 }
 
-import { flattenTokens, getStyleForPrismTypes, type FlatToken } from 'packages/ec-core/src/PrismUtils';
+import { flattenTokens, getStyleForPrismTypes, LANGUAGE_ALIASES, type FlatToken } from 'packages/ec-core/src/PrismUtils';
 
 function convertToThemedTokens(code: string, flatTokens: FlatToken[], theme: any, lang?: string): ThemedToken[][] {
 	const lines: ThemedToken[][] = [[]];
@@ -72,6 +72,7 @@ export class CodeHighlighter {
 	ec!: ExpressiveCodeEngine;
 	ecStyleElement: HTMLElement | undefined;
 	supportedLanguages!: string[];
+	safeLanguagesSet!: Set<string>;
 	prism!: any;
 	customThemes: unknown[] = [];
 	private tokenCache = new Map<string, TokensResult>();
@@ -85,7 +86,8 @@ export class CodeHighlighter {
 		this.prism = await loadPrism();
 
 		const loadedPrismLangs = Object.keys(this.prism.languages).filter(key => typeof this.prism.languages[key] === 'object');
-		this.supportedLanguages = Array.from(new Set([...loadedPrismLangs, 'plaintext', 'txt', 'text', 'plain', 'ansi']));
+		this.supportedLanguages = Array.from(new Set([...loadedPrismLangs, ...Object.keys(LANGUAGE_ALIASES), 'plaintext', 'txt', 'text', 'plain', 'ansi']));
+		this.safeLanguagesSet = new Set(this.supportedLanguages.filter(lang => !LANGUAGE_BLACKLIST.has(lang)));
 
 		this.ec = new ExpressiveCodeEngine(
 			createEcEngineConfig({
@@ -114,7 +116,7 @@ export class CodeHighlighter {
 	 * All languages that are safe to use with Obsidian's `registerMarkdownCodeBlockProcessor`.
 	 */
 	obsidianSafeLanguageNames(): string[] {
-		return this.supportedLanguages.filter(lang => !LANGUAGE_BLACKLIST.has(lang));
+		return Array.from(this.safeLanguagesSet);
 	}
 
 	/**
@@ -138,14 +140,18 @@ export class CodeHighlighter {
 		if (!this.prism || !this.supportedLanguages) {
 			return undefined;
 		}
-		const lowerLang = lang.toLowerCase();
-		if (!this.obsidianSafeLanguageNames().includes(lowerLang)) {
+		let lowerLang = lang.toLowerCase();
+		lowerLang = LANGUAGE_ALIASES[lowerLang] || lowerLang;
+		if (!this.safeLanguagesSet.has(lowerLang)) {
 			return undefined;
 		}
 
 		const cacheKey = `${lowerLang}:${code}`;
 		if (this.tokenCache.has(cacheKey)) {
-			return this.tokenCache.get(cacheKey);
+			const val = this.tokenCache.get(cacheKey);
+			this.tokenCache.delete(cacheKey);
+			this.tokenCache.set(cacheKey, val!); // LRU update: move to end
+			return val;
 		}
 
 		const grammar = this.prism.languages[lowerLang];

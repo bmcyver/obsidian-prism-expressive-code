@@ -4,7 +4,7 @@ import { type EditorState, type Range } from '@codemirror/state';
 import { type SyntaxNode } from '@lezer/common';
 import { syntaxTree } from '@codemirror/language';
 import { Cm6_Util } from 'packages/obsidian/src/codemirror/Cm6_Util';
-import { type ThemedToken } from 'shiki';
+import { type ThemedToken } from 'packages/obsidian/src/Highlighter';
 import { debounce, editorLivePreviewField } from 'obsidian';
 
 export const SHIKI_INLINE_REGEX = /^(.*)\{:([a-zA-Z0-9_\-+#]+)\}$/; // format: `code{:lang}`

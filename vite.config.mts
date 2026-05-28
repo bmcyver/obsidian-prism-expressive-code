@@ -2,13 +2,9 @@ import path from 'node:path';
 import { builtinModules } from 'node:module';
 import { defineConfig, type UserConfig } from 'vite';
 import { ExpressiveCodeEngine } from '@expressive-code/core';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import manifest from './manifest.json' with { type: 'json' };
 import { createCssVariableThemeBundle, createEcEngineConfig, EC_VIRTUAL_SETTINGS } from './packages/ec-core/src/Config';
-import { OBSIDIAN_THEME } from './packages/ec-core/src/ObsidianTheme';
-
-const polyfilledNodeBuiltins = new Set(['fs', 'path', 'url']);
-const externalNodeBuiltins = builtinModules.filter(moduleName => !polyfilledNodeBuiltins.has(moduleName.replace(/^node:/, '')));
+import oneDarkPro from './packages/obsidian/src/themes/one-dark-pro.mjs';
 
 const entryFile = 'packages/obsidian/src/main.ts';
 const EC_RUNTIME_MODULE_ID = 'virtual:ec-runtime';
@@ -22,12 +18,12 @@ function expressiveCodeBundlePlugin() {
 	const getBundle = async (): Promise<{ runtimeModule: string; styles: string }> => {
 		if (!bundlePromise) {
 			bundlePromise = (async () => {
-				const cssVariableTheme = createCssVariableThemeBundle(OBSIDIAN_THEME);
+				const cssVariableTheme = createCssVariableThemeBundle(oneDarkPro);
 				const ec = new ExpressiveCodeEngine(
 					createEcEngineConfig({
 						theme: cssVariableTheme.theme,
 						settings: EC_VIRTUAL_SETTINGS,
-						usingObsidianTheme: true,
+						getPrism: () => undefined,
 					}),
 				);
 
@@ -78,10 +74,6 @@ export default defineConfig(({ mode }) => {
 
 	return {
 		plugins: [
-			nodePolyfills({
-				include: ['fs', 'path', 'url'],
-				protocolImports: true,
-			}),
 			expressiveCodeBundlePlugin(),
 		],
 		resolve: {
@@ -111,7 +103,6 @@ export default defineConfig(({ mode }) => {
 					entryFileNames: 'main.js',
 					assetFileNames: 'styles.css',
 					codeSplitting: false,
-					// exports: 'named',
 				},
 				external: [
 					'obsidian',
@@ -127,7 +118,8 @@ export default defineConfig(({ mode }) => {
 					'@lezer/common',
 					'@lezer/highlight',
 					'@lezer/lr',
-					...externalNodeBuiltins,
+					...builtinModules,
+					...builtinModules.map(m => `node:${m}`),
 				],
 			},
 		},

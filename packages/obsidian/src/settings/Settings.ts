@@ -1,5 +1,3 @@
-import { OBSIDIAN_THEME_IDENTIFIER } from 'packages/obsidian/src/themes/ThemeRegistry';
-
 export enum FrameType {
 	Code = 'code',
 	Terminal = 'terminal',
@@ -26,8 +24,8 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-	darkTheme: OBSIDIAN_THEME_IDENTIFIER,
-	lightTheme: OBSIDIAN_THEME_IDENTIFIER,
+	darkTheme: 'one-dark-pro',
+	lightTheme: 'one-light',
 	preferThemeColors: true,
 	inlineHighlighting: true,
 	ecDefaultShowLineNumbers: false,

@@ -1,21 +1,68 @@
 import { ExpressiveCodeEngine } from '@expressive-code/core';
 import type ShikiPlugin from 'packages/obsidian/src/main';
-import { createHighlighterCore, type HighlighterCore, type LanguageRegistration, type TokensResult, type ThemedToken } from 'shiki/core';
-import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
+import { loadPrism } from 'obsidian';
 import { ThemeMapper } from 'packages/obsidian/src/themes/ThemeMapper';
 import { toDom } from 'hast-util-to-dom';
 import { createEcEngineConfig } from 'packages/ec-core/src/Config';
-import { ALIAS_TO_LANG, ESSENTIAL_LANGUAGES } from 'packages/ec-core/src/LanguageRegistry';
-import { THEME_IMPORTS } from 'packages/obsidian/src/themes/ThemeRegistry';
-import { LANGUAGE_BLACKLIST, SUPPORTED_LANGUAGES } from 'packages/obsidian/src/languages/LanguageRegistry';
+import { LANGUAGE_BLACKLIST } from 'packages/obsidian/src/languages/LanguageRegistry';
 
-export let sharedHighlighter: HighlighterCore | undefined;
+export interface ThemedToken {
+	content: string;
+	color?: string;
+	bgColor?: string;
+	fontStyle?: number;
+	offset: number;
+}
 
-export async function getSharedHighlighter(): Promise<HighlighterCore> {
-	if (!sharedHighlighter) {
-		throw new Error('Highlighter has not been initialized yet.');
+export interface TokensResult {
+	tokens: ThemedToken[][];
+}
+
+import { flattenTokens, getStyleForPrismTypes, type FlatToken } from 'packages/ec-core/src/PrismUtils';
+
+function convertToThemedTokens(code: string, flatTokens: FlatToken[], theme: any, lang?: string): ThemedToken[][] {
+	const lines: ThemedToken[][] = [[]];
+	let currentOffset = 0;
+
+	for (let t = 0; t < flatTokens.length; t++) {
+		const token = flatTokens[t];
+		const content = token.content;
+		const style = getStyleForPrismTypes(theme, token.types, token.typeKey, lang);
+
+		if (content.indexOf('\n') === -1) {
+			if (content.length > 0) {
+				lines[lines.length - 1].push({
+					content,
+					color: style.color || theme.fg || 'var(--shiki-code-normal)',
+					fontStyle: style.fontStyle,
+					offset: currentOffset,
+				} as any);
+			}
+			currentOffset += content.length;
+		} else {
+			const parts = content.split('\n');
+			for (let i = 0; i < parts.length; i++) {
+				const part = parts[i];
+				if (i > 0) {
+					lines.push([]);
+				}
+				if (part.length > 0) {
+					lines[lines.length - 1].push({
+						content: part,
+						color: style.color || theme.fg || 'var(--shiki-code-normal)',
+						fontStyle: style.fontStyle,
+						offset: currentOffset,
+					} as any);
+				}
+				currentOffset += part.length;
+				if (i < parts.length - 1) {
+					currentOffset += 1;
+				}
+			}
+		}
 	}
-	return sharedHighlighter;
+
+	return lines;
 }
 
 export class CodeHighlighter {
@@ -25,9 +72,8 @@ export class CodeHighlighter {
 	ec!: ExpressiveCodeEngine;
 	ecStyleElement: HTMLElement | undefined;
 	supportedLanguages!: string[];
-	shiki!: HighlighterCore;
+	prism!: any;
 	customThemes: unknown[] = [];
-	customLanguages: LanguageRegistration[] = [];
 	private tokenCache = new Map<string, TokensResult>();
 
 	constructor(plugin: ShikiPlugin) {
@@ -36,57 +82,31 @@ export class CodeHighlighter {
 	}
 
 	async load(): Promise<void> {
-		await this.loadEC();
-		await this.loadShiki();
+		this.prism = await loadPrism();
 
-		this.supportedLanguages = SUPPORTED_LANGUAGES;
-	}
+		const loadedPrismLangs = Object.keys(this.prism.languages).filter(key => typeof this.prism.languages[key] === 'object');
+		this.supportedLanguages = Array.from(new Set([...loadedPrismLangs, 'plaintext', 'txt', 'text', 'plain', 'ansi']));
 
-	async unload(): Promise<void> {
-		this.unloadEC();
-		this.unloadShiki();
-	}
-
-	async loadEC(): Promise<void> {
 		this.ec = new ExpressiveCodeEngine(
 			createEcEngineConfig({
 				theme: await this.themeMapper.getThemeForEC(),
 				settings: this.plugin.loadedSettings,
-				usingObsidianTheme: this.themeMapper.usingObsidianTheme(),
-				getHighlighter: getSharedHighlighter,
+				getPrism: () => this.prism,
 			}),
 		);
 
 		if (this.ecStyleElement) {
 			this.ecStyleElement.remove();
-			this.ecStyleElement = undefined;
 		}
-
 		const themeStyles = await this.ec.getThemeStyles();
 		this.ecStyleElement = document.head.createEl('style', { text: themeStyles });
 	}
 
-	unloadEC(): void {
+	async unload(): Promise<void> {
 		if (this.ecStyleElement) {
 			this.ecStyleElement.remove();
 			this.ecStyleElement = undefined;
 		}
-	}
-
-	async loadShiki(): Promise<void> {
-		this.shiki = await createHighlighterCore({
-			themes: Object.values(THEME_IMPORTS),
-			langs: Object.values(ESSENTIAL_LANGUAGES),
-			engine: createOnigurumaEngine(import('shiki/wasm')),
-		});
-		sharedHighlighter = this.shiki;
-	}
-
-	unloadShiki(): void {
-		if (this.shiki) {
-			this.shiki.dispose();
-		}
-		sharedHighlighter = undefined;
 		this.tokenCache.clear();
 	}
 
@@ -115,7 +135,7 @@ export class CodeHighlighter {
 	}
 
 	async getHighlightTokens(code: string, lang: string): Promise<TokensResult | undefined> {
-		if (!this.shiki || !this.supportedLanguages) {
+		if (!this.prism || !this.supportedLanguages) {
 			return undefined;
 		}
 		const lowerLang = lang.toLowerCase();
@@ -128,12 +148,19 @@ export class CodeHighlighter {
 			return this.tokenCache.get(cacheKey);
 		}
 
-		const resolved = ALIAS_TO_LANG[lowerLang] ?? lowerLang;
+		const grammar = this.prism.languages[lowerLang];
+		if (!grammar) {
+			return undefined;
+		}
 
-		const result = this.shiki.codeToTokens(code, {
-			lang: resolved,
-			theme: this.themeMapper.getThemeIdentifier(),
-		});
+		const prismTokens = this.prism.tokenize(code, grammar);
+		const flatTokens = flattenTokens(prismTokens);
+		const theme = await this.themeMapper.getThemeForEC();
+		const themedTokens = convertToThemedTokens(code, flatTokens, theme, lowerLang);
+
+		const result = {
+			tokens: themedTokens,
+		};
 
 		if (this.tokenCache.size > 100) {
 			const firstKey = this.tokenCache.keys().next().value;

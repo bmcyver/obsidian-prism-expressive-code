@@ -2,9 +2,9 @@ import { ExpressiveCodeTheme, type ExpressiveCodeEngineConfig, type ExpressiveCo
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { pluginFrames } from '@expressive-code/plugin-frames';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
-import { customPluginShiki } from './CustomPluginShiki';
+import { customPluginPrism } from './CustomPluginPrism';
 import { pluginTextMarkers } from '@expressive-code/plugin-text-markers';
-import { type ThemeRegistration, type HighlighterCore } from 'shiki/core';
+import { type ThemeRegistration } from './types';
 // eslint-disable-next-line no-relative-import-paths/no-relative-import-paths -- needed for vite to load this correctly
 import { getECTheme } from './ECTheme';
 
@@ -19,8 +19,7 @@ export interface EcSettingsProps {
 export interface EcConfigInput {
 	theme: ThemeRegistration;
 	settings: EcSettingsProps;
-	usingObsidianTheme: boolean;
-	getHighlighter?: () => Promise<HighlighterCore>;
+	getPrism: () => any;
 }
 
 export interface CssVariableThemeBundle {
@@ -90,12 +89,12 @@ export function createCssVariableThemeBundle(theme: ThemeRegistration): CssVaria
 }
 
 export function createEcEngineConfig(input: EcConfigInput): ExpressiveCodeEngineConfig {
-	const useThemeColors = input.settings.preferThemeColors && !input.usingObsidianTheme;
+	const useThemeColors = input.settings.preferThemeColors;
 
 	return {
 		themes: [new ExpressiveCodeTheme(input.theme)],
 		plugins: [
-			input.getHighlighter ? customPluginShiki({ getHighlighter: input.getHighlighter }) : undefined,
+			customPluginPrism({ getPrism: input.getPrism }),
 			pluginCollapsibleSections(),
 			pluginTextMarkers(),
 			pluginLineNumbers(),

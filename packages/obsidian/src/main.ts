@@ -6,7 +6,7 @@ import { ShikiSettingsTab } from 'packages/obsidian/src/settings/SettingsTab';
 import { filterHighlightAllPlugin, type PrismWithFilterHighlightAll } from 'packages/obsidian/src/PrismPlugin';
 import { CodeHighlighter } from 'packages/obsidian/src/Highlighter';
 import { InlineCodeBlock } from 'packages/obsidian/src/InlineCodeBlock';
-import { OBSIDIAN_THEME_IDENTIFIER, VALID_THEME_IDS } from 'packages/obsidian/src/themes/ThemeRegistry';
+import { VALID_THEME_IDS } from 'packages/obsidian/src/themes/ThemeRegistry';
 
 import 'packages/obsidian/src/styles.css';
 import 'virtual:ec-styles.css';
@@ -23,7 +23,6 @@ export default class ShikiPlugin extends Plugin {
 		const promises = Array.from(this.activeCm6Plugins).map(fn => fn());
 		await Promise.all(promises);
 	}
-
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -196,11 +195,11 @@ export default class ShikiPlugin extends Plugin {
 
 		let needsSave = false;
 		if (!VALID_THEME_IDS.has(this.settings.darkTheme)) {
-			this.settings.darkTheme = OBSIDIAN_THEME_IDENTIFIER;
+			this.settings.darkTheme = 'one-dark-pro';
 			needsSave = true;
 		}
 		if (!VALID_THEME_IDS.has(this.settings.lightTheme)) {
-			this.settings.lightTheme = OBSIDIAN_THEME_IDENTIFIER;
+			this.settings.lightTheme = 'one-light';
 			needsSave = true;
 		}
 

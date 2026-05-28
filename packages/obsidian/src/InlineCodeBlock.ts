@@ -17,7 +17,7 @@ export class InlineCodeBlock extends MarkdownRenderChild {
 	}
 
 	private async render(): Promise<void> {
-		if (!this.plugin.highlighter?.shiki) {
+		if (!this.plugin.highlighter?.prism) {
 			return;
 		}
 		this.containerEl.empty();

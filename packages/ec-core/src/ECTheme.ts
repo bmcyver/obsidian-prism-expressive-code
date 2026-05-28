@@ -45,7 +45,7 @@ export function getECTheme(useThemeColors: boolean): ExpressiveCodeEngineConfig[
 		uiFontSize: 'var(--font-text-size)',
 		uiFontWeight: 'var(--font-normal)',
 		uiLineHeight: 'var(--line-height-normal)',
-		uiPaddingBlock: 'var(--size-4-2)',
+		uiPaddingBlock: '0.2rem',
 		uiPaddingInline: 'var(--size-4-4)',
 		uiSelectionBackground: 'var(--text-selection)',
 		uiSelectionForeground: 'var(--text-normal)',

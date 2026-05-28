@@ -12,6 +12,9 @@ const EC_STYLES_MODULE_ID = 'virtual:ec-styles.css';
 const EC_RUNTIME_RESOLVED_ID = `\0${EC_RUNTIME_MODULE_ID}`;
 const EC_STYLES_RESOLVED_ID = `\0${EC_STYLES_MODULE_ID}`;
 
+const polyfilledNodeBuiltins = new Set(['fs', 'path', 'url']);
+const externalNodeBuiltins = builtinModules.filter(moduleName => !polyfilledNodeBuiltins.has(moduleName.replace(/^node:/, '')));
+
 function expressiveCodeBundlePlugin() {
 	let bundlePromise: Promise<{ runtimeModule: string; styles: string }> | undefined;
 
@@ -76,6 +79,7 @@ export default defineConfig(({ mode }) => {
 			expressiveCodeBundlePlugin(),
 			nodePolyfills({
 				include: ['path', 'url', 'process'],
+				protocolImports: true,
 			}),
 		],
 		resolve: {
@@ -120,8 +124,7 @@ export default defineConfig(({ mode }) => {
 					'@lezer/common',
 					'@lezer/highlight',
 					'@lezer/lr',
-					...builtinModules,
-					...builtinModules.map(m => `node:${m}`),
+					...externalNodeBuiltins,
 				],
 			},
 		},

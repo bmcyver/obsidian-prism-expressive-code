@@ -11,7 +11,7 @@ pnpm run build
 ## Note
 - 번들 크기를 줄이기 위해 `one dark pro` 및 `one light` 테마만 포함하고 있습니다. 다른 테마를 사용하고 싶다면 [ThemeRegistry.ts](./packages/obsidian/src/themes/ThemeRegistry.ts) 파일을 수정해주세요.
 - 실제 코드 하이라이팅은 `shiki`와 차이가 있을 수 있습니다.
-- 번들 사이즈는 ≈ 400kB입니다.
+- 번들 사이즈는 ≈ 500kB입니다.
 
 ## Licenses
 - [Shiki Highlighter](https://github.com/mProjectsCode/obsidian-shiki-plugin)은 [MIT License](https://github.com/mProjectsCode/obsidian-shiki-plugin/blob/master/LICENSE)로 라이선스가 부여됩니다.

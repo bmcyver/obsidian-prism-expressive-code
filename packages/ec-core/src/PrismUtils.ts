@@ -231,7 +231,13 @@ export function getScopesForPrismType(type: string): string[] {
 	return [type];
 }
 
-const styleCache = new Map<string, { color?: string; fontStyle?: number }>();
+import { LRUCache } from './LRUCache';
+
+const styleCache = new LRUCache<string, { color?: string; fontStyle?: number }>(2000);
+
+export function clearStyleCache(): void {
+	styleCache.clear();
+}
 
 export function getStyleForPrismTypes(theme: any, types: string[], typeKey: string, lang?: string): { color?: string; fontStyle?: number } {
 	const cacheKey = `${theme.name || theme.type || ''}:${typeKey}:${lang || ''}`;

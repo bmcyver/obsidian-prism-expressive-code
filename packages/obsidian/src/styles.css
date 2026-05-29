@@ -113,3 +113,8 @@ span.shiki-ul {
 	overflow: hidden !important;
 	box-shadow: none !important;
 }
+
+/* Apply list indentation for code blocks in Live Preview */
+.markdown-source-view .shiki-code-block[style*='--shiki-indent-level'] {
+	margin-left: calc(var(--shiki-indent-level, 0) * var(--list-indent)) !important;
+}

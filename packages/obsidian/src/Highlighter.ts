@@ -18,7 +18,8 @@ export interface TokensResult {
 	tokens: ThemedToken[][];
 }
 
-import { flattenTokens, getStyleForPrismTypes, LANGUAGE_ALIASES, type FlatToken } from 'packages/ec-core/src/PrismUtils';
+import { flattenTokens, getStyleForPrismTypes, clearStyleCache, LANGUAGE_ALIASES, type FlatToken } from 'packages/ec-core/src/PrismUtils';
+import { LRUCache } from 'packages/ec-core/src/LRUCache';
 
 function convertToThemedTokens(code: string, flatTokens: FlatToken[], theme: any, lang?: string): ThemedToken[][] {
 	const lines: ThemedToken[][] = [[]];
@@ -75,7 +76,8 @@ export class CodeHighlighter {
 	safeLanguagesSet!: Set<string>;
 	prism!: any;
 	customThemes: unknown[] = [];
-	private tokenCache = new Map<string, TokensResult>();
+	private tokenCache = new LRUCache<string, TokensResult>(1000);
+	private safeLanguagesArray: string[] = [];
 
 	constructor(plugin: ShikiPlugin) {
 		this.plugin = plugin;
@@ -88,6 +90,7 @@ export class CodeHighlighter {
 		const loadedPrismLangs = Object.keys(this.prism.languages).filter(key => typeof this.prism.languages[key] === 'object');
 		this.supportedLanguages = Array.from(new Set([...loadedPrismLangs, ...Object.keys(LANGUAGE_ALIASES), 'plaintext', 'txt', 'text', 'plain', 'ansi']));
 		this.safeLanguagesSet = new Set(this.supportedLanguages.filter(lang => !LANGUAGE_BLACKLIST.has(lang)));
+		this.safeLanguagesArray = Array.from(this.safeLanguagesSet);
 
 		this.ec = new ExpressiveCodeEngine(
 			createEcEngineConfig({
@@ -110,13 +113,14 @@ export class CodeHighlighter {
 			this.ecStyleElement = undefined;
 		}
 		this.tokenCache.clear();
+		clearStyleCache();
 	}
 
 	/**
 	 * All languages that are safe to use with Obsidian's `registerMarkdownCodeBlockProcessor`.
 	 */
 	obsidianSafeLanguageNames(): string[] {
-		return Array.from(this.safeLanguagesSet);
+		return this.safeLanguagesArray;
 	}
 
 	/**
@@ -147,11 +151,9 @@ export class CodeHighlighter {
 		}
 
 		const cacheKey = `${lowerLang}:${code}`;
-		if (this.tokenCache.has(cacheKey)) {
-			const val = this.tokenCache.get(cacheKey);
-			this.tokenCache.delete(cacheKey);
-			this.tokenCache.set(cacheKey, val!); // LRU update: move to end
-			return val;
+		const cached = this.tokenCache.get(cacheKey);
+		if (cached) {
+			return cached;
 		}
 
 		const grammar = this.prism.languages[lowerLang];
@@ -168,12 +170,6 @@ export class CodeHighlighter {
 			tokens: themedTokens,
 		};
 
-		if (this.tokenCache.size > 100) {
-			const firstKey = this.tokenCache.keys().next().value;
-			if (firstKey) {
-				this.tokenCache.delete(firstKey);
-			}
-		}
 		this.tokenCache.set(cacheKey, result);
 
 		return result;

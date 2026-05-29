@@ -5,6 +5,8 @@ import { THEME_IMPORTS } from 'packages/obsidian/src/themes/ThemeRegistry';
 
 export class ThemeMapper {
 	plugin: ShikiPlugin;
+	private cachedThemeId?: string;
+	private cachedTheme?: ThemeRegistration;
 
 	constructor(plugin: ShikiPlugin) {
 		this.plugin = plugin;
@@ -20,7 +22,12 @@ export class ThemeMapper {
 
 	async getThemeForEC(): Promise<ThemeRegistration> {
 		const activeTheme = this.getThemeIdentifier();
-		return this.loadEssentialTheme(activeTheme);
+		if (this.cachedThemeId === activeTheme && this.cachedTheme) {
+			return this.cachedTheme;
+		}
+		this.cachedTheme = await this.loadEssentialTheme(activeTheme);
+		this.cachedThemeId = activeTheme;
+		return this.cachedTheme;
 	}
 
 	getThemeIdentifier(): string {

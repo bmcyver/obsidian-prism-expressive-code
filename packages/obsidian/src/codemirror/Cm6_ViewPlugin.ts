@@ -9,6 +9,9 @@ import { debounce, editorLivePreviewField } from 'obsidian';
 
 export const SHIKI_INLINE_REGEX = /^(.*)\{:([a-zA-Z0-9_\-+#]+)\}$/; // format: `code{:lang}`
 
+const nodePropsCache = new Map<string, Set<string>>();
+const isCodeBlockCache = new Map<string, boolean>();
+
 enum DecorationUpdateType {
 	Insert,
 	Remove,
@@ -137,8 +140,14 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 			isCodeBlockNode(node: SyntaxNode): boolean {
 				let curr: typeof node | null = node;
 				while (curr) {
-					if (curr.type.name?.toLowerCase().includes('codeblock')) {
-						return true;
+					const name = curr.type.name;
+					if (name) {
+						let isCode = isCodeBlockCache.get(name);
+						if (isCode === undefined) {
+							isCode = name.toLowerCase().includes('codeblock');
+							isCodeBlockCache.set(name, isCode);
+						}
+						if (isCode) return true;
 					}
 					curr = curr.parent;
 				}
@@ -211,8 +220,12 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 					to: expandedViewport.to,
 					enter: nodeRef => {
 						const node = nodeRef.node;
-
-						const props: Set<string> = new Set<string>(node.type.name?.split('_'));
+						const nodeName = node.type.name;
+						let props = nodePropsCache.get(nodeName);
+						if (!props) {
+							props = new Set<string>(nodeName ? nodeName.split('_') : []);
+							nodePropsCache.set(nodeName, props);
+						}
 
 						if (props.has('formatting')) {
 							return;

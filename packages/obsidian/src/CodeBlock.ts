@@ -69,30 +69,24 @@ export class CodeBlock extends BaseCodeBlock {
 			return;
 		}
 
-		// Apply list indentation in Live Preview (Editing View)
-		setTimeout(() => {
-			if (!this.containerEl) return;
-			const isLivePreview = this.containerEl.closest('.markdown-source-view') !== null;
-			if (isLivePreview) {
-				const firstLine = this.source.split('\n')[0] ?? '';
-				const match = /^[ \t]*/.exec(firstLine);
-				const indent = match ? match[0] : '';
-				let spaces = 0;
-				let tabs = 0;
-				for (const char of indent) {
-					if (char === ' ') spaces++;
-					else if (char === '\t') tabs++;
-				}
-				const level = tabs + Math.floor(spaces / 4);
-				if (level > 0) {
-					this.containerEl.style.setProperty('margin-left', `calc(${level} * var(--list-indent))`, 'important');
-				} else {
-					this.containerEl.style.removeProperty('margin-left');
-				}
-			} else {
-				this.containerEl.style.removeProperty('margin-left');
-			}
-		}, 0);
+		// Apply list indentation for Live Preview (Editing View) via CSS variable
+		const firstLine = this.source.split('\n')[0] ?? '';
+		const match = /^[ \t]*/.exec(firstLine);
+		const indent = match ? match[0] : '';
+		let spaces = 0;
+		let tabs = 0;
+		for (const char of indent) {
+			if (char === ' ') spaces++;
+			else if (char === '\t') tabs++;
+		}
+		const level = tabs + Math.floor(spaces / 4);
+
+		this.containerEl.classList.add('shiki-code-block');
+		if (level > 0) {
+			this.containerEl.style.setProperty('--shiki-indent-level', level.toString());
+		} else {
+			this.containerEl.style.removeProperty('--shiki-indent-level');
+		}
 
 		const cleanedSource = this.stripCommonIndentation(this.source);
 		await this.plugin.highlighter.renderWithEc(cleanedSource, this.language, metaString, this.containerEl);

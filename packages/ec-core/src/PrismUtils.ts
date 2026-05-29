@@ -1,5 +1,6 @@
 export const LANGUAGE_ALIASES: Record<string, string> = {
 	zsh: 'bash',
+	asm: 'nasm',
 };
 
 // A mapping from Prism token types to TextMate scopes for theme matching

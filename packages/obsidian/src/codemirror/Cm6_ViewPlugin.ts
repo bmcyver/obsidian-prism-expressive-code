@@ -189,6 +189,7 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 					return;
 				}
 				let lang = '';
+				let beginLineEndOffset = -1;
 				let state: SyntaxNode[] = [];
 				const decorationUpdates: DecorationUpdate[] = [];
 				// Capture the state at the time of the syntax tree traversal so we can
@@ -252,7 +253,11 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 						}
 
 						if (props.has('HyperMD-codeblock') && !props.has('HyperMD-codeblock-begin') && !props.has('HyperMD-codeblock-end')) {
-							state.push(node);
+							if (lang !== '') {
+								if (beginLineEndOffset === -1 || node.from > beginLineEndOffset) {
+									state.push(node);
+								}
+							}
 							return;
 						}
 
@@ -260,12 +265,18 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 							const content = Cm6_Util.getContent(view.state, node.from, node.to);
 
 							lang = /```\s*(\S+)/.exec(content)?.[1] ?? '';
+							try {
+								beginLineEndOffset = view.state.doc.lineAt(node.from).to;
+							} catch (e) {
+								beginLineEndOffset = -1;
+							}
+							state = [];
 						}
 
 						if (props.has('HyperMD-codeblock-end')) {
 							if (state.length > 0 && lang !== '') {
-								const start = state[0].from;
-								const end = state[state.length - 1].to;
+								const start = view.state.doc.lineAt(state[0].from).from;
+								const end = view.state.doc.lineAt(state[state.length - 1].to).to;
 
 								decorationUpdates.push({
 									type: DecorationUpdateType.Insert,
@@ -277,8 +288,8 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 							}
 
 							if (state.length > 0 && lang === '') {
-								const start = state[0].from;
-								const end = state[state.length - 1].to;
+								const start = view.state.doc.lineAt(state[0].from).from;
+								const end = view.state.doc.lineAt(state[state.length - 1].to).to;
 
 								decorationUpdates.push({
 									type: DecorationUpdateType.Remove,
@@ -289,6 +300,7 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 
 							lang = '';
 							state = [];
+							beginLineEndOffset = -1;
 						}
 					},
 				});

@@ -11,9 +11,9 @@ body {
 	--shiki-code-value: var(--color-purple);
 
 	/*--shiki-code-border-color: var(--background-modifier-border);*/
-        --shiki-code-block-border-color: transparent;
-        --shiki-code-block-border-radius: var(--code-radius);
-        --shiki-code-block-border-width: 0px; /* this has to have a unit */
+	--shiki-code-block-border-color: transparent;
+	--shiki-code-block-border-radius: var(--code-radius);
+	--shiki-code-block-border-width: 0px; /* this has to have a unit */
 	--shiki-code-block-spacing: var(--p-spacing);
 
 	--shiki-highlight-red: rgba(var(--color-red-rgb), 0.5);
@@ -48,6 +48,11 @@ body {
 /* Disable ligatures in code blocks, as they can cause incorrect highlighting */
 div.expressive-code {
 	font-variant-ligatures: no-contextual;
+	margin-inline: 0 !important;
+
+	& > figure {
+		margin-inline: 0 !important;
+	}
 
 	& > figure > pre {
 		/* Fix for shimmering focus */
@@ -94,4 +99,17 @@ span.shiki-ul {
 /* Settings tab  */
 .setting-item-control input.shiki-custom-theme-folder {
 	min-width: 250px;
+}
+
+/* Hide empty opening/closing fenced code block lines in Live Preview when not active (i.e. when preview widget is visible next to them) */
+.markdown-source-view.mod-cm6 div.HyperMD-codeblock-begin:has(+ .cm-preview-code-block),
+.markdown-source-view.mod-cm6 div.cm-preview-code-block + div.HyperMD-codeblock-end {
+	background-color: transparent !important;
+	border: none !important;
+	height: 0px !important;
+	min-height: 0px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	overflow: hidden !important;
+	box-shadow: none !important;
 }

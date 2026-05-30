@@ -1,12 +1,13 @@
 import { ExpressiveCodeEngine } from '@expressive-code/core';
 import type ShikiPlugin from 'src/main';
-import { loadPrism } from 'obsidian';
+
 import { ThemeMapper } from 'src/themes/ThemeMapper';
 import { toDom } from 'hast-util-to-dom';
 import { createEcEngineConfig } from 'src/core/Config';
 import { LANGUAGE_BLACKLIST } from 'src/languages/LanguageRegistry';
 import { clearStyleCache, LANGUAGE_ALIASES } from 'src/prism/PrismUtils';
-import { InlineHighlighter } from 'src/prism/InlineHighlighter';
+import { InlineHighlighter, type TokensResult } from 'src/prism/InlineHighlighter';
+import type * as Prism from 'prismjs';
 
 export class CodeHighlighter {
 	plugin: ShikiPlugin;
@@ -17,7 +18,7 @@ export class CodeHighlighter {
 	ecStyleElement: HTMLElement | undefined;
 	supportedLanguages!: string[];
 	safeLanguagesSet!: Set<string>;
-	prism!: any;
+
 	customThemes: unknown[] = [];
 	private safeLanguagesArray: string[] = [];
 
@@ -28,9 +29,9 @@ export class CodeHighlighter {
 	}
 
 	async load(): Promise<void> {
-		this.prism = await loadPrism();
+		const prism = (window as unknown as { Prism: typeof Prism }).Prism;
 
-		const loadedPrismLangs = Object.keys(this.prism.languages).filter(key => typeof this.prism.languages[key] === 'object');
+		const loadedPrismLangs = Object.keys(prism.languages).filter(key => typeof prism.languages[key] === 'object');
 		this.supportedLanguages = Array.from(new Set([...loadedPrismLangs, ...Object.keys(LANGUAGE_ALIASES), 'plaintext', 'txt', 'text', 'plain', 'ansi']));
 		this.safeLanguagesSet = new Set(this.supportedLanguages.filter(lang => !LANGUAGE_BLACKLIST.has(lang)));
 		this.safeLanguagesArray = Array.from(this.safeLanguagesSet);
@@ -39,7 +40,6 @@ export class CodeHighlighter {
 			createEcEngineConfig({
 				theme: await this.themeMapper.getThemeForEC(),
 				settings: this.plugin.loadedSettings,
-				getPrism: () => this.prism,
 			}),
 		);
 
@@ -47,7 +47,8 @@ export class CodeHighlighter {
 			this.ecStyleElement.remove();
 		}
 		const themeStyles = await this.ec.getThemeStyles();
-		this.ecStyleElement = document.head.createEl('style', { text: themeStyles });
+		// eslint-disable-next-line obsidianmd/no-forbidden-elements
+		this.ecStyleElement = activeDocument.head.createEl('style', { text: themeStyles });
 	}
 
 	async unload(): Promise<void> {
@@ -83,7 +84,8 @@ export class CodeHighlighter {
 		container.append(toDom(this.themeMapper.fixAST(result.renderedGroupAst)));
 	}
 
-	async getHighlightTokens(code: string, lang: string) {
-		return this.inlineHighlighter.getHighlightTokens(code, lang, this.prism, this.safeLanguagesSet, this.supportedLanguages);
+	async getHighlightTokens(code: string, lang: string): Promise<TokensResult | undefined> {
+		const prism = (window as unknown as { Prism: typeof Prism }).Prism;
+		return this.inlineHighlighter.getHighlightTokens(code, lang, prism, this.safeLanguagesSet, this.supportedLanguages);
 	}
 }

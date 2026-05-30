@@ -1,14 +1,31 @@
 import type ShikiPlugin from 'src/main';
-import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
-import { type Range } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { StateEffect, StateField, type Extension, type Range } from '@codemirror/state';
 import { debounce } from 'obsidian';
 import { Cm6_SyntaxTreeParser, DecorationUpdateType } from 'src/codemirror/Cm6_SyntaxTreeParser';
 import { Cm6_DecorationBuilder } from 'src/codemirror/Cm6_DecorationBuilder';
 
-export function createCm6Plugin(plugin: ShikiPlugin) {
-	return ViewPlugin.fromClass(
+export const updateDecorationsEffect = StateEffect.define<DecorationSet>();
+
+export const shikiDecorationsField = StateField.define<DecorationSet>({
+	create() {
+		return Decoration.none;
+	},
+	update(decorations, tr) {
+		decorations = decorations.map(tr.changes);
+		for (const e of tr.effects) {
+			if (e.is(updateDecorationsEffect)) {
+				decorations = e.value;
+			}
+		}
+		return decorations;
+	},
+	provide: f => EditorView.decorations.from(f),
+});
+
+export function createCm6Plugin(plugin: ShikiPlugin): Extension {
+	const viewPlugin = ViewPlugin.fromClass(
 		class Cm6ViewPlugin {
-			decorations: DecorationSet;
 			view: EditorView;
 
 			pendingDocChanged = false;
@@ -20,7 +37,6 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 
 			constructor(view: EditorView) {
 				this.view = view;
-				this.decorations = Decoration.none;
 				void this.updateWidgets(view);
 
 				this.updateFn = (): Promise<void> => {
@@ -60,13 +76,6 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 			}
 
 			update(update: ViewUpdate): void {
-				try {
-					this.decorations = this.decorations.map(update.changes);
-				} catch (e) {
-					this.decorations = Decoration.none;
-					console.warn('Resetting decorations due to error:', e);
-				}
-
 				if (update.docChanged || update.selectionSet || update.viewportChanged) {
 					this.view = update.view;
 					this.pendingDocChanged = this.pendingDocChanged || update.docChanged;
@@ -126,7 +135,7 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 					}
 				}
 
-				let finalDecorations = this.decorations;
+				let finalDecorations = this.view.state.field(shikiDecorationsField, false) ?? Decoration.none;
 				for (const r of removeRanges) {
 					finalDecorations = finalDecorations.update({
 						filterFrom: r.from,
@@ -136,25 +145,27 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 				}
 
 				if (newDecorationsList.length > 0) {
-					newDecorationsList.sort((a, b) => a.from - b.from || a.to - b.to);
+					newDecorationsList.sort((a, b) => {
+						const diff = a.from - b.from;
+						return diff !== 0 ? diff : a.to - b.to;
+					});
 					finalDecorations = finalDecorations.update({
 						add: newDecorationsList,
 					});
 				}
 
-				this.decorations = finalDecorations;
-
 				if ((removeRanges.length > 0 || newDecorationsList.length > 0) && this.view.state === capturedState) {
-					requestAnimationFrame(() => {
+					window.requestAnimationFrame(() => {
 						if (this.view.state === capturedState && !this.view.composing) {
-							this.view.dispatch(this.view.state.update({}));
+							this.view.dispatch({
+								effects: updateDecorationsEffect.of(finalDecorations),
+							});
 						}
 					});
 				}
 			}
 
 			destroy(): void {
-				this.decorations = Decoration.none;
 				this.debouncedDocChangedUpdate.cancel();
 				this.debouncedViewportUpdate.cancel();
 				this.debouncedCompositionEndUpdate.cancel();
@@ -162,7 +173,6 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 			}
 		},
 		{
-			decorations: v => v.decorations,
 			eventHandlers: {
 				compositionend(_event, _view) {
 					this.pendingDocChanged = true;
@@ -174,4 +184,6 @@ export function createCm6Plugin(plugin: ShikiPlugin) {
 			},
 		},
 	);
+
+	return [shikiDecorationsField, viewPlugin];
 }

@@ -1,9 +1,9 @@
 export interface ThemeRegistration {
 	name: string;
 	displayName?: string;
-	type?: 'light' | 'dark' | string;
+	type?: string;
 	colors: Record<string, string>;
-	tokenColors: any[];
-	settings?: any[];
+	tokenColors: unknown[];
+	settings?: unknown[];
 	semanticHighlighting?: boolean;
 }

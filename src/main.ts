@@ -38,6 +38,7 @@ export default class ShikiPlugin extends Plugin {
 
 		this.app.workspace.onLayoutReady(async () => {
 			try {
+				await loadPrism();
 				await this.highlighter.load();
 
 				const processorRegistry = new MarkdownProcessorRegistry(this);
@@ -97,7 +98,7 @@ export default class ShikiPlugin extends Plugin {
 	}
 
 	async registerPrismPlugin(): Promise<void> {
-		const prism = (await loadPrism()) as PrismWithFilterHighlightAll;
+		const prism = (window as unknown as { Prism: PrismWithFilterHighlightAll }).Prism;
 		const filterHighlightAll = filterHighlightAllPlugin(prism);
 		filterHighlightAll?.reject.addSelector('div.expressive-code pre code');
 	}

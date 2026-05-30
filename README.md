@@ -4,15 +4,15 @@
 
 ## Build
 ```zsh
-pnpm install --frozen-lockfile
+pnpm install
 pnpm run build
 ```
 
 ## Note
-- 번들 크기를 줄이기 위해 `one dark pro` 및 `one light` 테마만 포함하고 있습니다. 다른 테마를 사용하고 싶다면 [ThemeRegistry.ts](./packages/obsidian/src/themes/ThemeRegistry.ts) 파일을 수정해주세요.
-- 실제 코드 하이라이팅은 `shiki`와 차이가 있을 수 있습니다.
-- 번들 사이즈는 ≈ 500kB입니다.
+- 번들 크기를 줄이기 위해 `one dark pro` 및 `one light` 테마만 기본 포함하고 있습니다. 추가 테마를 원하실 경우 [ThemeRegistry.ts](./src/themes/ThemeRegistry.ts) 파일을 수정해주세요.
+- 실제 코드 하이라이팅은 `shiki` 원본과 약간의 차이가 있을 수 있습니다.
+- 번들 사이즈는 약 500kB 이하로 가볍게 유지됩니다.
 
 ## Licenses
-- [Shiki Highlighter](https://github.com/mProjectsCode/obsidian-shiki-plugin)은 [MIT License](https://github.com/mProjectsCode/obsidian-shiki-plugin/blob/master/LICENSE)로 라이선스가 부여됩니다.
-- [Shiki Highlighter](https://github.com/mProjectsCode/obsidian-shiki-plugin)에서 수정된 부분은 [MIT License](./LICENSE)로 라이선스가 부여됩니다.
+- [Shiki Highlighter](https://github.com/mProjectsCode/obsidian-shiki-plugin) 원본 코드는 [MIT License](https://github.com/mProjectsCode/obsidian-shiki-plugin/blob/master/LICENSE)를 따릅니다.
+- 본 저장소에서 수정 및 재작성된 코드는 [MIT License](./LICENSE)가 부여됩니다.

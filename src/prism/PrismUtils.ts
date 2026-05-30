@@ -3,6 +3,24 @@ export const LANGUAGE_ALIASES: Record<string, string> = {
 	asm: 'nasm',
 };
 
+// Removed ThemeRegistration import
+
+export interface ThemeSetting {
+	scope?: string | string[];
+	settings?: {
+		foreground?: string;
+		fontStyle?: string;
+	};
+}
+
+export interface ThemeLike {
+	name?: string;
+	type?: string;
+	settings?: ThemeSetting[];
+	tokenColors?: ThemeSetting[];
+	fg?: string;
+}
+
 // A mapping from Prism token types to TextMate scopes for theme matching
 export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
 	// Standard core tokens
@@ -87,9 +105,9 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
 	'data-type': ['support.type', 'storage.type'],
 };
 
-export function getColorForScopes(theme: any, scopes: string[]): { color?: string; fontStyle?: string } | undefined {
+export function getColorForScopes(theme: ThemeLike, scopes: string[]): { color?: string; fontStyle?: string } | undefined {
 	if (!theme) return undefined;
-	const settings = theme.settings || theme.tokenColors;
+	const settings = theme.settings ?? theme.tokenColors;
 	if (!settings) return undefined;
 
 	let bestMatch: { color?: string; fontStyle?: string } | undefined = undefined;
@@ -233,19 +251,28 @@ export function getScopesForPrismType(type: string): string[] {
 
 import { LRUCache } from '../cache/LRUCache';
 
-const styleCache = new LRUCache<string, { color?: string; fontStyle?: number }>(2000);
+export enum FontStyle {
+	NotSet = -1,
+	None = 0,
+	Italic = 1,
+	Bold = 2,
+	Underline = 4,
+	Strikethrough = 8,
+}
+
+const styleCache = new LRUCache<string, { color?: string; fontStyle?: FontStyle }>(2000);
 
 export function clearStyleCache(): void {
 	styleCache.clear();
 }
 
-export function getStyleForPrismTypes(theme: any, types: string[], typeKey: string, lang?: string): { color?: string; fontStyle?: number } {
-	const cacheKey = `${theme.name || theme.type || ''}:${typeKey}:${lang || ''}`;
+export function getStyleForPrismTypes(theme: ThemeLike, types: string[], typeKey: string, lang?: string): { color?: string; fontStyle?: FontStyle } {
+	const cacheKey = `${theme.name ?? theme.type ?? ''}:${typeKey}:${lang ?? ''}`;
 	const cached = styleCache.get(cacheKey);
 	if (cached) return cached;
 
 	let color: string | undefined = undefined;
-	let fontStyleNum = 0;
+	let fontStyleNum: FontStyle = FontStyle.None;
 	let hasColor = false;
 	let hasFontStyle = false;
 
@@ -272,10 +299,10 @@ export function getStyleForPrismTypes(theme: any, types: string[], typeKey: stri
 			}
 			if (!hasFontStyle && style.fontStyle) {
 				const fs = style.fontStyle.toLowerCase();
-				if (fs.includes('italic')) fontStyleNum |= 1;
-				if (fs.includes('bold')) fontStyleNum |= 2;
-				if (fs.includes('underline')) fontStyleNum |= 4;
-				if (fs.includes('strikethrough')) fontStyleNum |= 8;
+				if (fs.includes('italic')) fontStyleNum |= FontStyle.Italic;
+				if (fs.includes('bold')) fontStyleNum |= FontStyle.Bold;
+				if (fs.includes('underline')) fontStyleNum |= FontStyle.Underline;
+				if (fs.includes('strikethrough')) fontStyleNum |= FontStyle.Strikethrough;
 				hasFontStyle = true;
 			}
 			if (hasColor && hasFontStyle) {
@@ -298,9 +325,14 @@ export interface FlatToken {
 	typeKey: string;
 }
 
-export function flattenTokens(tokens: any[], parentTypes: string[] = [], result: FlatToken[] = []): FlatToken[] {
-	for (let i = 0; i < tokens.length; i++) {
-		const token = tokens[i];
+export interface PrismTokenLike {
+	type: string;
+	content: string | PrismTokenLike | (string | PrismTokenLike)[];
+	alias?: string | string[];
+}
+
+export function flattenTokens(tokens: (string | PrismTokenLike)[], parentTypes: string[] = [], result: FlatToken[] = []): FlatToken[] {
+	for (const token of tokens) {
 		if (typeof token === 'string') {
 			result.push({
 				content: token,
@@ -334,4 +366,31 @@ export function flattenTokens(tokens: any[], parentTypes: string[] = [], result:
 		}
 	}
 	return result;
+}
+
+export function splitTokensIntoLines(flatTokens: FlatToken[]): FlatToken[][] {
+	const lines: FlatToken[][] = [[]];
+	for (const token of flatTokens) {
+		const content = token.content;
+
+		if (!content.includes('\n')) {
+			if (content.length > 0) {
+				lines[lines.length - 1].push(token);
+			}
+		} else {
+			const parts = content.split('\n');
+			for (let i = 0; i < parts.length; i++) {
+				if (i > 0) {
+					lines.push([]);
+				}
+				if (parts[i].length > 0) {
+					lines[lines.length - 1].push({
+						...token,
+						content: parts[i],
+					});
+				}
+			}
+		}
+	}
+	return lines;
 }

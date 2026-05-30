@@ -26,7 +26,6 @@ function expressiveCodeBundlePlugin() {
 					createEcEngineConfig({
 						theme: cssVariableTheme.theme,
 						settings: EC_VIRTUAL_SETTINGS,
-						getPrism: () => undefined,
 					}),
 				);
 

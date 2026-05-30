@@ -3,11 +3,13 @@
 import eslint from '@eslint/js';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+import obsidianmd from 'eslint-plugin-obsidianmd';
 
 export default defineConfig(
 	{
 		ignores: ['npm/', 'node_modules/', 'exampleVault/', 'automation/', 'main.js', '*.svelte'],
 	},
+	obsidianmd.configs.recommended,
 	{
 		files: ['src/**/*.ts'],
 		extends: [
@@ -30,8 +32,6 @@ export default defineConfig(
 
 			'@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
 			'@typescript-eslint/restrict-template-expressions': 'off',
-
-			'no-relative-import-paths/no-relative-import-paths': ['warn', { allowSameFolder: false }],
 
 			'@typescript-eslint/ban-ts-comment': 'off',
 			'@typescript-eslint/no-empty-function': 'off',

@@ -1,11 +1,11 @@
-import { ExpressiveCodeTheme, type ExpressiveCodeEngineConfig, type ExpressiveCodePlugin } from '@expressive-code/core';
+import { ExpressiveCodeTheme, type ExpressiveCodeEngineConfig, type ExpressiveCodeThemeInput } from '@expressive-code/core';
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { pluginFrames } from '@expressive-code/plugin-frames';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 import { customPluginPrism } from '../prism/CustomPluginPrism';
 import { pluginTextMarkers } from '@expressive-code/plugin-text-markers';
 import { type ThemeRegistration } from './types';
-// eslint-disable-next-line no-relative-import-paths/no-relative-import-paths -- needed for vite to load this correctly
+
 import { getECTheme } from '../themes/ECTheme';
 
 export interface EcSettingsProps {
@@ -19,7 +19,6 @@ export interface EcSettingsProps {
 export interface EcConfigInput {
 	theme: ThemeRegistration;
 	settings: EcSettingsProps;
-	getPrism: () => any;
 }
 
 export interface CssVariableThemeBundle {
@@ -73,7 +72,7 @@ export function createCssVariableThemeBundle(theme: ThemeRegistration): CssVaria
 	const mappedTheme: ThemeRegistration = {
 		...theme,
 		colors: Object.fromEntries(Object.entries(theme.colors ?? {}).map(([key, value]) => [key, toPlaceholder(value)])),
-		tokenColors: (theme.tokenColors ?? []).map(mapThemeTokenColor),
+		tokenColors: (theme.tokenColors ?? []).map(mapThemeTokenColor as (value: unknown) => unknown),
 	};
 
 	return {
@@ -92,14 +91,14 @@ export function createEcEngineConfig(input: EcConfigInput): ExpressiveCodeEngine
 	const useThemeColors = input.settings.preferThemeColors;
 
 	return {
-		themes: [new ExpressiveCodeTheme(input.theme)],
+		themes: [new ExpressiveCodeTheme(input.theme as unknown as ExpressiveCodeThemeInput)],
 		plugins: [
-			customPluginPrism({ getPrism: input.getPrism }),
+			customPluginPrism(),
 			pluginCollapsibleSections(),
 			pluginTextMarkers(),
 			pluginLineNumbers(),
 			pluginFrames(),
-		].filter(Boolean) as ExpressiveCodePlugin[],
+		].filter(Boolean),
 		styleOverrides: getECTheme(useThemeColors),
 		minSyntaxHighlightingColorContrast: 0,
 		themeCssRoot: 'div.expressive-code',

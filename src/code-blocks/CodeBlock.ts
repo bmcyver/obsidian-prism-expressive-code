@@ -58,6 +58,6 @@ export class CodeBlock extends BaseCodeBlock {
 
 	public onunload(): void {
 		super.onunload();
-		this.containerEl.innerText = 'unloaded shiki code block';
+		this.containerEl.innerText = 'Unloaded shiki code block';
 	}
 }

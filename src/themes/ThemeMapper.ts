@@ -15,9 +15,9 @@ export class ThemeMapper {
 	private async loadEssentialTheme(activeTheme: string): Promise<ThemeRegistration> {
 		const themeLoader = THEME_IMPORTS[activeTheme];
 		if (themeLoader) {
-			return (await themeLoader()).default as ThemeRegistration;
+			return ((await themeLoader()) as { default: ThemeRegistration }).default;
 		}
-		return (await THEME_IMPORTS['one-dark-pro']()).default as ThemeRegistration;
+		return ((await THEME_IMPORTS['one-dark-pro']()) as { default: ThemeRegistration }).default;
 	}
 
 	async getThemeForEC(): Promise<ThemeRegistration> {

@@ -1,7 +1,9 @@
+// Removed ThemeRegistration import
+
 export interface ThemeDefinition {
 	id: string;
 	displayName: string;
-	import: () => Promise<any>;
+	import: () => Promise<unknown>;
 }
 
 export const THEMES: ThemeDefinition[] = [

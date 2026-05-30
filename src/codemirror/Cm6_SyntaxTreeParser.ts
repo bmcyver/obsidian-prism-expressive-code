@@ -165,7 +165,7 @@ export class Cm6_SyntaxTreeParser {
 					lang = /```\s*(\S+)/.exec(content)?.[1] ?? '';
 					try {
 						beginLineEndOffset = view.state.doc.lineAt(node.from).to;
-					} catch (e) {
+					} catch {
 						beginLineEndOffset = -1;
 					}
 					state = [];

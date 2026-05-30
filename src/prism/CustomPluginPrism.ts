@@ -1,9 +1,8 @@
 import { InlineStyleAnnotation, definePlugin, type ExpressiveCodePlugin } from '@expressive-code/core';
 
-import { flattenTokens, getStyleForPrismTypes, LANGUAGE_ALIASES, type FlatToken } from './PrismUtils';
-
-export function customPluginPrism(options: { getPrism: () => any }): ExpressiveCodePlugin {
-	const { getPrism } = options;
+import { flattenTokens, getStyleForPrismTypes, LANGUAGE_ALIASES, splitTokensIntoLines, FontStyle, type FlatToken } from './PrismUtils';
+import type * as Prism from 'prismjs';
+export function customPluginPrism(): ExpressiveCodePlugin {
 
 	return definePlugin({
 		name: 'Prism',
@@ -12,9 +11,9 @@ export function customPluginPrism(options: { getPrism: () => any }): ExpressiveC
 				const codeLines = codeBlock.getLines();
 				const code = codeBlock.code;
 
-				let prism: any;
+				let prism: typeof Prism | undefined;
 				try {
-					prism = getPrism();
+					prism = (window as unknown as { Prism: typeof Prism }).Prism;
 				} catch (err) {
 					const error = err instanceof Error ? err : new Error(String(err));
 					throw new Error(`Failed to load shared Prism syntax highlighter: "${error.message}"`, {
@@ -28,43 +27,15 @@ export function customPluginPrism(options: { getPrism: () => any }): ExpressiveC
 
 				const rawLanguage = codeBlock.language;
 				let lowerLang = rawLanguage.toLowerCase();
-				lowerLang = LANGUAGE_ALIASES[lowerLang] || lowerLang;
+				lowerLang = LANGUAGE_ALIASES[lowerLang] ?? lowerLang;
 				const grammar = prism.languages[lowerLang];
 
-				const finalGrammar = grammar || prism.languages.plaintext || prism.languages.text;
+				const finalGrammar = grammar ?? prism.languages.plaintext ?? prism.languages.text;
 				const prismTokens = prism.tokenize(code, finalGrammar);
 				const flatTokens = flattenTokens(prismTokens);
-				const lines: FlatToken[][] = [[]];
-
+				
 				// Split flat tokens into lines once (outside of theme variants loop)
-				for (let t = 0; t < flatTokens.length; t++) {
-					const token = flatTokens[t];
-					const content = token.content;
-
-					if (content.indexOf('\n') === -1) {
-						if (content.length > 0) {
-							lines[lines.length - 1].push({
-								content,
-								types: token.types,
-								typeKey: token.typeKey,
-							});
-						}
-					} else {
-						const parts = content.split('\n');
-						for (let i = 0; i < parts.length; i++) {
-							if (i > 0) {
-								lines.push([]);
-							}
-							if (parts[i].length > 0) {
-								lines[lines.length - 1].push({
-									content: parts[i],
-									types: token.types,
-									typeKey: token.typeKey,
-								});
-							}
-						}
-					}
-				}
+				const lines = splitTokensIntoLines(flatTokens);
 
 				for (let styleVariantIndex = 0; styleVariantIndex < styleVariants.length; styleVariantIndex++) {
 					const theme = styleVariants[styleVariantIndex].theme;
@@ -77,14 +48,16 @@ export function customPluginPrism(options: { getPrism: () => any }): ExpressiveC
 							const tokenEndIndex = charIndex + tokenLength;
 							const style = getStyleForPrismTypes(theme, token.types, token.typeKey, lowerLang);
 
+							const fs = style.fontStyle ?? FontStyle.None;
+
 							codeLines[lineIndex]?.addAnnotation(
 								new InlineStyleAnnotation({
 									styleVariantIndex,
-									color: style.color || theme.fg,
-									italic: (style.fontStyle! & 1) === 1,
-									bold: (style.fontStyle! & 2) === 2,
-									underline: (style.fontStyle! & 4) === 4,
-									strikethrough: (style.fontStyle! & 8) === 8,
+									color: style.color ?? theme.fg,
+									italic: (fs & FontStyle.Italic) !== 0,
+									bold: (fs & FontStyle.Bold) !== 0,
+									underline: (fs & FontStyle.Underline) !== 0,
+									strikethrough: (fs & FontStyle.Strikethrough) !== 0,
 									inlineRange: {
 										columnStart: charIndex,
 										columnEnd: tokenEndIndex,

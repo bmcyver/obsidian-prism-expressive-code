@@ -8,14 +8,14 @@ export class InlineCodeBlock extends BaseCodeBlock {
 	}
 
 	private async render(): Promise<void> {
-		if (!this.plugin.highlighter?.prism) {
+		if (!this.plugin.highlighter) {
 			return;
 		}
 		this.containerEl.empty();
 		this.containerEl.classList.add('shiki-inline');
 
 		const highlight = await this.plugin.highlighter.getHighlightTokens(this.source, this.language);
-		const tokens = highlight?.tokens.flat(1);
+		const tokens = highlight?.tokens;
 		if (!tokens?.length) {
 			return;
 		}
@@ -38,6 +38,6 @@ export class InlineCodeBlock extends BaseCodeBlock {
 
 	public onunload(): void {
 		super.onunload();
-		this.containerEl.innerText = 'unloaded shiki inline code block';
+		this.containerEl.innerText = 'Unloaded shiki inline code block';
 	}
 }

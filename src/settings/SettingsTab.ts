@@ -20,7 +20,7 @@ export class ShikiSettingsTab extends PluginSettingTab {
 		new Setting(this.containerEl).setName('All setting changes require a reload of the highlighter').addButton(button => {
 			button
 				.setCta()
-				.setButtonText('Reload Highlighter')
+				.setButtonText('Reload highlighter')
 				.onClick(async () => {
 					button.setDisabled(true);
 					await this.plugin.reloadHighlighter();
@@ -29,7 +29,7 @@ export class ShikiSettingsTab extends PluginSettingTab {
 		});
 
 		new Setting(this.containerEl)
-			.setName('Inline Syntax Highlighting')
+			.setName('Inline syntax highlighting')
 			.setDesc('Enables syntax highlighting for inline code blocks via `code{:lang}`.')
 			.addToggle(toggle => {
 				toggle.setValue(this.plugin.settings.inlineHighlighting).onChange(async value => {
@@ -38,7 +38,7 @@ export class ShikiSettingsTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(this.containerEl).setName('EC defaults').setHeading();
+		new Setting(this.containerEl).setName('Ec defaults').setHeading();
 
 		new Setting(this.containerEl)
 			.setName('Show line numbers')

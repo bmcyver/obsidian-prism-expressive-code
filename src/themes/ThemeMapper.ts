@@ -1,7 +1,7 @@
-import { type ThemeRegistration } from 'packages/ec-core/src/types';
+import { type ThemeRegistration } from 'src/core/types';
 import type * as hast_types from 'hast';
-import type ShikiPlugin from 'packages/obsidian/src/main';
-import { THEME_IMPORTS } from 'packages/obsidian/src/themes/ThemeRegistry';
+import type ShikiPlugin from 'src/main';
+import { THEME_IMPORTS } from 'src/themes/ThemeRegistry';
 
 export class ThemeMapper {
 	plugin: ShikiPlugin;

@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"paths": {
-			"packages/*": ["./packages/*"]
+			"src/*": ["./src/*"]
 		},
 		"module": "ESNext",
 		"target": "ESNext",
@@ -11,6 +11,8 @@
 		"strict": true,
 		"strictNullChecks": true,
 		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
 		"moduleResolution": "bundler",
 		"importHelpers": true,
 		"isolatedModules": true,
@@ -24,5 +26,5 @@
 		"types": ["node", "vite/client"],
 		"noEmit": true
 	},
-	"include": ["packages/*/src/**/*.ts", "packages/*/src/**/*.d.ts"]
+	"include": ["src/**/*.ts", "src/**/*.d.ts"]
 }

@@ -1,7 +1,7 @@
 import { PluginSettingTab, Setting } from 'obsidian';
-import type ShikiPlugin from 'packages/obsidian/src/main';
-import { THEME_DISPLAY_NAMES } from 'packages/obsidian/src/themes/ThemeRegistry';
-import { CollapseStyle, FrameType } from 'packages/obsidian/src/settings/Settings';
+import type ShikiPlugin from 'src/main';
+import { THEME_DISPLAY_NAMES } from 'src/themes/ThemeRegistry';
+import { CollapseStyle, FrameType } from 'src/settings/Settings';
 
 export class ShikiSettingsTab extends PluginSettingTab {
 	plugin: ShikiPlugin;

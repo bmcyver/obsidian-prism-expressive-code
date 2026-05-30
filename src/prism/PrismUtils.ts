@@ -231,7 +231,7 @@ export function getScopesForPrismType(type: string): string[] {
 	return [type];
 }
 
-import { LRUCache } from './LRUCache';
+import { LRUCache } from '../cache/LRUCache';
 
 const styleCache = new LRUCache<string, { color?: string; fontStyle?: number }>(2000);
 

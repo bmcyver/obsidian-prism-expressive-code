@@ -2,11 +2,11 @@ import path from 'node:path';
 import { builtinModules } from 'node:module';
 import { defineConfig, type UserConfig } from 'vite';
 import { ExpressiveCodeEngine } from '@expressive-code/core';
-import { createCssVariableThemeBundle, createEcEngineConfig, EC_VIRTUAL_SETTINGS } from './packages/ec-core/src/Config';
+import { createCssVariableThemeBundle, createEcEngineConfig, EC_VIRTUAL_SETTINGS } from './src/core/Config';
 import oneDarkPro from 'shiki/themes/one-dark-pro.mjs';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
-const entryFile = 'packages/obsidian/src/main.ts';
+const entryFile = 'src/main.ts';
 const EC_RUNTIME_MODULE_ID = 'virtual:ec-runtime';
 const EC_STYLES_MODULE_ID = 'virtual:ec-styles.css';
 const EC_RUNTIME_RESOLVED_ID = `\0${EC_RUNTIME_MODULE_ID}`;
@@ -84,7 +84,7 @@ export default defineConfig(({ mode }) => {
 		],
 		resolve: {
 			alias: {
-				packages: path.resolve(__dirname, './packages'),
+				src: path.resolve(__dirname, './src'),
 			},
 		},
 		build: {

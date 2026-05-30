@@ -1,6 +1,7 @@
 import { type MarkdownPostProcessorContext } from 'obsidian';
-import type ShikiPlugin from 'packages/obsidian/src/main';
-import { BaseCodeBlock } from 'packages/obsidian/src/BaseCodeBlock';
+import type ShikiPlugin from 'src/main';
+import { BaseCodeBlock } from 'src/code-blocks/BaseCodeBlock';
+import { extractMetaString, stripCommonIndentation, calculateListIndentationLevel } from 'src/utils/markdownUtils';
 
 export class CodeBlock extends BaseCodeBlock {
 	cachedMetaString: string;
@@ -11,57 +12,7 @@ export class CodeBlock extends BaseCodeBlock {
 	}
 
 	private getMetaString(): string {
-		const sectionInfo = this.ctx.getSectionInfo(this.containerEl);
-
-		if (sectionInfo === null) {
-			return '';
-		}
-
-		const lines = sectionInfo.text.split('\n');
-		const startLine = lines[sectionInfo.lineStart];
-
-		// regexp to match the text after the code block language
-		const regex = new RegExp('^[^`~]*?\\s*(```+|~~~+)' + this.language + ' (.*)', 'g');
-		const match = regex.exec(startLine);
-		if (match !== null) {
-			return match[2];
-		} else {
-			return '';
-		}
-	}
-
-	private stripCommonIndentation(source: string): string {
-		const lines = source.split('\n');
-
-		// Find the minimum common indentation of non-empty lines
-		let minIndent: string | null = null;
-		for (const line of lines) {
-			if (line.trim() === '') {
-				continue;
-			}
-			const match = /^[ \t]*/.exec(line);
-			if (match) {
-				const indent = match[0];
-				if (minIndent === null || indent.length < minIndent.length) {
-					minIndent = indent;
-				}
-			}
-		}
-
-		if (!minIndent || minIndent.length === 0) {
-			return source;
-		}
-
-		// Strip the common indentation from all lines
-		const prefix = minIndent;
-		return lines
-			.map(line => {
-				if (line.startsWith(prefix)) {
-					return line.slice(prefix.length);
-				}
-				return line;
-			})
-			.join('\n');
+		return extractMetaString(this.ctx, this.containerEl, this.language);
 	}
 
 	private async render(metaString: string): Promise<void> {
@@ -70,16 +21,7 @@ export class CodeBlock extends BaseCodeBlock {
 		}
 
 		// Apply list indentation for Live Preview (Editing View) via CSS variable
-		const firstLine = this.source.split('\n')[0] ?? '';
-		const match = /^[ \t]*/.exec(firstLine);
-		const indent = match ? match[0] : '';
-		let spaces = 0;
-		let tabs = 0;
-		for (const char of indent) {
-			if (char === ' ') spaces++;
-			else if (char === '\t') tabs++;
-		}
-		const level = tabs + Math.floor(spaces / 4);
+		const level = calculateListIndentationLevel(this.source);
 
 		this.containerEl.classList.add('shiki-code-block');
 		if (level > 0) {
@@ -88,7 +30,7 @@ export class CodeBlock extends BaseCodeBlock {
 			this.containerEl.style.removeProperty('--shiki-indent-level');
 		}
 
-		const cleanedSource = this.stripCommonIndentation(this.source);
+		const cleanedSource = stripCommonIndentation(this.source);
 		await this.plugin.highlighter.renderWithEc(cleanedSource, this.language, metaString, this.containerEl);
 	}
 

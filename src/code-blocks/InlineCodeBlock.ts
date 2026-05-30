@@ -1,6 +1,6 @@
 import { type MarkdownPostProcessorContext } from 'obsidian';
-import type ShikiPlugin from 'packages/obsidian/src/main';
-import { BaseCodeBlock } from 'packages/obsidian/src/BaseCodeBlock';
+import type ShikiPlugin from 'src/main';
+import { BaseCodeBlock } from 'src/code-blocks/BaseCodeBlock';
 
 export class InlineCodeBlock extends BaseCodeBlock {
 	constructor(plugin: ShikiPlugin, containerEl: HTMLElement, source: string, language: string, ctx: MarkdownPostProcessorContext) {
@@ -20,7 +20,7 @@ export class InlineCodeBlock extends BaseCodeBlock {
 			return;
 		}
 
-		this.plugin.highlighter.renderTokens(tokens, this.containerEl);
+		this.plugin.highlighter.inlineHighlighter.renderTokens(tokens, this.containerEl);
 	}
 
 	public async rerenderOnNoteChange(): Promise<void> {

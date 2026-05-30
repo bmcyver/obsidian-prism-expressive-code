@@ -9,7 +9,7 @@ export default defineConfig(
 		ignores: ['npm/', 'node_modules/', 'exampleVault/', 'automation/', 'main.js', '*.svelte'],
 	},
 	{
-		files: ['packages/**/*.ts'],
+		files: ['src/**/*.ts'],
 		extends: [
 			eslint.configs.recommended,
 			...tseslint.configs.recommended,

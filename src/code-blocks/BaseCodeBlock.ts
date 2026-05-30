@@ -1,5 +1,5 @@
 import { type MarkdownPostProcessorContext, MarkdownRenderChild } from 'obsidian';
-import type ShikiPlugin from 'packages/obsidian/src/main';
+import type ShikiPlugin from 'src/main';
 
 export abstract class BaseCodeBlock extends MarkdownRenderChild {
 	plugin: ShikiPlugin;
@@ -23,12 +23,12 @@ export abstract class BaseCodeBlock extends MarkdownRenderChild {
 
 	public onload(): void {
 		super.onload();
-		this.plugin.addActiveCodeBlock(this);
+		this.plugin.codeBlockManager.add(this);
 	}
 
 	public onunload(): void {
 		super.onunload();
-		this.plugin.removeActiveCodeBlock(this);
+		this.plugin.codeBlockManager.remove(this);
 		this.containerEl.empty();
 	}
 }

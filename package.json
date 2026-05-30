@@ -7,8 +7,8 @@
 		"dev": "vite build --mode=development --watch",
 		"build": "pnpm typecheck && vite build --mode=production",
 		"typecheck": "tsc -noEmit -skipLibCheck",
-		"format": "prettier --write packages/**",
-		"lint": "eslint --max-warnings=0 packages/**"
+		"format": "prettier --write src/**",
+		"lint": "eslint --max-warnings=0 src/**"
 	},
 	"author": "bmcyver",
 	"license": "MIT",

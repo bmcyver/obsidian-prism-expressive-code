@@ -8,7 +8,7 @@ export function customPluginPrism(options: { getPrism: () => any }): ExpressiveC
 	return definePlugin({
 		name: 'Prism',
 		hooks: {
-			performSyntaxAnalysis: async ({ codeBlock, styleVariants, config: { logger } }) => {
+			performSyntaxAnalysis: async ({ codeBlock, styleVariants }) => {
 				const codeLines = codeBlock.getLines();
 				const code = codeBlock.code;
 

@@ -2,11 +2,11 @@ import { ExpressiveCodeTheme, type ExpressiveCodeEngineConfig, type ExpressiveCo
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { pluginFrames } from '@expressive-code/plugin-frames';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
-import { customPluginPrism } from './CustomPluginPrism';
+import { customPluginPrism } from '../prism/CustomPluginPrism';
 import { pluginTextMarkers } from '@expressive-code/plugin-text-markers';
 import { type ThemeRegistration } from './types';
 // eslint-disable-next-line no-relative-import-paths/no-relative-import-paths -- needed for vite to load this correctly
-import { getECTheme } from './ECTheme';
+import { getECTheme } from '../themes/ECTheme';
 
 export interface EcSettingsProps {
 	preferThemeColors: boolean;

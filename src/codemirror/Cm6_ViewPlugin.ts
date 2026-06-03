@@ -1,189 +1,239 @@
-import type ShikiPlugin from 'src/main';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
-import { StateEffect, StateField, type Extension, type Range } from '@codemirror/state';
-import { debounce } from 'obsidian';
-import { Cm6_SyntaxTreeParser, DecorationUpdateType } from 'src/codemirror/Cm6_SyntaxTreeParser';
-import { Cm6_DecorationBuilder } from 'src/codemirror/Cm6_DecorationBuilder';
+import type ShikiPlugin from "src/main";
+import {
+  Decoration,
+  type DecorationSet,
+  EditorView,
+  ViewPlugin,
+  type ViewUpdate,
+} from "@codemirror/view";
+import {
+  StateEffect,
+  StateField,
+  type Extension,
+  type Range,
+} from "@codemirror/state";
+import { debounce } from "obsidian";
+import {
+  Cm6_SyntaxTreeParser,
+  DecorationUpdateType,
+} from "src/codemirror/Cm6_SyntaxTreeParser";
+import { Cm6_DecorationBuilder } from "src/codemirror/Cm6_DecorationBuilder";
 
 export const updateDecorationsEffect = StateEffect.define<DecorationSet>();
 
 export const shikiDecorationsField = StateField.define<DecorationSet>({
-	create() {
-		return Decoration.none;
-	},
-	update(decorations, tr) {
-		decorations = decorations.map(tr.changes);
-		for (const e of tr.effects) {
-			if (e.is(updateDecorationsEffect)) {
-				decorations = e.value;
-			}
-		}
-		return decorations;
-	},
-	provide: f => EditorView.decorations.from(f),
+  create() {
+    return Decoration.none;
+  },
+  update(decorations, tr) {
+    decorations = decorations.map(tr.changes);
+    for (const e of tr.effects) {
+      if (e.is(updateDecorationsEffect)) {
+        decorations = e.value;
+      }
+    }
+    return decorations;
+  },
+  provide: (f) => EditorView.decorations.from(f),
 });
 
 export function createCm6Plugin(plugin: ShikiPlugin): Extension {
-	const viewPlugin = ViewPlugin.fromClass(
-		class Cm6ViewPlugin {
-			view: EditorView;
+  const viewPlugin = ViewPlugin.fromClass(
+    class Cm6ViewPlugin {
+      view: EditorView;
 
-			pendingDocChanged = false;
-			updateFn: () => Promise<void>;
+      pendingDocChanged = false;
+      updateFn: () => Promise<void>;
 
-			debouncedDocChangedUpdate: (() => void) & { cancel(): void };
-			debouncedViewportUpdate: (() => void) & { cancel(): void };
-			debouncedCompositionEndUpdate: (() => void) & { cancel(): void };
+      debouncedDocChangedUpdate: (() => void) & { cancel(): void };
+      debouncedViewportUpdate: (() => void) & { cancel(): void };
+      debouncedCompositionEndUpdate: (() => void) & { cancel(): void };
 
-			constructor(view: EditorView) {
-				this.view = view;
-				void this.updateWidgets(view);
+      constructor(view: EditorView) {
+        this.view = view;
+        void this.updateWidgets(view);
 
-				this.updateFn = (): Promise<void> => {
-					return this.updateWidgets(this.view);
-				};
-				plugin.activeCm6Plugins.add(this.updateFn);
+        this.updateFn = (): Promise<void> => {
+          return this.updateWidgets(this.view);
+        };
+        plugin.activeCm6Plugins.add(this.updateFn);
 
-				this.debouncedDocChangedUpdate = debounce(
-					() => {
-						const docChanged = this.pendingDocChanged;
-						this.pendingDocChanged = false;
-						void this.updateWidgets(this.view, docChanged);
-					},
-					300,
-					true,
-				);
+        this.debouncedDocChangedUpdate = debounce(
+          () => {
+            const docChanged = this.pendingDocChanged;
+            this.pendingDocChanged = false;
+            void this.updateWidgets(this.view, docChanged);
+          },
+          300,
+          true,
+        );
 
-				this.debouncedViewportUpdate = debounce(
-					() => {
-						const docChanged = this.pendingDocChanged;
-						this.pendingDocChanged = false;
-						void this.updateWidgets(this.view, docChanged);
-					},
-					150,
-					true,
-				);
+        this.debouncedViewportUpdate = debounce(
+          () => {
+            const docChanged = this.pendingDocChanged;
+            this.pendingDocChanged = false;
+            void this.updateWidgets(this.view, docChanged);
+          },
+          150,
+          true,
+        );
 
-				this.debouncedCompositionEndUpdate = debounce(
-					() => {
-						const docChanged = this.pendingDocChanged;
-						this.pendingDocChanged = false;
-						void this.updateWidgets(this.view, docChanged);
-					},
-					100,
-					true,
-				);
-			}
+        this.debouncedCompositionEndUpdate = debounce(
+          () => {
+            const docChanged = this.pendingDocChanged;
+            this.pendingDocChanged = false;
+            void this.updateWidgets(this.view, docChanged);
+          },
+          100,
+          true,
+        );
+      }
 
-			update(update: ViewUpdate): void {
-				if (update.docChanged || update.selectionSet || update.viewportChanged) {
-					this.view = update.view;
-					this.pendingDocChanged = this.pendingDocChanged || update.docChanged;
+      update(update: ViewUpdate): void {
+        if (
+          update.docChanged ||
+          update.selectionSet ||
+          update.viewportChanged
+        ) {
+          this.view = update.view;
+          this.pendingDocChanged = this.pendingDocChanged || update.docChanged;
 
-					this.debouncedDocChangedUpdate.cancel();
-					this.debouncedViewportUpdate.cancel();
-					this.debouncedCompositionEndUpdate.cancel();
+          this.debouncedDocChangedUpdate.cancel();
+          this.debouncedViewportUpdate.cancel();
+          this.debouncedCompositionEndUpdate.cancel();
 
-					if (update.view.composing) {
-						return;
-					}
+          if (update.view.composing) {
+            return;
+          }
 
-					if (update.docChanged) {
-						this.debouncedDocChangedUpdate();
-					} else {
-						this.debouncedViewportUpdate();
-					}
-				}
-			}
+          if (update.docChanged) {
+            this.debouncedDocChangedUpdate();
+          } else {
+            this.debouncedViewportUpdate();
+          }
+        }
+      }
 
-			async updateWidgets(view: EditorView, docChanged: boolean = true): Promise<void> {
-				if (view.composing) {
-					return;
-				}
+      async updateWidgets(
+        view: EditorView,
+        docChanged: boolean = true,
+      ): Promise<void> {
+        if (view.composing) {
+          return;
+        }
 
-				const capturedState = view.state;
-				const newDecorationsList: Range<Decoration>[] = [];
-				const removeRanges: { from: number; to: number }[] = [];
+        const capturedState = view.state;
+        const newDecorationsList: Range<Decoration>[] = [];
+        const removeRanges: { from: number; to: number }[] = [];
 
-				const decorationUpdates = Cm6_SyntaxTreeParser.getDecorationUpdates(view, plugin, docChanged);
+        const decorationUpdates = Cm6_SyntaxTreeParser.getDecorationUpdates(
+          view,
+          plugin,
+          docChanged,
+        );
 
-				const highlightPromises = decorationUpdates.map(async node => {
-					if (node.type === DecorationUpdateType.Remove) {
-						return { type: DecorationUpdateType.Remove as const, from: node.from, to: node.to };
-					} else {
-						const decorations = await Cm6_DecorationBuilder.buildDecorations(plugin, node.codeStart ?? node.from, node.codeEnd ?? node.to, node.lang, node.content);
-						return { type: DecorationUpdateType.Insert as const, node, decorations };
-					}
-				});
+        const highlightPromises = decorationUpdates.map(async (node) => {
+          if (node.type === DecorationUpdateType.Remove) {
+            return {
+              type: DecorationUpdateType.Remove as const,
+              from: node.from,
+              to: node.to,
+            };
+          } else {
+            const decorations = await Cm6_DecorationBuilder.buildDecorations(
+              plugin,
+              node.codeStart ?? node.from,
+              node.codeEnd ?? node.to,
+              node.lang,
+              node.content,
+            );
+            return {
+              type: DecorationUpdateType.Insert as const,
+              node,
+              decorations,
+            };
+          }
+        });
 
-				const highlightResults = await Promise.all(highlightPromises);
+        const highlightResults = await Promise.all(highlightPromises);
 
-				if (this.view.state !== capturedState || this.view.composing) {
-					return;
-				}
+        if (this.view.state !== capturedState || this.view.composing) {
+          return;
+        }
 
-				for (const result of highlightResults) {
-					if (result.type === DecorationUpdateType.Remove) {
-						removeRanges.push({ from: result.from, to: result.to });
-					} else {
-						const { node, decorations } = result;
-						removeRanges.push({ from: node.from, to: node.to });
-						if (node.hideLang && node.hideStart !== undefined && node.hideEnd !== undefined) {
-							decorations.unshift(Decoration.replace({}).range(node.hideStart, node.hideEnd));
-						}
-						newDecorationsList.push(...decorations);
-					}
-				}
+        for (const result of highlightResults) {
+          if (result.type === DecorationUpdateType.Remove) {
+            removeRanges.push({ from: result.from, to: result.to });
+          } else {
+            const { node, decorations } = result;
+            removeRanges.push({ from: node.from, to: node.to });
+            if (
+              node.hideLang &&
+              node.hideStart !== undefined &&
+              node.hideEnd !== undefined
+            ) {
+              decorations.unshift(
+                Decoration.replace({}).range(node.hideStart, node.hideEnd),
+              );
+            }
+            newDecorationsList.push(...decorations);
+          }
+        }
 
-				let finalDecorations = this.view.state.field(shikiDecorationsField, false) ?? Decoration.none;
-				for (const r of removeRanges) {
-					finalDecorations = finalDecorations.update({
-						filterFrom: r.from,
-						filterTo: r.to,
-						filter: () => false,
-					});
-				}
+        let finalDecorations =
+          this.view.state.field(shikiDecorationsField, false) ??
+          Decoration.none;
+        for (const r of removeRanges) {
+          finalDecorations = finalDecorations.update({
+            filterFrom: r.from,
+            filterTo: r.to,
+            filter: () => false,
+          });
+        }
 
-				if (newDecorationsList.length > 0) {
-					newDecorationsList.sort((a, b) => {
-						const diff = a.from - b.from;
-						return diff !== 0 ? diff : a.to - b.to;
-					});
-					finalDecorations = finalDecorations.update({
-						add: newDecorationsList,
-					});
-				}
+        if (newDecorationsList.length > 0) {
+          newDecorationsList.sort((a, b) => {
+            const diff = a.from - b.from;
+            return diff !== 0 ? diff : a.to - b.to;
+          });
+          finalDecorations = finalDecorations.update({
+            add: newDecorationsList,
+          });
+        }
 
-				if ((removeRanges.length > 0 || newDecorationsList.length > 0) && this.view.state === capturedState) {
-					window.requestAnimationFrame(() => {
-						if (this.view.state === capturedState && !this.view.composing) {
-							this.view.dispatch({
-								effects: updateDecorationsEffect.of(finalDecorations),
-							});
-						}
-					});
-				}
-			}
+        if (
+          (removeRanges.length > 0 || newDecorationsList.length > 0) &&
+          this.view.state === capturedState
+        ) {
+          window.requestAnimationFrame(() => {
+            if (this.view.state === capturedState && !this.view.composing) {
+              this.view.dispatch({
+                effects: updateDecorationsEffect.of(finalDecorations),
+              });
+            }
+          });
+        }
+      }
 
-			destroy(): void {
-				this.debouncedDocChangedUpdate.cancel();
-				this.debouncedViewportUpdate.cancel();
-				this.debouncedCompositionEndUpdate.cancel();
-				plugin.activeCm6Plugins.delete(this.updateFn);
-			}
-		},
-		{
-			eventHandlers: {
-				compositionend(_event, _view) {
-					this.pendingDocChanged = true;
-					this.debouncedDocChangedUpdate.cancel();
-					this.debouncedViewportUpdate.cancel();
-					this.debouncedCompositionEndUpdate.cancel();
-					this.debouncedCompositionEndUpdate();
-				},
-			},
-		},
-	);
+      destroy(): void {
+        this.debouncedDocChangedUpdate.cancel();
+        this.debouncedViewportUpdate.cancel();
+        this.debouncedCompositionEndUpdate.cancel();
+        plugin.activeCm6Plugins.delete(this.updateFn);
+      }
+    },
+    {
+      eventHandlers: {
+        compositionend(_event, _view) {
+          this.pendingDocChanged = true;
+          this.debouncedDocChangedUpdate.cancel();
+          this.debouncedViewportUpdate.cancel();
+          this.debouncedCompositionEndUpdate.cancel();
+          this.debouncedCompositionEndUpdate();
+        },
+      },
+    },
+  );
 
-	return [shikiDecorationsField, viewPlugin];
+  return [shikiDecorationsField, viewPlugin];
 }

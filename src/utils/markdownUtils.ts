@@ -1,68 +1,73 @@
-import { type MarkdownPostProcessorContext } from 'obsidian';
+import { type MarkdownPostProcessorContext } from "obsidian";
 
-export function extractMetaString(ctx: MarkdownPostProcessorContext, containerEl: HTMLElement, language: string): string {
-	const sectionInfo = ctx.getSectionInfo(containerEl);
+export function extractMetaString(
+  ctx: MarkdownPostProcessorContext,
+  containerEl: HTMLElement,
+  language: string,
+): string {
+  const sectionInfo = ctx.getSectionInfo(containerEl);
 
-	if (sectionInfo === null) {
-		return '';
-	}
+  if (sectionInfo === null) {
+    return "";
+  }
 
-	const lines = sectionInfo.text.split('\n');
-	const startLine = lines[sectionInfo.lineStart];
+  const lines = sectionInfo.text.split("\n");
+  const startLine = lines[sectionInfo.lineStart];
+  if (startLine === undefined) return "";
 
-	// regexp to match the text after the code block language
-	const regex = new RegExp('^[^`~]*?\\s*(```+|~~~+)' + language + ' (.*)', 'g');
-	const match = regex.exec(startLine);
-	if (match !== null) {
-		return match[2];
-	} else {
-		return '';
-	}
+  // regexp to match the text after the code block language
+  const regex = new RegExp("^[^`~]*?\\s*(```+|~~~+)" + language + " (.*)", "g");
+  const match = regex.exec(startLine);
+  if (match !== null && match[2]) {
+    return match[2];
+  } else {
+    return "";
+  }
 }
 
 export function stripCommonIndentation(source: string): string {
-	const lines = source.split('\n');
+  const lines = source.split("\n");
 
-	// Find the minimum common indentation of non-empty lines
-	let minIndent: string | null = null;
-	for (const line of lines) {
-		if (line.trim() === '') {
-			continue;
-		}
-		const match = /^[ \t]*/.exec(line);
-		if (match) {
-			const indent = match[0];
-			if (minIndent === null || indent.length < minIndent.length) {
-				minIndent = indent;
-			}
-		}
-	}
+  // Find the minimum common indentation of non-empty lines
+  let minIndent: string | null = null;
+  for (const line of lines) {
+    if (line.trim() === "") {
+      continue;
+    }
+    const match = /^[ \t]*/.exec(line);
+    if (match) {
+      const indent = match[0];
+      if (minIndent === null || indent.length < minIndent.length) {
+        minIndent = indent;
+      }
+    }
+  }
 
-	if (!minIndent || minIndent.length === 0) {
-		return source;
-	}
+  if (!minIndent || minIndent.length === 0) {
+    return source;
+  }
 
-	// Strip the common indentation from all lines
-	const prefix = minIndent;
-	return lines
-		.map(line => {
-			if (line.startsWith(prefix)) {
-				return line.slice(prefix.length);
-			}
-			return line;
-		})
-		.join('\n');
+  // Strip the common indentation from all lines
+  const prefix = minIndent;
+  return lines
+    .map((line) => {
+      if (line.startsWith(prefix)) {
+        return line.slice(prefix.length);
+      }
+      return line;
+    })
+    .join("\n");
 }
 
 export function calculateListIndentationLevel(source: string): number {
-	const firstLine = source.split('\n')[0] ?? '';
-	const match = /^[ \t]*/.exec(firstLine);
-	const indent = match ? match[0] : '';
-	let spaces = 0;
-	let tabs = 0;
-	for (const char of indent) {
-		if (char === ' ') spaces++;
-		else if (char === '\t') tabs++;
-	}
-	return tabs + Math.floor(spaces / 4);
+  const firstLine = source.split("\n")[0] ?? "";
+  const match = /^[ \t]*/.exec(firstLine);
+  const indent = match ? match[0] : "";
+  let spaces = 0;
+  let tabs = 0;
+  for (const char of indent) {
+    if (char === " ") spaces++;
+    else if (char === "\t") tabs++;
+  }
+  return tabs + Math.floor(spaces / 4);
 }

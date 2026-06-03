@@ -1,43 +1,24 @@
-// @ts-check
-
-import eslint from '@eslint/js';
-import { defineConfig } from 'eslint/config';
-import tseslint from 'typescript-eslint';
-import obsidianmd from 'eslint-plugin-obsidianmd';
+import { defineConfig, globalIgnores } from "eslint/config";
+import tseslint from "typescript-eslint";
+import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default defineConfig(
-	{
-		ignores: ['npm/', 'node_modules/', 'exampleVault/', 'automation/', 'main.js', '*.svelte'],
-	},
-	obsidianmd.configs.recommended,
-	{
-		files: ['src/**/*.ts'],
-		extends: [
-			eslint.configs.recommended,
-			...tseslint.configs.recommended,
-			...tseslint.configs.recommendedTypeChecked,
-			...tseslint.configs.stylisticTypeChecked,
-		],
-		languageOptions: {
-			parser: tseslint.parser,
-			parserOptions: {
-				project: true,
-			},
-		},
-		rules: {
-			'@typescript-eslint/no-explicit-any': ['warn'],
-
-			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
-			'@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'inline-type-imports' }],
-
-			'@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
-			'@typescript-eslint/restrict-template-expressions': 'off',
-
-			'@typescript-eslint/ban-ts-comment': 'off',
-			'@typescript-eslint/no-empty-function': 'off',
-			'@typescript-eslint/no-inferrable-types': 'off',
-			'@typescript-eslint/explicit-function-return-type': ['warn'],
-			'@typescript-eslint/require-await': 'off',
-		},
-	},
+  obsidianmd.configs.recommended,
+  {
+    files: ["src/**/*.ts"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: true,
+      },
+    },
+  },
+  globalIgnores([
+    "dist/**",
+    "node_modules/**",
+    "*.json",
+    "*.mts",
+    "*.mjs",
+    "main.js",
+  ]),
 );

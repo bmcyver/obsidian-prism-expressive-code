@@ -1,43 +1,55 @@
-import { type MarkdownPostProcessorContext } from 'obsidian';
-import type ShikiPlugin from 'src/main';
-import { BaseCodeBlock } from 'src/code-blocks/BaseCodeBlock';
+import { type MarkdownPostProcessorContext } from "obsidian";
+import type ShikiPlugin from "src/main";
+import { BaseCodeBlock } from "src/code-blocks/BaseCodeBlock";
 
 export class InlineCodeBlock extends BaseCodeBlock {
-	constructor(plugin: ShikiPlugin, containerEl: HTMLElement, source: string, language: string, ctx: MarkdownPostProcessorContext) {
-		super(plugin, containerEl, source, language, ctx);
-	}
+  constructor(
+    plugin: ShikiPlugin,
+    containerEl: HTMLElement,
+    source: string,
+    language: string,
+    ctx: MarkdownPostProcessorContext,
+  ) {
+    super(plugin, containerEl, source, language, ctx);
+  }
 
-	private async render(): Promise<void> {
-		if (!this.plugin.highlighter) {
-			return;
-		}
-		this.containerEl.empty();
-		this.containerEl.classList.add('shiki-inline');
+  private async render(): Promise<void> {
+    if (!this.plugin.highlighter) {
+      return;
+    }
+    this.containerEl.empty();
+    this.containerEl.classList.add("shiki-inline");
 
-		const highlight = await this.plugin.highlighter.getHighlightTokens(this.source, this.language);
-		const tokens = highlight?.tokens;
-		if (!tokens?.length) {
-			return;
-		}
+    const highlight = await this.plugin.highlighter.getHighlightTokens(
+      this.source,
+      this.language,
+    );
+    const tokens = highlight?.tokens;
+    if (!tokens?.length) {
+      return;
+    }
 
-		this.plugin.highlighter.inlineHighlighter.renderTokens(tokens, this.containerEl);
-	}
+    this.plugin.highlighter.inlineHighlighter.renderTokens(
+      tokens,
+      this.containerEl,
+    );
+  }
 
-	public async rerenderOnNoteChange(): Promise<void> {
-		// noop for inline code blocks
-	}
+  public async rerenderOnNoteChange(): Promise<void> {
+    // noop for inline code blocks
+  }
 
-	public async forceRerender(): Promise<void> {
-		await this.render();
-	}
+  public async forceRerender(): Promise<void> {
+    await this.render();
+  }
 
-	public onload(): void {
-		super.onload();
-		void this.render();
-	}
+  public onload(): void {
+    super.onload();
+    void this.render();
+  }
 
-	public onunload(): void {
-		super.onunload();
-		this.containerEl.innerText = 'Unloaded shiki inline code block';
-	}
+  public onunload(): void {
+    super.onunload();
+    this.containerEl.innerText = "Unloaded shiki inline code block";
+  }
 }

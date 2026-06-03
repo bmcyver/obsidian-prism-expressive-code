@@ -1,30 +1,23 @@
 {
-	"compilerOptions": {
-		"paths": {
-			"src/*": ["./src/*"]
-		},
-		"module": "ESNext",
-		"target": "ESNext",
-		"allowJs": true,
-		"checkJs": true,
-		"noImplicitAny": true,
-		"strict": true,
-		"strictNullChecks": true,
-		"noImplicitReturns": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"moduleResolution": "bundler",
-		"importHelpers": true,
-		"isolatedModules": true,
-		"skipLibCheck": true,
-		"verbatimModuleSyntax": true,
-		"resolveJsonModule": true,
-		"moduleDetection": "force",
-		"sourceMap": true,
-		"lib": ["DOM", "ESNext"],
-		"allowSyntheticDefaultImports": true,
-		"types": ["node", "vite/client"],
-		"noEmit": true
-	},
-	"include": ["src/**/*.ts", "src/**/*.d.ts"]
+  "compilerOptions": {
+    "paths": {
+      "src/*": ["./src/*"]
+    },
+    "rootDir": ".",
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "module": "ESNext",
+    "target": "esnext",
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ESNext", "DOM"]
+  },
+  "include": ["src/**/*.ts"]
 }

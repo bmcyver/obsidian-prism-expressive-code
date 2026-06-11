@@ -148,6 +148,12 @@ export function createLivePreviewPlugin(
         );
       }
 
+      cancelAllDebounces(): void {
+        this.debouncedDocChangedUpdate.cancel();
+        this.debouncedViewportUpdate.cancel();
+        this.debouncedCompositionEndUpdate.cancel();
+      }
+
       update(update: ViewUpdate): void {
         if (
           update.docChanged ||
@@ -157,9 +163,7 @@ export function createLivePreviewPlugin(
           this.view = update.view;
           this.pendingDocChanged = this.pendingDocChanged || update.docChanged;
 
-          this.debouncedDocChangedUpdate.cancel();
-          this.debouncedViewportUpdate.cancel();
-          this.debouncedCompositionEndUpdate.cancel();
+          this.cancelAllDebounces();
 
           if (update.view.composing) {
             return;
@@ -274,9 +278,7 @@ export function createLivePreviewPlugin(
       }
 
       destroy(): void {
-        this.debouncedDocChangedUpdate.cancel();
-        this.debouncedViewportUpdate.cancel();
-        this.debouncedCompositionEndUpdate.cancel();
+        this.cancelAllDebounces();
         plugin.activeCm6Plugins.delete(this.updateFn);
       }
     },
@@ -284,9 +286,7 @@ export function createLivePreviewPlugin(
       eventHandlers: {
         compositionend(_event, _view) {
           this.pendingDocChanged = true;
-          this.debouncedDocChangedUpdate.cancel();
-          this.debouncedViewportUpdate.cancel();
-          this.debouncedCompositionEndUpdate.cancel();
+          this.cancelAllDebounces();
           this.debouncedCompositionEndUpdate();
         },
       },

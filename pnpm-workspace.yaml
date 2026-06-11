@@ -1,0 +1,6 @@
+packages:
+  - "."
+  - "expressive-code"
+
+overrides:
+  "@expressive-code/core": "workspace:*"

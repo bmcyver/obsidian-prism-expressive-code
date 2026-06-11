@@ -14,7 +14,7 @@ import "virtual:ec-runtime";
 export default class PrismExpressiveCodePlugin extends Plugin {
   highlighter!: CodeHighlighter;
   codeBlockManager!: CodeBlockManager;
-  settings!: Settings;
+  declare settings: Settings;
   loadedSettings!: Settings;
   activeCm6Plugins = new Set<() => Promise<void>>();
   lastDarkMode = false;

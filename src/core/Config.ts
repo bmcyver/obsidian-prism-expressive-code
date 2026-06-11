@@ -57,7 +57,9 @@ export function createCssVariableThemeBundle(
       return existing;
     }
 
-    const placeholder = `#${placeholderCounter.toString(16).padStart(6, "0").toUpperCase()}`;
+    // Start offset at 0xE00000 to prevent conflicts with black (#000000) or other very common colors
+    const colorInt = 0xE00000 + placeholderCounter;
+    const placeholder = `#${colorInt.toString(16).toUpperCase()}`;
     placeholderCounter += 1;
     cssVarToPlaceholder.set(value, placeholder);
     return placeholder;

@@ -7,7 +7,7 @@ export class LRUCache<K, V> {
   private cache: Map<K, V>;
 
   constructor(max = 100) {
-    this.max = max;
+    this.max = Math.max(1, max);
     this.cache = new Map();
   }
 
@@ -23,7 +23,10 @@ export class LRUCache<K, V> {
     if (this.cache.has(key)) {
       this.cache.delete(key);
     } else if (this.cache.size >= this.max) {
-      this.cache.delete(this.cache.keys().next().value!);
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.cache.delete(oldestKey);
+      }
     }
     this.cache.set(key, val);
   }
@@ -37,6 +40,22 @@ export class LRUCache<K, V> {
   }
 }
 
+function getLineAt(text: string, lineIndex: number): string | undefined {
+  let startIdx = 0;
+  for (let i = 0; i < lineIndex; i++) {
+    const nextNewline = text.indexOf("\n", startIdx);
+    if (nextNewline === -1) {
+      return undefined;
+    }
+    startIdx = nextNewline + 1;
+  }
+  const endIdx = text.indexOf("\n", startIdx);
+  if (endIdx === -1) {
+    return text.slice(startIdx);
+  }
+  return text.slice(startIdx, endIdx);
+}
+
 export function extractMetaString(
   ctx: MarkdownPostProcessorContext,
   containerEl: HTMLElement,
@@ -48,8 +67,7 @@ export function extractMetaString(
     return "";
   }
 
-  const lines = sectionInfo.text.split("\n");
-  const startLine = lines[sectionInfo.lineStart];
+  const startLine = getLineAt(sectionInfo.text, sectionInfo.lineStart);
   if (startLine === undefined) return "";
 
   // Escape special regex characters in language to prevent syntax errors (e.g., c++)

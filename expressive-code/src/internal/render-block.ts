@@ -1,0 +1,266 @@
+import type { Element } from "../hast";
+import { addClassName, setInlineStyle, h } from "../hast";
+import { ExpressiveCodePlugin } from "../common/plugin";
+import {
+  ExpressiveCodeHookContext,
+  ExpressiveCodeHookContextBase,
+  ExpressiveCodePluginHooks_BeforeRendering,
+  runHooks,
+} from "../common/plugin-hooks";
+import { PluginStyles } from "./css";
+import {
+  PluginGutterElement,
+  getRenderEmptyLineFn,
+  renderLineToAst,
+} from "./render-line";
+import { isBoolean, isHastElement, newTypeError } from "./type-checks";
+import { AnnotationRenderPhaseOrder } from "../common/annotation";
+import { ExpressiveCodeBlock } from "../common/block";
+import { GutterElement } from "../common/gutter";
+
+export async function renderBlock({
+  codeBlock,
+  groupContents,
+  locale,
+  config,
+  plugins,
+  cssVar,
+  cssVarName,
+  styleVariants,
+}: {
+  plugins: readonly ExpressiveCodePlugin[];
+} & ExpressiveCodeHookContextBase) {
+  const state: ExpressiveCodeProcessingState = {
+    canEditAnnotations: true,
+    canEditCode: true,
+    canEditLanguage: true,
+    canEditMetadata: true,
+  };
+  codeBlock.state = state;
+
+  const blockStyles: PluginStyles[] = [];
+  const gutterElements: PluginGutterElement[] = [];
+
+  const runHooksContext = {
+    plugins,
+    config,
+  };
+  const baseContext: Omit<
+    ExpressiveCodeHookContext,
+    "addStyles" | "addGutterElement"
+  > = {
+    codeBlock,
+    groupContents,
+    locale,
+    config,
+    cssVar,
+    cssVarName,
+    styleVariants,
+  };
+
+  const runBeforeRenderingHooks = async (
+    key: keyof ExpressiveCodePluginHooks_BeforeRendering,
+  ) => {
+    await runHooks(key, runHooksContext, async ({ hookFn, plugin }) => {
+      await hookFn({
+        ...baseContext,
+        addStyles: (styles: string) =>
+          blockStyles.push({ pluginName: plugin.name, styles }),
+        addGutterElement: (gutterElement: GutterElement) => {
+          if (!gutterElement || typeof gutterElement !== "object")
+            throw newTypeError("object", gutterElement, "gutterElement");
+          if (typeof gutterElement.renderLine !== "function")
+            throw newTypeError(
+              '"function" type',
+              typeof gutterElement.renderLine,
+              "gutterElement.renderLine",
+            );
+          if (
+            gutterElement.renderPhase &&
+            AnnotationRenderPhaseOrder.indexOf(gutterElement.renderPhase) === -1
+          )
+            throw newTypeError(
+              "AnnotationRenderPhase",
+              gutterElement.renderPhase,
+              "gutterElement.renderPhase",
+            );
+          gutterElements.push({ pluginName: plugin.name, gutterElement });
+        },
+      });
+    });
+  };
+
+  // Run hooks for preprocessing metadata and code
+  state.canEditCode = false;
+  await runBeforeRenderingHooks("preprocessLanguage");
+  state.canEditLanguage = false;
+  // Apply default props to the code block now that the language is fixed
+  applyDefaultProps(codeBlock, config);
+  // Continue with the next hooks
+  await runBeforeRenderingHooks("preprocessMetadata");
+  state.canEditCode = true;
+  await runBeforeRenderingHooks("preprocessCode");
+
+  // Run hooks for processing & finalizing the code
+  await runBeforeRenderingHooks("performSyntaxAnalysis");
+  await runBeforeRenderingHooks("postprocessAnalyzedCode");
+  state.canEditCode = false;
+
+  // Run hooks for annotating the code
+  await runBeforeRenderingHooks("annotateCode");
+  await runBeforeRenderingHooks("postprocessAnnotations");
+  state.canEditMetadata = false;
+  state.canEditAnnotations = false;
+
+  // Render lines to AST and run rendering hooks
+  const lines = codeBlock.getLines();
+  const renderedAstLines: Element[] = [];
+  const renderEmptyLine = getRenderEmptyLineFn({
+    gutterElements,
+    ...baseContext,
+  });
+  const {
+    wrap = false,
+    preserveIndent = true,
+    hangingIndent = 0,
+  } = codeBlock.props;
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex];
+    // Render the current line to an AST and wrap it in an object that can be passed
+    // through all hooks, allowing plugins to edit or completely replace the AST
+    const lineRenderData = {
+      lineAst: renderLineToAst({
+        line,
+        lineIndex,
+        gutterElements,
+        ...baseContext,
+      }),
+    };
+    // Add indent information if wrapping is enabled and the configuration
+    // either requests preserving indent or rendering a hanging indent
+    if (wrap && (preserveIndent || hangingIndent > 0)) {
+      const baseIndent = preserveIndent
+        ? (line.text.match(/^\s*/)?.[0].length ?? 0)
+        : 0;
+      const indent = baseIndent + hangingIndent;
+      if (indent > 0)
+        setInlineStyle(lineRenderData.lineAst, "--ecIndent", `${indent}ch`);
+    }
+    // Allow plugins to modify or even completely replace the AST
+    await runHooks(
+      "postprocessRenderedLine",
+      runHooksContext,
+      async ({ hookFn, plugin }) => {
+        await hookFn({
+          ...baseContext,
+          addStyles: (styles: string) =>
+            blockStyles.push({ pluginName: plugin.name, styles }),
+          line,
+          lineIndex,
+          renderData: lineRenderData,
+          renderEmptyLine,
+        });
+        if (!isHastElement(lineRenderData.lineAst)) {
+          throw newTypeError("hast Element", lineRenderData.lineAst, "lineAst");
+        }
+      },
+    );
+    renderedAstLines.push(lineRenderData.lineAst);
+  }
+
+  // Combine rendered lines into a block AST and wrap it in an object that can be passed
+  // through all hooks, allowing plugins to edit or completely replace the AST
+  const blockRenderData = {
+    blockAst: buildCodeBlockAstFromRenderedLines(codeBlock, renderedAstLines),
+  };
+  await runHooks(
+    "postprocessRenderedBlock",
+    runHooksContext,
+    async ({ hookFn, plugin }) => {
+      await hookFn({
+        ...baseContext,
+        addStyles: (styles: string) =>
+          blockStyles.push({ pluginName: plugin.name, styles }),
+        renderData: blockRenderData,
+        renderEmptyLine,
+      });
+      if (!isHastElement(blockRenderData.blockAst)) {
+        throw newTypeError(
+          "hast Element",
+          blockRenderData.blockAst,
+          "blockAst",
+        );
+      }
+    },
+  );
+
+  return {
+    renderedBlockAst: blockRenderData.blockAst,
+    blockStyles,
+  };
+}
+
+function buildCodeBlockAstFromRenderedLines(
+  codeBlock: ExpressiveCodeBlock,
+  renderedLines: Element[],
+) {
+  const preProperties = { dataLanguage: codeBlock.language || "plaintext" };
+  const preElement = h("pre", preProperties, h("code", renderedLines));
+  if (codeBlock.props.wrap) {
+    const maxLineLength = codeBlock
+      .getLines()
+      .reduce((max, line) => Math.max(max, line.text.length), 0);
+    addClassName(preElement, "wrap");
+    setInlineStyle(preElement, "--ecMaxLine", `${maxLineLength}ch`);
+  }
+  return preElement;
+}
+
+function applyDefaultProps(
+  codeBlock: ExpressiveCodeBlock,
+  config: ExpressiveCodeHookContextBase["config"],
+) {
+  // Build default props by merging the base defaults with the language-specific overrides
+  const { overridesByLang = {}, ...baseDefaults } = config.defaultProps;
+  const mergedDefaults = { ...baseDefaults };
+  Object.keys(overridesByLang).forEach((key) => {
+    const langs = key.split(",").map((lang) => lang.trim());
+    if (langs.includes(codeBlock.language)) {
+      Object.assign(mergedDefaults, overridesByLang[key]);
+    }
+  });
+  // Apply the merged default values to undefined code block props
+  const defaultKeys = Object.keys(
+    mergedDefaults,
+  ) as (keyof ExpressiveCodeBlock["props"])[];
+  const undefinedValueKeys = defaultKeys.filter(
+    (key) => codeBlock.props[key] === undefined,
+  );
+  Object.assign(
+    codeBlock.props,
+    Object.fromEntries(
+      undefinedValueKeys.map((key) => [key, mergedDefaults[key]]),
+    ),
+  );
+}
+
+export interface ExpressiveCodeProcessingState {
+  canEditCode: boolean;
+  canEditLanguage: boolean;
+  canEditMetadata: boolean;
+  canEditAnnotations: boolean;
+}
+
+export function validateExpressiveCodeProcessingState(
+  state: ExpressiveCodeProcessingState | undefined,
+) {
+  const isValid =
+    state &&
+    // Expect all properties to be defined and booleans
+    isBoolean(state.canEditCode) &&
+    isBoolean(state.canEditLanguage) &&
+    isBoolean(state.canEditMetadata) &&
+    isBoolean(state.canEditAnnotations);
+  if (!isValid) throw newTypeError("ExpressiveCodeProcessingState", state);
+}

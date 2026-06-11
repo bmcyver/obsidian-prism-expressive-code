@@ -65,7 +65,7 @@ export class CodeBlockManager {
 
   public async forceRerenderAll(): Promise<void> {
     const promises: Promise<void>[] = [];
-    for (const [_, codeBlocks] of this.activeCodeBlocks) {
+    for (const codeBlocks of this.activeCodeBlocks.values()) {
       for (const codeBlock of codeBlocks) {
         promises.push(codeBlock.forceRerender());
       }

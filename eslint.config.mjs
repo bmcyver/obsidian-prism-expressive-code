@@ -16,6 +16,7 @@ export default defineConfig(
   globalIgnores([
     "dist/**",
     "node_modules/**",
+    "expressive-code/**",
     "*.json",
     "*.mts",
     "*.mjs",

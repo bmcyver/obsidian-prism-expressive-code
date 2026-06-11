@@ -26,7 +26,7 @@
     "vite-plugin-node-polyfills": "^0.28.0"
   },
   "dependencies": {
-    "@expressive-code/core": "^0.42.0",
+    "@expressive-code/core": "workspace:*",
     "@expressive-code/plugin-collapsible-sections": "^0.42.0",
     "@expressive-code/plugin-frames": "^0.42.0",
     "@expressive-code/plugin-line-numbers": "^0.42.0",

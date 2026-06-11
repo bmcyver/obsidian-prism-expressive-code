@@ -26,7 +26,7 @@ jobs:
       - name: Build plugin
         run: |
           pnpm install --frozen-lockfile
-          pnpm run build --filter=@expressive-code/core
+          pnpm --filter=@expressive-code/core run build
           pnpm run build
 
       - name: Check for optional styles

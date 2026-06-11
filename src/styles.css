@@ -1,40 +1,40 @@
 body {
-  --shiki-code-background: var(--code-background);
-  --shiki-code-normal: var(--text-muted);
-  --shiki-code-comment: var(--text-faint);
-  --shiki-code-function: var(--color-green);
-  --shiki-code-important: var(--color-orange);
-  --shiki-code-keyword: var(--color-pink);
-  --shiki-code-property: var(--color-cyan);
-  --shiki-code-punctuation: var(--text-muted);
-  --shiki-code-string: var(--color-yellow);
-  --shiki-code-value: var(--color-purple);
+  --pec-code-background: var(--code-background);
+  --pec-code-normal: var(--text-muted);
+  --pec-code-comment: var(--text-faint);
+  --pec-code-function: var(--color-green);
+  --pec-code-important: var(--color-orange);
+  --pec-code-keyword: var(--color-pink);
+  --pec-code-property: var(--color-cyan);
+  --pec-code-punctuation: var(--text-muted);
+  --pec-code-string: var(--color-yellow);
+  --pec-code-value: var(--color-purple);
 
-  /*--shiki-code-border-color: var(--background-modifier-border);*/
-  --shiki-code-block-border-color: transparent;
-  --shiki-code-block-border-radius: var(--code-radius);
-  --shiki-code-block-border-width: 0px; /* this has to have a unit */
-  --shiki-code-block-spacing: var(--p-spacing);
+  /*--pec-code-border-color: var(--background-modifier-border);*/
+  --pec-code-block-border-color: transparent;
+  --pec-code-block-border-radius: var(--code-radius);
+  --pec-code-block-border-width: 0px; /* this has to have a unit */
+  --pec-code-block-spacing: var(--p-spacing);
 
-  --shiki-highlight-red: rgba(var(--color-red-rgb), 0.5);
-  --shiki-highlight-green: rgba(var(--color-green-rgb), 0.5);
-  --shiki-highlight-neutral: var(--shiki-code-normal);
-  --shiki-highlight-red-background: rgba(var(--color-red-rgb), 0.1);
-  --shiki-highlight-green-background: rgba(var(--color-green-rgb), 0.1);
-  --shiki-highlight-neutral-background: rgba(var(--mono-rgb-100), 0.05);
+  --pec-highlight-red: rgba(var(--color-red-rgb), 0.5);
+  --pec-highlight-green: rgba(var(--color-green-rgb), 0.5);
+  --pec-highlight-neutral: var(--pec-code-normal);
+  --pec-highlight-red-background: rgba(var(--color-red-rgb), 0.1);
+  --pec-highlight-green-background: rgba(var(--color-green-rgb), 0.1);
+  --pec-highlight-neutral-background: rgba(var(--mono-rgb-100), 0.05);
 
-  --shiki-terminal-dots-color: var(--text-faint);
+  --pec-terminal-dots-color: var(--text-faint);
 
-  --shiki-tooltip-background: var(--background-modifier-message);
-  --shiki-tooltip-text-color: #fafafa;
+  --pec-tooltip-background: var(--background-modifier-message);
+  --pec-tooltip-text-color: #fafafa;
 
-  --shiki-gutter-border-color: var(--background-modifier-border);
-  --shiki-gutter-border-width: var(--border-width);
-  --shiki-gutter-text-color: var(--text-faint);
-  --shiki-gutter-text-color-highlight: var(--shiki-code-normal);
+  --pec-gutter-border-color: var(--background-modifier-border);
+  --pec-gutter-border-width: var(--border-width);
+  --pec-gutter-text-color: var(--text-faint);
+  --pec-gutter-text-color-highlight: var(--pec-code-normal);
 
-  --shiki-active-tab-border-width: 2px;
-  --shiki-active-tab-border-color: var(--shiki-highlight-neutral);
+  --pec-active-tab-border-width: 2px;
+  --pec-active-tab-border-color: var(--pec-highlight-neutral);
 }
 
 .edit-block-button {
@@ -77,7 +77,7 @@ div.expressive-code {
 
 .markdown-preview-view {
   div.expressive-code {
-    margin-block: var(--shiki-code-block-spacing);
+    margin-block: var(--pec-code-block-spacing);
   }
 }
 
@@ -86,22 +86,22 @@ div.markdown-preview-view
   > div
   > div.mod-header
   + div
-  > div.block-language-yaml.shiki-hide-in-reading-mode {
+  > div.block-language-yaml.pec-hide-in-reading-mode {
   display: none;
 }
 
-span.shiki-bold {
+span.pec-bold {
   font-weight: var(--bold-weight, 600);
 }
-span.shiki-italic {
+span.pec-italic {
   font-style: italic;
 }
-span.shiki-ul {
+span.pec-ul {
   text-decoration: underline;
 }
 
 /* Settings tab  */
-.setting-item-control input.shiki-custom-theme-folder {
+.setting-item-control input.pec-custom-theme-folder {
   min-width: 250px;
 }
 
@@ -122,8 +122,6 @@ span.shiki-ul {
 }
 
 /* Apply list indentation for code blocks in Live Preview */
-.markdown-source-view .shiki-code-block[style*="--shiki-indent-level"] {
-  margin-left: calc(
-    var(--shiki-indent-level, 0) * var(--list-indent)
-  ) !important;
+.markdown-source-view .pec-code-block[style*="--pec-indent-level"] {
+  margin-left: calc(var(--pec-indent-level, 0) * var(--list-indent)) !important;
 }

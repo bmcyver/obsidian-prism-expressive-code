@@ -1,5 +1,42 @@
 import { type MarkdownPostProcessorContext } from "obsidian";
 
+export const INLINE_CODE_REGEX = /^(.*)\{:([a-zA-Z0-9_\-+#]+)\}$/; // format: `code{:lang}`
+
+export class LRUCache<K, V> {
+  private max: number;
+  private cache: Map<K, V>;
+
+  constructor(max = 100) {
+    this.max = max;
+    this.cache = new Map();
+  }
+
+  get(key: K): V | undefined {
+    if (!this.cache.has(key)) return undefined;
+    const val = this.cache.get(key)!;
+    this.cache.delete(key);
+    this.cache.set(key, val);
+    return val;
+  }
+
+  set(key: K, val: V): void {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.max) {
+      this.cache.delete(this.cache.keys().next().value!);
+    }
+    this.cache.set(key, val);
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  get size(): number {
+    return this.cache.size;
+  }
+}
+
 export function extractMetaString(
   ctx: MarkdownPostProcessorContext,
   containerEl: HTMLElement,
@@ -15,8 +52,12 @@ export function extractMetaString(
   const startLine = lines[sectionInfo.lineStart];
   if (startLine === undefined) return "";
 
+  // Escape special regex characters in language to prevent syntax errors (e.g., c++)
+  const escapedLanguage = language.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // regexp to match the text after the code block language
-  const regex = new RegExp("^[^`~]*?\\s*(```+|~~~+)" + language + " (.*)", "g");
+  const regex = new RegExp(
+    "^[^`~]*?\\s*(```+|~~~+)" + escapedLanguage + " (.*)",
+  );
   const match = regex.exec(startLine);
   if (match !== null && match[2]) {
     return match[2];

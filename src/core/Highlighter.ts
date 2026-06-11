@@ -1,19 +1,19 @@
 import { ExpressiveCodeEngine } from "@expressive-code/core";
-import type ShikiPlugin from "src/main";
+import type PrismExpressiveCodePlugin from "../main";
 
-import { ThemeMapper } from "src/themes/ThemeMapper";
+import { ThemeMapper } from "../themes/ThemeManager";
 import { toDom } from "hast-util-to-dom";
-import { createEcEngineConfig } from "src/core/Config";
-import { LANGUAGE_BLACKLIST } from "src/languages/LanguageRegistry";
-import { clearStyleCache, LANGUAGE_ALIASES } from "src/prism/PrismUtils";
+import { createEcEngineConfig } from "./Config";
+import { LANGUAGE_BLACKLIST } from "../prism/PrismUtils";
+import { clearStyleCache, LANGUAGE_ALIASES } from "../prism/PrismUtils";
 import {
   InlineHighlighter,
   type TokensResult,
-} from "src/prism/InlineHighlighter";
+} from "../prism/InlineHighlighter";
 import type * as Prism from "prismjs";
 
 export class CodeHighlighter {
-  plugin: ShikiPlugin;
+  plugin: PrismExpressiveCodePlugin;
   themeMapper: ThemeMapper;
   inlineHighlighter: InlineHighlighter;
 
@@ -25,14 +25,17 @@ export class CodeHighlighter {
   customThemes: unknown[] = [];
   private safeLanguagesArray: string[] = [];
 
-  constructor(plugin: ShikiPlugin) {
+  constructor(plugin: PrismExpressiveCodePlugin) {
     this.plugin = plugin;
     this.themeMapper = new ThemeMapper(this.plugin);
     this.inlineHighlighter = new InlineHighlighter(this.themeMapper);
   }
 
   async load(): Promise<void> {
-    const prism = (window as unknown as { Prism: typeof Prism }).Prism;
+    const prism = (window as unknown as { Prism?: typeof Prism }).Prism;
+    if (!prism) {
+      return;
+    }
 
     const loadedPrismLangs = Object.keys(prism.languages).filter(
       (key) => typeof prism.languages[key] === "object",
@@ -105,7 +108,7 @@ export class CodeHighlighter {
     });
 
     container.empty();
-    container.append(toDom(this.themeMapper.fixAST(result.renderedGroupAst)));
+    container.append(toDom(result.renderedGroupAst));
   }
 
   async getHighlightTokens(

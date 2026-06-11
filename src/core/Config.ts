@@ -10,7 +10,7 @@ import { customPluginPrism } from "../prism/CustomPluginPrism";
 import { pluginTextMarkers } from "@expressive-code/plugin-text-markers";
 import { type ThemeRegistration } from "./types";
 
-import { getECTheme } from "../themes/ECTheme";
+import { getECTheme } from "../themes/ThemeManager";
 
 export interface EcSettingsProps {
   preferThemeColors: boolean;
@@ -28,7 +28,6 @@ export interface EcConfigInput {
   theme: ThemeRegistration;
   settings: EcSettingsProps;
 }
-
 export interface CssVariableThemeBundle {
   theme: ThemeRegistration;
   restoreCssVariables: (css: string) => string;
@@ -111,7 +110,6 @@ export function createCssVariableThemeBundle(
     },
   };
 }
-
 export function createEcEngineConfig(
   input: EcConfigInput,
 ): ExpressiveCodeEngineConfig {

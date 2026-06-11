@@ -9,7 +9,7 @@ pnpm run build
 ```
 
 ## Note
-- 번들 크기를 줄이기 위해 `one dark pro` 및 `one light` 테마만 기본 포함하고 있습니다. 추가 테마를 원하실 경우 [ThemeRegistry.ts](./src/themes/ThemeRegistry.ts) 파일을 수정해주세요.
+- 번들 크기를 줄이기 위해 `one dark pro` 및 `one light` 테마만 기본 포함하고 있습니다. 추가 테마를 원하실 경우 [ThemeManager.ts](./src/themes/ThemeManager.ts) 파일을 수정해주세요.
 - 실제 코드 하이라이팅은 `shiki` 원본과 약간의 차이가 있을 수 있습니다.
 - 번들 사이즈는 약 500kB 이하로 가볍게 유지됩니다.
 

@@ -4,6 +4,37 @@ import {
   type StyleValueOrValues,
   type UnresolvedStyleValue,
 } from "@expressive-code/core";
+import { type ThemeRegistration } from "../core/types";
+import type PrismExpressiveCodePlugin from "../main";
+
+export interface ThemeDefinition {
+  id: string;
+  displayName: string;
+  import: () => Promise<unknown>;
+}
+
+export const THEMES: ThemeDefinition[] = [
+  {
+    id: "one-dark-pro",
+    displayName: "One Dark Pro (dark)",
+    import: () => import("shiki/themes/one-dark-pro.mjs"),
+  },
+  {
+    id: "one-light",
+    displayName: "One Light (light)",
+    import: () => import("shiki/themes/one-light.mjs"),
+  },
+];
+
+export const VALID_THEME_IDS = new Set(THEMES.map((t) => t.id));
+
+export const THEME_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
+  THEMES.map((t) => [t.id, t.displayName]),
+);
+
+export const THEME_IMPORTS = Object.fromEntries(
+  THEMES.map((t) => [t.id, t.import]),
+);
 
 export function getECTheme(
   useThemeColors: boolean,
@@ -20,27 +51,27 @@ export function getECTheme(
     }: {
       theme: ExpressiveCodeTheme;
     }): StyleValueOrValues =>
-      theme.colors["editor.background"] ?? "var(--shiki-code-background)";
+      theme.colors["editor.background"] ?? "var(--pec-code-background)";
     foregroundColor = ({
       theme,
     }: {
       theme: ExpressiveCodeTheme;
     }): StyleValueOrValues =>
-      theme.colors["editor.foreground"] ?? "var(--shiki-code-normal)";
+      theme.colors["editor.foreground"] ?? "var(--pec-code-normal)";
     gutterBorderColor = ({
       theme,
     }: {
       theme: ExpressiveCodeTheme;
     }): StyleValueOrValues =>
       theme.colors["editorLineNumber.foreground"] ??
-      "var(--shiki-gutter-border-color)";
+      "var(--pec-gutter-border-color)";
     gutterTextColor = ({
       theme,
     }: {
       theme: ExpressiveCodeTheme;
     }): StyleValueOrValues =>
       theme.colors["editorLineNumber.foreground"] ??
-      "var(--shiki-gutter-text-color)";
+      "var(--pec-gutter-text-color)";
     gutterTextActiveColor = ({
       theme,
     }: {
@@ -48,19 +79,19 @@ export function getECTheme(
     }): StyleValueOrValues =>
       (theme.colors["editorLineNumber.activeForeground"] ||
         theme.colors["editorLineNumber.foreground"]) ??
-      "var(--shiki-gutter-text-color-highlight)";
+      "var(--pec-gutter-text-color-highlight)";
   } else {
-    backgroundColor = "var(--shiki-code-background)";
-    foregroundColor = "var(--shiki-code-normal)";
-    gutterBorderColor = "var(--shiki-gutter-border-color)";
-    gutterTextColor = "var(--shiki-gutter-text-color)";
-    gutterTextActiveColor = "var(--shiki-gutter-text-color-highlight)";
+    backgroundColor = "var(--pec-code-background)";
+    foregroundColor = "var(--pec-code-normal)";
+    gutterBorderColor = "var(--pec-gutter-border-color)";
+    gutterTextColor = "var(--pec-gutter-text-color)";
+    gutterTextActiveColor = "var(--pec-gutter-text-color-highlight)";
   }
 
   return {
-    borderColor: "var(--shiki-code-block-border-color)",
-    borderRadius: "var(--shiki-code-block-border-radius)",
-    borderWidth: "var(--shiki-code-block-border-width)",
+    borderColor: "var(--pec-code-block-border-color)",
+    borderRadius: "var(--pec-code-block-border-radius)",
+    borderWidth: "var(--pec-code-block-border-width)",
     codeBackground: backgroundColor,
     codeFontFamily: "var(--font-monospace)",
     codeFontSize: "var(--code-size)",
@@ -82,37 +113,37 @@ export function getECTheme(
     uiSelectionBackground: "var(--text-selection)",
     uiSelectionForeground: "var(--text-normal)",
     gutterBorderColor: gutterBorderColor,
-    gutterBorderWidth: "var(--shiki-gutter-border-width)",
+    gutterBorderWidth: "var(--pec-gutter-border-width)",
     gutterForeground: gutterTextColor,
     gutterHighlightForeground: gutterTextActiveColor,
     textMarkers: {
-      delBackground: "var(--shiki-highlight-red-background)",
-      delBorderColor: "var(--shiki-highlight-red)",
-      delDiffIndicatorColor: "var(--shiki-highlight-red)",
+      delBackground: "var(--pec-highlight-red-background)",
+      delBorderColor: "var(--pec-highlight-red)",
+      delDiffIndicatorColor: "var(--pec-highlight-red)",
       inlineMarkerBorderWidth: "var(--border-width)",
-      insBackground: "var(--shiki-highlight-green-background)",
-      insBorderColor: "var(--shiki-highlight-green)",
-      insDiffIndicatorColor: "var(--shiki-highlight-green)",
+      insBackground: "var(--pec-highlight-green-background)",
+      insBorderColor: "var(--pec-highlight-green)",
+      insDiffIndicatorColor: "var(--pec-highlight-green)",
       lineDiffIndicatorMarginLeft: "0.3rem",
       lineMarkerAccentMargin: "0rem",
       lineMarkerAccentWidth: "0.15rem",
       lineMarkerLabelColor: "white",
       lineMarkerLabelPaddingInline: "0.2rem",
-      markBackground: "var(--shiki-highlight-neutral-background)",
-      markBorderColor: "var(--shiki-highlight-neutral)",
+      markBackground: "var(--pec-highlight-neutral-background)",
+      markBorderColor: "var(--pec-highlight-neutral)",
     },
     frames: {
       editorActiveTabBackground: backgroundColor,
       editorActiveTabBorderColor: "transparent",
       editorActiveTabForeground: "var(--text-normal)",
       editorActiveTabIndicatorBottomColor: "transparent",
-      editorActiveTabIndicatorHeight: "var(--shiki-active-tab-border-width)",
-      editorActiveTabIndicatorTopColor: "var(--shiki-active-tab-border-color)",
+      editorActiveTabIndicatorHeight: "var(--pec-active-tab-border-width)",
+      editorActiveTabIndicatorTopColor: "var(--pec-active-tab-border-color)",
       editorBackground: backgroundColor,
       editorTabBarBackground: "var(--color-primary)",
       editorTabBarBorderBottomColor: "transparent",
       editorTabBarBorderColor: "transparent",
-      editorTabBorderRadius: "var(--shiki-code-border-radius)",
+      editorTabBorderRadius: "var(--pec-code-border-radius)",
       editorTabsMarginBlockStart: "0",
       editorTabsMarginInlineStart: "0",
       frameBoxShadowCssValue: "none",
@@ -120,18 +151,60 @@ export function getECTheme(
       inlineButtonBackgroundActiveOpacity: "1",
       inlineButtonBackgroundHoverOrFocusOpacity: "1",
       inlineButtonBackgroundIdleOpacity: "0",
-      inlineButtonBorder: "var(--shiki-code-border-color)",
+      inlineButtonBorder: "var(--pec-code-border-color)",
       inlineButtonBorderOpacity: "1",
       inlineButtonForeground: "var(--text-normal)",
       shadowColor: "transparent",
       terminalBackground: backgroundColor,
       terminalTitlebarBackground: backgroundColor,
       terminalTitlebarBorderBottomColor: "transparent",
-      terminalTitlebarDotsForeground: "var(--shiki-terminal-dots-color)",
+      terminalTitlebarDotsForeground: "var(--pec-terminal-dots-color)",
       terminalTitlebarDotsOpacity: "1",
       terminalTitlebarForeground: "var(--text-normal)",
-      tooltipSuccessBackground: "var(--shiki-tooltip-background)",
-      tooltipSuccessForeground: "var(--shiki-tooltip-text-color)",
+      tooltipSuccessBackground: "var(--pec-tooltip-background)",
+      tooltipSuccessForeground: "var(--pec-tooltip-text-color)",
     },
   };
+}
+
+export class ThemeMapper {
+  plugin: PrismExpressiveCodePlugin;
+  private cachedThemeId?: string;
+  private cachedTheme?: ThemeRegistration;
+
+  constructor(plugin: PrismExpressiveCodePlugin) {
+    this.plugin = plugin;
+  }
+
+  private async loadEssentialTheme(
+    activeTheme: string,
+  ): Promise<ThemeRegistration> {
+    const themeLoader = THEME_IMPORTS[activeTheme];
+    if (themeLoader) {
+      return ((await themeLoader()) as { default: ThemeRegistration }).default;
+    }
+    const fallbackLoader = THEME_IMPORTS["one-dark-pro"];
+    if (!fallbackLoader) {
+      throw new Error("Fallback theme not found");
+    }
+    return ((await fallbackLoader()) as { default: ThemeRegistration }).default;
+  }
+
+  async getThemeForEC(): Promise<ThemeRegistration> {
+    const activeTheme = this.getThemeIdentifier();
+    if (this.cachedThemeId === activeTheme && this.cachedTheme) {
+      return this.cachedTheme;
+    }
+    this.cachedTheme = await this.loadEssentialTheme(activeTheme);
+    this.cachedThemeId = activeTheme;
+    return this.cachedTheme;
+  }
+
+  getThemeIdentifier(): string {
+    if (this.plugin.app.isDarkMode()) {
+      return this.plugin.loadedSettings.darkTheme;
+    } else {
+      return this.plugin.loadedSettings.lightTheme;
+    }
+  }
 }

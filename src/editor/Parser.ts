@@ -1,11 +1,60 @@
+import { type EditorState, type EditorSelection } from "@codemirror/state";
 import { type EditorView } from "@codemirror/view";
-import { type EditorState } from "@codemirror/state";
 import { type SyntaxNode } from "@lezer/common";
 import { syntaxTree } from "@codemirror/language";
 import { editorLivePreviewField } from "obsidian";
-import { Cm6_Util } from "src/codemirror/Cm6_Util";
-import type ShikiPlugin from "src/main";
-import { SHIKI_INLINE_REGEX } from "src/utils/constants";
+import type PrismExpressiveCodePlugin from "../main";
+import { INLINE_CODE_REGEX } from "../utils";
+
+export class EditorUtil {
+  /**
+   * Checks if two ranges overlap.
+   *
+   * @param fromA
+   * @param toA
+   * @param fromB
+   * @param toB
+   */
+  static checkRangeOverlap(
+    fromA: number,
+    toA: number,
+    fromB: number,
+    toB: number,
+  ): boolean {
+    return fromA <= toB && fromB <= toA;
+  }
+
+  /**
+   * Checks if editor selection and the given range overlap.
+   *
+   * @param selection
+   * @param from
+   * @param to
+   */
+  static checkSelectionAndRangeOverlap(
+    selection: EditorSelection,
+    from: number,
+    to: number,
+  ): boolean {
+    for (const range of selection.ranges) {
+      if (EditorUtil.checkRangeOverlap(range.from, range.to, from, to)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Gets the editor content of a given range.
+   *
+   * @param state
+   * @param from
+   * @param to
+   */
+  static getContent(state: EditorState, from: number, to: number): string {
+    return state.sliceDoc(from, to);
+  }
+}
 
 export enum DecorationUpdateType {
   Insert,
@@ -36,7 +85,7 @@ export interface RemoveDecoration {
 const nodePropsCache = new Map<string, Set<string>>();
 const isCodeBlockCache = new Map<string, boolean>();
 
-export class Cm6_SyntaxTreeParser {
+export class SyntaxTreeParser {
   static isLivePreview(state: EditorState): boolean {
     // @ts-ignore some strange private field not being assignable
     return state.field(editorLivePreviewField);
@@ -97,12 +146,12 @@ export class Cm6_SyntaxTreeParser {
 
   static getDecorationUpdates(
     view: EditorView,
-    plugin: ShikiPlugin,
+    plugin: PrismExpressiveCodePlugin,
     docChanged: boolean,
   ): DecorationUpdate[] {
     let lang = "";
     let beginLineEndOffset = -1;
-    let state: SyntaxNode[] = [];
+    let codeBlockNodes: SyntaxNode[] = [];
     const decorationUpdates: DecorationUpdate[] = [];
 
     const expandedViewport = this.getExpandedViewportRange(view);
@@ -124,13 +173,13 @@ export class Cm6_SyntaxTreeParser {
         }
 
         if (props.has("inline-code")) {
-          const content = Cm6_Util.getContent(view.state, node.from, node.to);
+          const content = EditorUtil.getContent(view.state, node.from, node.to);
 
           if (content.endsWith("}") && plugin.settings.inlineHighlighting) {
-            const match = content.match(SHIKI_INLINE_REGEX); // format: `code{:lang}`
+            const match = content.match(INLINE_CODE_REGEX); // format: `code{:lang}`
             if (match && match[1] && match[2]) {
               const hasSelectionOverlap =
-                Cm6_Util.checkSelectionAndRangeOverlap(
+                EditorUtil.checkSelectionAndRangeOverlap(
                   view.state.selection,
                   node.from - 1,
                   node.to + 1,
@@ -174,48 +223,49 @@ export class Cm6_SyntaxTreeParser {
         ) {
           if (lang !== "") {
             if (beginLineEndOffset === -1 || node.from > beginLineEndOffset) {
-              state.push(node);
+              codeBlockNodes.push(node);
             }
           }
           return;
         }
 
         if (props.has("HyperMD-codeblock-begin")) {
-          const content = Cm6_Util.getContent(view.state, node.from, node.to);
+          const content = EditorUtil.getContent(view.state, node.from, node.to);
 
-          lang = /```\s*(\S+)/.exec(content)?.[1] ?? "";
+          // Support both backticks (```) and tildes (~~~) code blocks
+          lang = /^(?:`{3,}|~{3,})\s*(\S+)/.exec(content)?.[1] ?? "";
           try {
             beginLineEndOffset = view.state.doc.lineAt(node.from).to;
           } catch {
             beginLineEndOffset = -1;
           }
-          state = [];
+          codeBlockNodes = [];
         }
 
         if (props.has("HyperMD-codeblock-end")) {
-          if (state.length > 0 && lang !== "") {
-            const firstState = state[0];
-            const lastState = state[state.length - 1];
-            if (firstState && lastState) {
-              const start = view.state.doc.lineAt(firstState.from).from;
-              const end = view.state.doc.lineAt(lastState.to).to;
+          if (codeBlockNodes.length > 0 && lang !== "") {
+            const firstNode = codeBlockNodes[0];
+            const lastNode = codeBlockNodes[codeBlockNodes.length - 1];
+            if (firstNode && lastNode) {
+              const start = view.state.doc.lineAt(firstNode.from).from;
+              const end = view.state.doc.lineAt(lastNode.to).to;
 
               decorationUpdates.push({
                 type: DecorationUpdateType.Insert,
                 from: start,
                 to: end,
                 lang,
-                content: Cm6_Util.getContent(view.state, start, end),
+                content: EditorUtil.getContent(view.state, start, end),
               });
             }
           }
 
-          if (state.length > 0 && lang === "") {
-            const firstState = state[0];
-            const lastState = state[state.length - 1];
-            if (firstState && lastState) {
-              const start = view.state.doc.lineAt(firstState.from).from;
-              const end = view.state.doc.lineAt(lastState.to).to;
+          if (codeBlockNodes.length > 0 && lang === "") {
+            const firstNode = codeBlockNodes[0];
+            const lastNode = codeBlockNodes[codeBlockNodes.length - 1];
+            if (firstNode && lastNode) {
+              const start = view.state.doc.lineAt(firstNode.from).from;
+              const end = view.state.doc.lineAt(lastNode.to).to;
 
               decorationUpdates.push({
                 type: DecorationUpdateType.Remove,
@@ -226,7 +276,7 @@ export class Cm6_SyntaxTreeParser {
           }
 
           lang = "";
-          state = [];
+          codeBlockNodes = [];
           beginLineEndOffset = -1;
         }
       },

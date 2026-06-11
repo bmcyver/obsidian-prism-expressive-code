@@ -9,6 +9,7 @@
     "prettier": "prettier --write .",
     "lint": "eslint ."
   },
+  "private": true,
   "author": "bmcyver",
   "license": "MIT",
   "devDependencies": {

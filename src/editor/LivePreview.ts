@@ -1,4 +1,4 @@
-import type ShikiPlugin from "src/main";
+import type PrismExpressiveCodePlugin from "../main";
 import {
   Decoration,
   type DecorationSet,
@@ -7,21 +7,78 @@ import {
   type ViewUpdate,
 } from "@codemirror/view";
 import {
+  type Range,
   StateEffect,
   StateField,
   type Extension,
-  type Range,
 } from "@codemirror/state";
+import { type ThemedToken } from "../prism/InlineHighlighter";
+import { LRUCache } from "../utils";
 import { debounce } from "obsidian";
-import {
-  Cm6_SyntaxTreeParser,
-  DecorationUpdateType,
-} from "src/codemirror/Cm6_SyntaxTreeParser";
-import { Cm6_DecorationBuilder } from "src/codemirror/Cm6_DecorationBuilder";
+import { SyntaxTreeParser, DecorationUpdateType } from "./Parser";
+
+const decorationCache = new LRUCache<string, Decoration>(200);
+
+export class DecorationBuilder {
+  static async buildDecorations(
+    plugin: PrismExpressiveCodePlugin,
+    from: number,
+    to: number,
+    language: string,
+    content: string,
+  ): Promise<Range<Decoration>[]> {
+    if (language === "") {
+      return [];
+    }
+
+    const highlight = await plugin.highlighter.getHighlightTokens(
+      content,
+      language.toLowerCase(),
+    );
+
+    if (!highlight) {
+      return [];
+    }
+
+    const tokens = highlight.tokens;
+
+    const decorations: Range<Decoration>[] = [];
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (!token) continue;
+      const nextToken: ThemedToken | undefined = tokens[i + 1];
+
+      const tokenStyle =
+        plugin.highlighter.inlineHighlighter.getTokenStyle(token);
+      const classStr = tokenStyle.classes.join(" ");
+      const cacheKey = `${tokenStyle.style}|${classStr}`;
+
+      let dec = decorationCache.get(cacheKey);
+      if (!dec) {
+        const attrs: Record<string, string> = { style: tokenStyle.style };
+        if (classStr) {
+          attrs.class = classStr;
+        }
+        dec = Decoration.mark({ attributes: attrs });
+        decorationCache.set(cacheKey, dec);
+      }
+
+      decorations.push(
+        dec.range(
+          from + token.offset,
+          nextToken ? from + nextToken.offset : to,
+        ),
+      );
+    }
+
+    return decorations;
+  }
+}
 
 export const updateDecorationsEffect = StateEffect.define<DecorationSet>();
 
-export const shikiDecorationsField = StateField.define<DecorationSet>({
+export const pecDecorationsField = StateField.define<DecorationSet>({
   create() {
     return Decoration.none;
   },
@@ -37,7 +94,9 @@ export const shikiDecorationsField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 
-export function createCm6Plugin(plugin: ShikiPlugin): Extension {
+export function createLivePreviewPlugin(
+  plugin: PrismExpressiveCodePlugin,
+): Extension {
   const viewPlugin = ViewPlugin.fromClass(
     class Cm6ViewPlugin {
       view: EditorView;
@@ -126,7 +185,7 @@ export function createCm6Plugin(plugin: ShikiPlugin): Extension {
         const newDecorationsList: Range<Decoration>[] = [];
         const removeRanges: { from: number; to: number }[] = [];
 
-        const decorationUpdates = Cm6_SyntaxTreeParser.getDecorationUpdates(
+        const decorationUpdates = SyntaxTreeParser.getDecorationUpdates(
           view,
           plugin,
           docChanged,
@@ -140,7 +199,7 @@ export function createCm6Plugin(plugin: ShikiPlugin): Extension {
               to: node.to,
             };
           } else {
-            const decorations = await Cm6_DecorationBuilder.buildDecorations(
+            const decorations = await DecorationBuilder.buildDecorations(
               plugin,
               node.codeStart ?? node.from,
               node.codeEnd ?? node.to,
@@ -181,8 +240,7 @@ export function createCm6Plugin(plugin: ShikiPlugin): Extension {
         }
 
         let finalDecorations =
-          this.view.state.field(shikiDecorationsField, false) ??
-          Decoration.none;
+          this.view.state.field(pecDecorationsField, false) ?? Decoration.none;
         for (const r of removeRanges) {
           finalDecorations = finalDecorations.update({
             filterFrom: r.from,
@@ -235,5 +293,5 @@ export function createCm6Plugin(plugin: ShikiPlugin): Extension {
     },
   );
 
-  return [shikiDecorationsField, viewPlugin];
+  return [pecDecorationsField, viewPlugin];
 }

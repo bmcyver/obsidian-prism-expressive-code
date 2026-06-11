@@ -5,9 +5,9 @@ import {
   FontStyle,
   type FlatToken,
   type ThemeLike,
-} from "src/prism/PrismUtils";
-import { LRUCache } from "src/cache/LRUCache";
-import { type ThemeMapper } from "src/themes/ThemeMapper";
+} from "./PrismUtils";
+import { LRUCache } from "../utils";
+import { type ThemeMapper } from "../themes/ThemeManager";
 import type * as Prism from "prismjs";
 
 export interface ThemedToken {
@@ -96,7 +96,7 @@ export class InlineHighlighter {
       );
       tokens.push({
         content: token.content,
-        color: style.color ?? theme.fg ?? "var(--shiki-code-normal)",
+        color: style.color ?? theme.fg ?? "var(--pec-code-normal)",
         fontStyle: style.fontStyle,
         offset: currentOffset,
       });
@@ -130,9 +130,9 @@ export class InlineHighlighter {
     return {
       style: `color: ${token.color}`,
       classes: [
-        (fontStyle & FontStyle.Italic) !== 0 ? "shiki-italic" : undefined,
-        (fontStyle & FontStyle.Bold) !== 0 ? "shiki-bold" : undefined,
-        (fontStyle & FontStyle.Underline) !== 0 ? "shiki-ul" : undefined,
+        (fontStyle & FontStyle.Italic) !== 0 ? "pec-italic" : undefined,
+        (fontStyle & FontStyle.Bold) !== 0 ? "pec-bold" : undefined,
+        (fontStyle & FontStyle.Underline) !== 0 ? "pec-ul" : undefined,
       ].filter(Boolean) as string[],
     };
   }

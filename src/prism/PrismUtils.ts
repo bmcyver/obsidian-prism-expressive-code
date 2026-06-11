@@ -1,3 +1,17 @@
+import { LRUCache } from "../utils";
+
+// some languages break obsidian's `registerMarkdownCodeBlockProcessor`, so we blacklist them
+export const LANGUAGE_BLACKLIST = new Set(["c++", "c#", "f#", "mermaid"]);
+
+// some languages are considered special
+export const LANGUAGE_SPECIAL = new Set([
+  "plaintext",
+  "txt",
+  "text",
+  "plain",
+  "ansi",
+]);
+
 export const LANGUAGE_ALIASES: Record<string, string> = {
   zsh: "bash",
   asm: "nasm",
@@ -274,8 +288,6 @@ export function getScopesForPrismType(type: string): string[] {
 
   return [type];
 }
-
-import { LRUCache } from "../cache/LRUCache";
 
 export enum FontStyle {
   NotSet = -1,

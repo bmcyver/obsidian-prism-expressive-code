@@ -1,21 +1,17 @@
 import { debounce, loadPrism, Plugin } from "obsidian";
-import { createCm6Plugin } from "src/codemirror/Cm6_ViewPlugin";
-import { DEFAULT_SETTINGS, type Settings } from "src/settings/Settings";
-import { ShikiSettingsTab } from "src/settings/SettingsTab";
-import {
-  filterHighlightAllPlugin,
-  type PrismWithFilterHighlightAll,
-} from "src/core/PrismPlugin";
-import { CodeHighlighter } from "src/core/Highlighter";
-import { VALID_THEME_IDS } from "src/themes/ThemeRegistry";
-import { CodeBlockManager } from "src/managers/CodeBlockManager";
-import { MarkdownProcessorRegistry } from "src/managers/MarkdownProcessorRegistry";
+import { createLivePreviewPlugin } from "./editor/LivePreview";
+import { DEFAULT_SETTINGS, type Settings } from "./settings";
+import { PrismExpressiveCodeSettingTab } from "./settings";
+import { CodeHighlighter } from "./core/Highlighter";
+import { VALID_THEME_IDS } from "./themes/ThemeManager";
+import { CodeBlockManager } from "./core/Processors";
+import { MarkdownProcessorRegistry } from "./core/Processors";
 
 import "src/styles.css";
 import "virtual:ec-styles.css";
 import "virtual:ec-runtime";
 
-export default class ShikiPlugin extends Plugin {
+export default class PrismExpressiveCodePlugin extends Plugin {
   highlighter!: CodeHighlighter;
   codeBlockManager!: CodeBlockManager;
   settings!: Settings;
@@ -31,7 +27,7 @@ export default class ShikiPlugin extends Plugin {
   async onload(): Promise<void> {
     await this.loadSettings();
     this.loadedSettings = structuredClone(this.settings);
-    this.addSettingTab(new ShikiSettingsTab(this));
+    this.addSettingTab(new PrismExpressiveCodeSettingTab(this));
 
     this.highlighter = new CodeHighlighter(this);
     this.codeBlockManager = new CodeBlockManager(this);
@@ -47,7 +43,7 @@ export default class ShikiPlugin extends Plugin {
         const processorRegistry = new MarkdownProcessorRegistry(this);
         processorRegistry.registerProcessors();
 
-        this.registerEditorExtension([createCm6Plugin(this)]);
+        this.registerEditorExtension([createLivePreviewPlugin(this)]);
 
         await this.registerPrismPlugin();
 
@@ -57,7 +53,7 @@ export default class ShikiPlugin extends Plugin {
         void this.updateCm6Plugins();
       } catch (e) {
         console.warn(
-          "Failed to initialize Shiki Highlighter in the background.",
+          "Failed to initialize Expressive Code Highlighter in the background.",
           e,
         );
       }
@@ -104,10 +100,20 @@ export default class ShikiPlugin extends Plugin {
   }
 
   async registerPrismPlugin(): Promise<void> {
-    const prism = (window as unknown as { Prism: PrismWithFilterHighlightAll })
+    const prism = (window as unknown as { Prism: typeof import("prismjs") })
       .Prism;
-    const filterHighlightAll = filterHighlightAllPlugin(prism);
-    filterHighlightAll?.reject.addSelector("div.expressive-code pre code");
+    if (prism && prism.hooks) {
+      prism.hooks.add("before-all-elements-highlight", (env: unknown) => {
+        const environment = env as { elements?: Element[] };
+        if (environment.elements) {
+          environment.elements = environment.elements.filter(
+            (element: Element) => {
+              return !element.matches("div.expressive-code pre code");
+            },
+          );
+        }
+      });
+    }
   }
 
   onunload(): void {

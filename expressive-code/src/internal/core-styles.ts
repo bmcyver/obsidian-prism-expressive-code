@@ -2,13 +2,13 @@ import {
   lighten,
   ensureColorContrastOnBackground,
   setAlpha,
-} from "../helpers/color-transforms";
-import { ResolverContext } from "../common/plugin";
-import { PluginStyleSettings } from "../common/plugin-style-settings";
+} from '../helpers/color-transforms';
+import { ResolverContext } from '../common/plugin';
+import { PluginStyleSettings } from '../common/plugin-style-settings';
 import {
   UnresolvedStyleSettings,
   codeLineClass,
-} from "../common/style-settings";
+} from '../common/style-settings';
 
 export interface CoreStyleSettings {
   /**
@@ -179,46 +179,46 @@ export interface CoreStyleSettings {
 export const coreStyleSettings = new PluginStyleSettings({
   defaultValues: {
     // Outer container
-    borderRadius: "0.3rem",
-    borderWidth: "1.5px",
+    borderRadius: '0.3rem',
+    borderWidth: '1.5px',
     borderColor: ({ theme }) =>
-      theme.colors["titleBar.border"] ||
+      theme.colors['titleBar.border'] ||
       lighten(
-        theme.colors["editor.background"],
-        theme.type === "dark" ? 0.5 : -0.15,
+        theme.colors['editor.background'],
+        theme.type === 'dark' ? 0.5 : -0.15,
       ) ||
-      "transparent",
+      'transparent',
     // Code editor content
     codeFontFamily: minifyFontFamily(
       `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace`,
     ),
-    codeFontSize: "0.85rem",
-    codeFontWeight: "400",
-    codeLineHeight: "1.65",
-    codePaddingBlock: "1rem",
-    codePaddingInline: "1.35rem",
-    codeBackground: ({ theme }) => theme.colors["editor.background"],
-    codeForeground: ({ theme }) => theme.colors["editor.foreground"],
+    codeFontSize: '0.85rem',
+    codeFontWeight: '400',
+    codeLineHeight: '1.65',
+    codePaddingBlock: '1rem',
+    codePaddingInline: '1.35rem',
+    codeBackground: ({ theme }) => theme.colors['editor.background'],
+    codeForeground: ({ theme }) => theme.colors['editor.foreground'],
     codeSelectionBackground: ({ theme }) =>
-      theme.colors["editor.selectionBackground"],
+      theme.colors['editor.selectionBackground'],
     // Gutter
     gutterBorderColor: ({ resolveSetting }) =>
-      setAlpha(resolveSetting("gutterForeground"), 0.2),
-    gutterBorderWidth: "1.5px",
+      setAlpha(resolveSetting('gutterForeground'), 0.2),
+    gutterBorderWidth: '1.5px',
     gutterForeground: ({ theme, resolveSetting }) =>
       ensureColorContrastOnBackground(
-        theme.colors["editorLineNumber.foreground"] ||
-          resolveSetting("codeForeground"),
-        resolveSetting("codeBackground"),
+        theme.colors['editorLineNumber.foreground'] ||
+          resolveSetting('codeForeground'),
+        resolveSetting('codeBackground'),
         3.3,
         3.6,
       ),
     gutterHighlightForeground: ({ theme, resolveSetting }) =>
       ensureColorContrastOnBackground(
-        theme.colors["editorLineNumber.activeForeground"] ||
-          theme.colors["editorLineNumber.foreground"] ||
-          resolveSetting("codeForeground"),
-        resolveSetting("codeBackground"),
+        theme.colors['editorLineNumber.activeForeground'] ||
+          theme.colors['editorLineNumber.foreground'] ||
+          resolveSetting('codeForeground'),
+        resolveSetting('codeBackground'),
         4.5,
         5,
       ),
@@ -226,33 +226,33 @@ export const coreStyleSettings = new PluginStyleSettings({
     uiFontFamily: minifyFontFamily(
       `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'`,
     ),
-    uiFontSize: "0.9rem",
-    uiFontWeight: "400",
-    uiLineHeight: "1.65",
-    uiPaddingBlock: "0.25rem",
-    uiPaddingInline: "1rem",
+    uiFontSize: '0.9rem',
+    uiFontWeight: '400',
+    uiLineHeight: '1.65',
+    uiPaddingBlock: '0.25rem',
+    uiPaddingInline: '1rem',
     uiSelectionBackground: ({ theme }) =>
-      theme.colors["menu.selectionBackground"],
+      theme.colors['menu.selectionBackground'],
     uiSelectionForeground: ({ theme }) =>
-      theme.colors["menu.selectionForeground"],
+      theme.colors['menu.selectionForeground'],
     // Special colors
-    focusBorder: ({ theme }) => theme.colors["focusBorder"],
+    focusBorder: ({ theme }) => theme.colors['focusBorder'],
     scrollbarThumbColor: ({ theme, resolveSetting }) =>
       ensureColorContrastOnBackground(
-        theme.colors["scrollbarSlider.background"],
-        resolveSetting("codeBackground"),
+        theme.colors['scrollbarSlider.background'],
+        resolveSetting('codeBackground'),
         1,
         2,
       ),
     scrollbarThumbHoverColor: ({ theme, resolveSetting }) =>
       ensureColorContrastOnBackground(
-        theme.colors["scrollbarSlider.hoverBackground"],
-        resolveSetting("codeBackground"),
+        theme.colors['scrollbarSlider.hoverBackground'],
+        resolveSetting('codeBackground'),
         2.5,
         3.5,
       ),
   } satisfies UnresolvedStyleSettings,
-  preventUnitlessValues: ["borderRadius", "borderWidth", "gutterBorderWidth"],
+  preventUnitlessValues: ['borderRadius', 'borderWidth', 'gutterBorderWidth'],
 });
 
 export function getCoreBaseStyles({
@@ -261,43 +261,43 @@ export function getCoreBaseStyles({
   useThemedScrollbars,
   useThemedSelectionColors,
 }: {
-  cssVar: ResolverContext["cssVar"];
+  cssVar: ResolverContext['cssVar'];
   useStyleReset: boolean;
   useThemedScrollbars: boolean;
   useThemedSelectionColors: boolean;
 }) {
-  const ifThemedScrollbars = (css: string) => (useThemedScrollbars ? css : "");
+  const ifThemedScrollbars = (css: string) => (useThemedScrollbars ? css : '');
   const ifThemedSelectionColors = (css: string) =>
-    useThemedSelectionColors ? css : "";
+    useThemedSelectionColors ? css : '';
 
   return `
-		font-family: ${cssVar("uiFontFamily")};
-		font-size: ${cssVar("uiFontSize")};
-		font-weight: ${cssVar("uiFontWeight")};
-		line-height: ${cssVar("uiLineHeight")};
+		font-family: ${cssVar('uiFontFamily')};
+		font-size: ${cssVar('uiFontSize')};
+		font-weight: ${cssVar('uiFontWeight')};
+		line-height: ${cssVar('uiLineHeight')};
 		text-size-adjust: none;
 		-webkit-text-size-adjust: none;
 
 		*:not(:is(svg, svg *)) {
-			${useStyleReset ? "all: revert;" : ""}
+			${useStyleReset ? 'all: revert;' : ''}
 			box-sizing: border-box;
 		}
 
 		${ifThemedSelectionColors(`::selection {
-			background: ${cssVar("uiSelectionBackground")};
-			color: ${cssVar("uiSelectionForeground")};
+			background: ${cssVar('uiSelectionBackground')};
+			color: ${cssVar('uiSelectionForeground')};
 		}`)}
 
 		pre {
 			display: flex;
 			margin: 0;
 			padding: 0;
-			border: ${cssVar("borderWidth")} solid ${cssVar("borderColor")};
-			border-radius: calc(${cssVar("borderRadius")} + ${cssVar("borderWidth")});
-			background: ${cssVar("codeBackground")};
+			border: ${cssVar('borderWidth')} solid ${cssVar('borderColor')};
+			border-radius: calc(${cssVar('borderRadius')} + ${cssVar('borderWidth')});
+			background: ${cssVar('codeBackground')};
 
 			&:focus-visible {
-				outline: 3px solid ${cssVar("focusBorder")};
+				outline: 3px solid ${cssVar('focusBorder')};
 				outline-offset: -3px;
 			}
 
@@ -306,17 +306,17 @@ export function getCoreBaseStyles({
 				display: block;
 				flex: 1 0 100%;
 
-				padding: ${cssVar("codePaddingBlock")} 0;
-				color: ${cssVar("codeForeground")};
+				padding: ${cssVar('codePaddingBlock')} 0;
+				color: ${cssVar('codeForeground')};
 
-				font-family: ${cssVar("codeFontFamily")};
-				font-size: ${cssVar("codeFontSize")};
-				font-weight: ${cssVar("codeFontWeight")};
-				line-height: ${cssVar("codeLineHeight")};
+				font-family: ${cssVar('codeFontFamily')};
+				font-size: ${cssVar('codeFontSize')};
+				font-weight: ${cssVar('codeFontWeight')};
+				line-height: ${cssVar('codeLineHeight')};
 			}
 
 			${ifThemedSelectionColors(`::selection {
-				background: ${cssVar("codeSelectionBackground")};
+				background: ${cssVar('codeSelectionBackground')};
 				color: inherit;
 			}`)}
 
@@ -337,18 +337,18 @@ export function getCoreBaseStyles({
 			&::-webkit-scrollbar,
 			&::-webkit-scrollbar-track {
 				background-color: inherit;
-				border-radius: calc(${cssVar("borderRadius")} + ${cssVar("borderWidth")});
+				border-radius: calc(${cssVar('borderRadius')} + ${cssVar('borderWidth')});
 				border-top-left-radius: 0;
 				border-top-right-radius: 0;
 			}
 			&::-webkit-scrollbar-thumb {
-				background-color: ${cssVar("scrollbarThumbColor")};
+				background-color: ${cssVar('scrollbarThumbColor')};
 				border: 4px solid transparent;
 				background-clip: content-box;
 				border-radius: 10px;
 			}
 			&::-webkit-scrollbar-thumb:hover {
-				background-color: ${cssVar("scrollbarThumbHoverColor")};
+				background-color: ${cssVar('scrollbarThumbHoverColor')};
 			}
 			`)}
 		}
@@ -367,7 +367,7 @@ export function getCoreBaseStyles({
 
 			.gutter {
 				grid-area: gutter;
-				color: ${cssVar("gutterForeground")};
+				color: ${cssVar('gutterForeground')};
 
 				/* Make all gutter elements non-interactive by default */
 				& > * {
@@ -378,20 +378,20 @@ export function getCoreBaseStyles({
 
 				/* Apply conditional styles if a gutter is present */
 				& ~ .code {
-					--ecLineBrdCol: ${cssVar("gutterBorderColor")};
+					--ecLineBrdCol: ${cssVar('gutterBorderColor')};
 				}
 			}
 
 			&.highlight .gutter {
-				color: ${cssVar("gutterHighlightForeground")};
+				color: ${cssVar('gutterHighlightForeground')};
 			}
 
 			.code {
 				grid-area: code;
 				position: relative;
 				box-sizing: content-box;
-				padding-inline-start: calc(var(--ecIndent, 0ch) + ${cssVar("codePaddingInline")} - var(--ecGtrBrdWd));
-				padding-inline-end: ${cssVar("codePaddingInline")};
+				padding-inline-start: calc(var(--ecIndent, 0ch) + ${cssVar('codePaddingInline')} - var(--ecGtrBrdWd));
+				padding-inline-end: ${cssVar('codePaddingInline')};
 				text-indent: calc(var(--ecIndent, 0ch) * -1);
 
 				&::before,
@@ -401,7 +401,7 @@ export function getCoreBaseStyles({
 				}
 
 				/* Support a colorful border on the start of the code line */
-				--ecGtrBrdWd: ${cssVar("gutterBorderWidth")};
+				--ecGtrBrdWd: ${cssVar('gutterBorderWidth')};
 				border-inline-start: var(--ecGtrBrdWd) solid var(--ecLineBrdCol, transparent);
 			}
 		}
@@ -436,7 +436,7 @@ export function getCoreThemeStyles(styleVariantIndex: number) {
 
 function minifyFontFamily(fontFamily: string) {
   return fontFamily
-    .split(",")
+    .split(',')
     .map((font) => font.trim())
-    .join(",");
+    .join(',');
 }

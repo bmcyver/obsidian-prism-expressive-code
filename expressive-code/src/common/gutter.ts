@@ -1,7 +1,7 @@
-import type { Element } from "../hast";
-import { AnnotationRenderPhase } from "./annotation";
-import { ExpressiveCodeLine } from "./line";
-import { ExpressiveCodeHookContextBase } from "./plugin-hooks";
+import type { Element } from '../hast';
+import { AnnotationRenderPhase } from './annotation';
+import { ExpressiveCodeLine } from './line';
+import { ExpressiveCodeHookContextBase } from './plugin-hooks';
 
 export interface GutterElement {
   /**

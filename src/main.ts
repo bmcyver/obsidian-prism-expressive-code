@@ -1,15 +1,15 @@
-import { debounce, loadPrism, Plugin } from "obsidian";
-import { createLivePreviewPlugin } from "./editor/LivePreview";
-import { DEFAULT_SETTINGS, type Settings } from "./settings";
-import { PrismExpressiveCodeSettingTab } from "./settings";
-import { CodeHighlighter } from "./core/Highlighter";
-import { VALID_THEME_IDS } from "./themes/ThemeManager";
-import { CodeBlockManager } from "./core/Processors";
-import { MarkdownProcessorRegistry } from "./core/Processors";
+import { debounce, loadPrism, Plugin } from 'obsidian';
+import { createLivePreviewPlugin } from './editor/LivePreview';
+import { DEFAULT_SETTINGS, type Settings } from './settings';
+import { PrismExpressiveCodeSettingTab } from './settings';
+import { CodeHighlighter } from './core/Highlighter';
+import { VALID_THEME_IDS } from './themes/ThemeManager';
+import { CodeBlockManager } from './core/Processors';
+import { MarkdownProcessorRegistry } from './core/Processors';
 
-import "src/styles.css";
-import "virtual:ec-styles.css";
-import "virtual:ec-runtime";
+import 'src/styles.css';
+import 'virtual:ec-styles.css';
+import 'virtual:ec-runtime';
 
 export default class PrismExpressiveCodePlugin extends Plugin {
   highlighter!: CodeHighlighter;
@@ -53,7 +53,7 @@ export default class PrismExpressiveCodePlugin extends Plugin {
         void this.updateCm6Plugins();
       } catch (e) {
         console.warn(
-          "Failed to initialize Expressive Code Highlighter in the background.",
+          'Failed to initialize Expressive Code Highlighter in the background.',
           e,
         );
       }
@@ -68,7 +68,7 @@ export default class PrismExpressiveCodePlugin extends Plugin {
     );
 
     this.registerEvent(
-      this.app.workspace.on("css-change", () => {
+      this.app.workspace.on('css-change', () => {
         const currentDarkMode = this.app.isDarkMode();
         if (currentDarkMode !== this.lastDarkMode) {
           this.lastDarkMode = currentDarkMode;
@@ -78,8 +78,8 @@ export default class PrismExpressiveCodePlugin extends Plugin {
     );
 
     this.addCommand({
-      id: "reload-highlighter",
-      name: "Reload highlighter",
+      id: 'reload-highlighter',
+      name: 'Reload highlighter',
       callback: () => {
         void this.reloadHighlighter();
       },
@@ -100,15 +100,15 @@ export default class PrismExpressiveCodePlugin extends Plugin {
   }
 
   async registerPrismPlugin(): Promise<void> {
-    const prism = (window as unknown as { Prism: typeof import("prismjs") })
+    const prism = (window as unknown as { Prism: typeof import('prismjs') })
       .Prism;
     if (prism && prism.hooks) {
-      prism.hooks.add("before-all-elements-highlight", (env: unknown) => {
+      prism.hooks.add('before-all-elements-highlight', (env: unknown) => {
         const environment = env as { elements?: Element[] };
         if (environment.elements) {
           environment.elements = environment.elements.filter(
             (element: Element) => {
-              return !element.matches("div.expressive-code pre code");
+              return !element.matches('div.expressive-code pre code');
             },
           );
         }
@@ -129,11 +129,11 @@ export default class PrismExpressiveCodePlugin extends Plugin {
 
     let needsSave = false;
     if (!VALID_THEME_IDS.has(this.settings.darkTheme)) {
-      this.settings.darkTheme = "one-dark-pro";
+      this.settings.darkTheme = 'one-dark-pro';
       needsSave = true;
     }
     if (!VALID_THEME_IDS.has(this.settings.lightTheme)) {
-      this.settings.lightTheme = "one-light";
+      this.settings.lightTheme = 'one-light';
       needsSave = true;
     }
 

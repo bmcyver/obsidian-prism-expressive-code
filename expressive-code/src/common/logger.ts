@@ -11,7 +11,7 @@ export class ExpressiveCodeLogger implements ExpressiveCodeLoggerOptions {
   readonly logger: Partial<ExpressiveCodeLoggerOptions>;
 
   constructor(logger: Partial<ExpressiveCodeLoggerOptions> = {}) {
-    this.label = logger.label ?? "expressive-code";
+    this.label = logger.label ?? 'expressive-code';
     this.logger = logger;
   }
 
@@ -67,13 +67,13 @@ export function logErrorDetails(input: {
       lines.push(...error.stack.split(/\r?\n/).slice(errMsgLines.length));
     }
     if (error.cause instanceof Error) {
-      lines.push("Caused by:");
+      lines.push('Caused by:');
       lines.push(...pad(getErrorDetails(error.cause)));
     }
     return lines;
   };
   const error =
     input.error instanceof Error ? input.error : new Error(String(input.error));
-  const details = pad(getErrorDetails(error)).join("\n");
+  const details = pad(getErrorDetails(error)).join('\n');
   input.logger.error(`${input.prefix} Error details:\n${details}\n`);
 }

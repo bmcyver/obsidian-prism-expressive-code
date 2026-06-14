@@ -1,7 +1,7 @@
-import { ExpressiveCodePluginHooks } from "./plugin-hooks";
-import { PluginStyleSettings } from "./plugin-style-settings";
-import { StyleSettingPath } from "./style-settings";
-import { StyleVariant } from "./style-variants";
+import { ExpressiveCodePluginHooks } from './plugin-hooks';
+import { PluginStyleSettings } from './plugin-style-settings';
+import { StyleSettingPath } from './style-settings';
+import { StyleVariant } from './style-variants';
 
 /**
  * An interface that defines an Expressive Code plugin. To add a custom plugin,

@@ -1,7 +1,7 @@
-import type PrismExpressiveCodePlugin from "../main";
-import { TFile } from "obsidian";
-import { type BaseCodeBlock, CodeBlock, InlineCodeBlock } from "./CodeBlocks";
-import { INLINE_CODE_REGEX } from "../utils";
+import type PrismExpressiveCodePlugin from '../main';
+import { TFile } from 'obsidian';
+import { type BaseCodeBlock, CodeBlock, InlineCodeBlock } from './CodeBlocks';
+import { INLINE_CODE_REGEX } from '../utils';
 
 export class CodeBlockManager {
   plugin: PrismExpressiveCodePlugin;
@@ -14,7 +14,7 @@ export class CodeBlockManager {
 
   public registerEvents(): void {
     this.plugin.registerEvent(
-      this.plugin.app.metadataCache.on("changed", (file) => {
+      this.plugin.app.metadataCache.on('changed', (file) => {
         if (file instanceof TFile) {
           if (this.activeCodeBlocks.has(file.path)) {
             for (const codeBlock of this.activeCodeBlocks.get(file.path)!) {
@@ -26,7 +26,7 @@ export class CodeBlockManager {
     );
 
     this.plugin.registerEvent(
-      this.plugin.app.vault.on("rename", (file, oldPath) => {
+      this.plugin.app.vault.on('rename', (file, oldPath) => {
         if (file instanceof TFile) {
           if (this.activeCodeBlocks.has(oldPath)) {
             const blocks = this.activeCodeBlocks.get(oldPath)!;
@@ -95,7 +95,7 @@ export class MarkdownProcessorRegistry {
           language,
           async (source, el, ctx) => {
             // we need to avoid making the hidden frontmatter code block visible
-            if (el.parentElement?.classList.contains("mod-frontmatter")) {
+            if (el.parentElement?.classList.contains('mod-frontmatter')) {
               return;
             }
 
@@ -122,9 +122,9 @@ export class MarkdownProcessorRegistry {
 
   private registerInlineCodeProcessor(): void {
     this.plugin.registerMarkdownPostProcessor(async (el, ctx) => {
-      const inlineCodes = el.findAll(":not(pre) > code");
+      const inlineCodes = el.findAll(':not(pre) > code');
       for (const codeElm of inlineCodes) {
-        const match = INLINE_CODE_REGEX.exec(codeElm.textContent ?? ""); // format: `code{:lang}`
+        const match = INLINE_CODE_REGEX.exec(codeElm.textContent ?? ''); // format: `code{:lang}`
         if (!match || !match[1] || !match[2]) {
           continue;
         }

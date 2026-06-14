@@ -1,4 +1,4 @@
-import * as hast from "../hast";
+import * as hast from '../hast';
 
 /** @deprecated Please import this function from the `/hast` entrypoint instead. */
 export const addClassName = hast.addClassName;

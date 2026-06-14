@@ -1,13 +1,13 @@
-import type PrismExpressiveCodePlugin from "../main";
+import type PrismExpressiveCodePlugin from '../main';
 import {
   type MarkdownPostProcessorContext,
   MarkdownRenderChild,
-} from "obsidian";
+} from 'obsidian';
 import {
   extractMetaString,
   stripCommonIndentation,
   calculateListIndentationLevel,
-} from "../utils";
+} from '../utils';
 
 export abstract class BaseCodeBlock extends MarkdownRenderChild {
   plugin: PrismExpressiveCodePlugin;
@@ -58,7 +58,7 @@ export class CodeBlock extends BaseCodeBlock {
     ctx: MarkdownPostProcessorContext,
   ) {
     super(plugin, containerEl, source, language, ctx);
-    this.cachedMetaString = "";
+    this.cachedMetaString = '';
   }
 
   private getMetaString(): string {
@@ -73,14 +73,14 @@ export class CodeBlock extends BaseCodeBlock {
     // Apply list indentation for Live Preview (Editing View) via CSS variable
     const level = calculateListIndentationLevel(this.source);
 
-    this.containerEl.classList.add("pec-code-block");
+    this.containerEl.classList.add('pec-code-block');
     if (level > 0) {
       this.containerEl.style.setProperty(
-        "--pec-indent-level",
+        '--pec-indent-level',
         level.toString(),
       );
     } else {
-      this.containerEl.style.removeProperty("--pec-indent-level");
+      this.containerEl.style.removeProperty('--pec-indent-level');
     }
 
     const cleanedSource = stripCommonIndentation(this.source);
@@ -131,7 +131,7 @@ export class InlineCodeBlock extends BaseCodeBlock {
       return;
     }
     this.containerEl.empty();
-    this.containerEl.classList.add("pec-inline");
+    this.containerEl.classList.add('pec-inline');
 
     const highlight = await this.plugin.highlighter.getHighlightTokens(
       this.source,

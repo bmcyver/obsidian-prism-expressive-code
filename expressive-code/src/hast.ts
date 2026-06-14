@@ -7,15 +7,15 @@ import type {
   Parents,
   Properties,
   Root,
-} from "hast";
-import { toHtml } from "hast-util-to-html";
-import { toText } from "hast-util-to-text";
-import { matches, select, selectAll } from "hast-util-select";
-import { visit } from "unist-util-visit";
-import { visitParents, CONTINUE, EXIT, SKIP } from "unist-util-visit-parents";
-import { h, s } from "hastscript";
-import { compile, type Element as StylisElement } from "stylis";
-import { serializeCssStringValue } from "./internal/escaping";
+} from 'hast';
+import { toHtml } from 'hast-util-to-html';
+import { toText } from 'hast-util-to-text';
+import { matches, select, selectAll } from 'hast-util-select';
+import { visit } from 'unist-util-visit';
+import { visitParents, CONTINUE, EXIT, SKIP } from 'unist-util-visit-parents';
+import { h, s } from 'hastscript';
+import { compile, type Element as StylisElement } from 'stylis';
+import { serializeCssStringValue } from './internal/escaping';
 
 export { visit, visitParents, CONTINUE, EXIT, SKIP };
 export { toHtml, toText, matches, select, selectAll, h, s };
@@ -58,7 +58,7 @@ export function getClassNames(node: Element): string[] {
   if (!stringOrArr || stringOrArr === true) return [];
   if (Array.isArray(stringOrArr))
     return stringOrArr.map((className) => className.toString());
-  return stringOrArr.toString().split(" ");
+  return stringOrArr.toString().split(' ');
 }
 
 /**
@@ -69,7 +69,7 @@ export function getClassNames(node: Element): string[] {
 export function addClassName(node: Element, className: string) {
   const classNames = getClassNames(node);
   if (classNames.indexOf(className) === -1) classNames.push(className);
-  setProperty(node, "className", classNames);
+  setProperty(node, 'className', classNames);
 }
 
 /**
@@ -82,7 +82,7 @@ export function removeClassName(node: Element, className: string) {
   const index = classNames.indexOf(className);
   if (index === -1) return;
   classNames.splice(index, 1);
-  setProperty(node, "className", classNames);
+  setProperty(node, 'className', classNames);
 }
 
 /**
@@ -92,7 +92,7 @@ export function removeClassName(node: Element, className: string) {
  */
 export function getInlineStyles(node: Element): Map<string, string> {
   const styles = new Map<string, string>();
-  const styleString = node.properties?.style?.toString().trim() || "";
+  const styleString = node.properties?.style?.toString().trim() || '';
   if (!styleString) return styles;
 
   try {
@@ -100,7 +100,7 @@ export function getInlineStyles(node: Element): Map<string, string> {
     if (ast && ast[0] && ast[0].children) {
       const decls = ast[0].children as StylisElement[];
       for (const decl of decls) {
-        if (decl.type === "decl") {
+        if (decl.type === 'decl') {
           const prop = Array.isArray(decl.props) ? decl.props[0] : decl.props;
           const value = decl.children as string;
           if (prop && value) {
@@ -124,8 +124,8 @@ export function getInlineStyles(node: Element): Map<string, string> {
 export function setInlineStyles(node: Element, styles: Map<string, string>) {
   const styleString = [...styles]
     .map(([prop, value]) => `${prop}:${value}`)
-    .join(";");
-  setProperty(node, "style", styleString);
+    .join(';');
+  setProperty(node, 'style', styleString);
 }
 
 /**
@@ -141,13 +141,13 @@ export function setInlineStyle(
   node: Element,
   cssProperty: string,
   value: string | null,
-  valueFormat: "raw" | "string" = "raw",
+  valueFormat: 'raw' | 'string' = 'raw',
 ) {
   const styles = getInlineStyles(node);
   if (value !== null) {
     styles.set(
       cssProperty,
-      valueFormat === "string" ? serializeCssStringValue(value) : value,
+      valueFormat === 'string' ? serializeCssStringValue(value) : value,
     );
   } else {
     styles.delete(cssProperty);

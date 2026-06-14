@@ -1,6 +1,6 @@
-import { CoreStyleSettings } from "../internal/core-styles";
-import { cssVarReplacements } from "../internal/css";
-import { ExpressiveCodeTheme } from "./theme";
+import { CoreStyleSettings } from '../internal/core-styles';
+import { cssVarReplacements } from '../internal/css';
+import { ExpressiveCodeTheme } from './theme';
 
 export interface StyleSettings extends CoreStyleSettings {}
 
@@ -70,7 +70,7 @@ export type ResolvedStyleSettingsByPath = Map<StyleSettingPath, string>;
  *   (see {@link cssVarReplacements}).
  */
 export function getCssVarName(styleSetting: StyleSettingPath) {
-  let varName = styleSetting.replace(/\./g, "-");
+  let varName = styleSetting.replace(/\./g, '-');
   const capitalize = (word: string) => word[0].toUpperCase() + word.slice(1);
   cssVarReplacements.forEach((replacement, term) => {
     const termRegExp = new RegExp(
@@ -83,8 +83,8 @@ export function getCssVarName(styleSetting: StyleSettingPath) {
         // preceded by a lowercase character or the beginning of the string,
         // and followed by a non-lowercase character or the end of the string
         `(?<=[a-z]|^)${capitalize(term)}(?=[^a-z]|$)`,
-      ].join("|"),
-      "g",
+      ].join('|'),
+      'g',
     );
     varName = varName.replace(termRegExp, (match) =>
       match === term ? replacement : capitalize(replacement),
@@ -93,4 +93,4 @@ export function getCssVarName(styleSetting: StyleSettingPath) {
   return `--ec-${varName}`;
 }
 
-export const codeLineClass = "ec-line";
+export const codeLineClass = 'ec-line';

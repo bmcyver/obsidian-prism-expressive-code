@@ -1,10 +1,10 @@
 import {
   resolveStyleSettings,
   getCssVarDeclarations,
-} from "../internal/style-resolving";
-import { ExpressiveCodePlugin, ResolverContext } from "./plugin";
-import { ResolvedStyleSettingsByPath, StyleOverrides } from "./style-settings";
-import { ExpressiveCodeTheme } from "./theme";
+} from '../internal/style-resolving';
+import { ExpressiveCodePlugin, ResolverContext } from './plugin';
+import { ResolvedStyleSettingsByPath, StyleOverrides } from './style-settings';
+import { ExpressiveCodeTheme } from './theme';
 
 export type StyleVariant = {
   theme: ExpressiveCodeTheme;
@@ -28,7 +28,7 @@ export function resolveStyleVariants({
   themes: ExpressiveCodeTheme[];
   plugins: readonly ExpressiveCodePlugin[];
   styleOverrides: StyleOverrides;
-  cssVarName: ResolverContext["cssVarName"];
+  cssVarName: ResolverContext['cssVarName'];
 }): StyleVariant[] {
   return themes.map((theme, styleVariantIndex) => {
     // Resolve all style settings contributed by core & plugins,

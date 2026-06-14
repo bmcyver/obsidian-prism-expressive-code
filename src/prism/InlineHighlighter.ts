@@ -5,10 +5,10 @@ import {
   FontStyle,
   type FlatToken,
   type ThemeLike,
-} from "./PrismUtils";
-import { LRUCache } from "../utils";
-import { type ThemeMapper } from "../themes/ThemeManager";
-import type * as Prism from "prismjs";
+} from './PrismUtils';
+import { LRUCache } from '../utils';
+import { type ThemeMapper } from '../themes/ThemeManager';
+import type * as Prism from 'prismjs';
 
 export interface ThemedToken {
   content: string;
@@ -96,7 +96,7 @@ export class InlineHighlighter {
       );
       tokens.push({
         content: token.content,
-        color: style.color ?? theme.fg ?? "var(--pec-code-normal)",
+        color: style.color ?? theme.fg ?? 'var(--pec-code-normal)',
         fontStyle: style.fontStyle,
         offset: currentOffset,
       });
@@ -116,7 +116,7 @@ export class InlineHighlighter {
     const tokenStyle = this.getTokenStyle(token);
     parent.createSpan({
       text: token.content,
-      cls: tokenStyle.classes.join(" "),
+      cls: tokenStyle.classes.join(' '),
       attr: { style: tokenStyle.style },
     });
   }
@@ -130,9 +130,9 @@ export class InlineHighlighter {
     return {
       style: `color: ${token.color}`,
       classes: [
-        (fontStyle & FontStyle.Italic) !== 0 ? "pec-italic" : undefined,
-        (fontStyle & FontStyle.Bold) !== 0 ? "pec-bold" : undefined,
-        (fontStyle & FontStyle.Underline) !== 0 ? "pec-ul" : undefined,
+        (fontStyle & FontStyle.Italic) !== 0 ? 'pec-italic' : undefined,
+        (fontStyle & FontStyle.Bold) !== 0 ? 'pec-bold' : undefined,
+        (fontStyle & FontStyle.Underline) !== 0 ? 'pec-ul' : undefined,
       ].filter(Boolean) as string[],
     };
   }

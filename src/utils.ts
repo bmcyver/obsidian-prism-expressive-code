@@ -1,4 +1,4 @@
-import { type MarkdownPostProcessorContext } from "obsidian";
+import { type MarkdownPostProcessorContext } from 'obsidian';
 
 export const INLINE_CODE_REGEX = /^(.*)\{:([a-zA-Z0-9_\-+#]+)\}$/; // format: `code{:lang}`
 
@@ -43,13 +43,13 @@ export class LRUCache<K, V> {
 function getLineAt(text: string, lineIndex: number): string | undefined {
   let startIdx = 0;
   for (let i = 0; i < lineIndex; i++) {
-    const nextNewline = text.indexOf("\n", startIdx);
+    const nextNewline = text.indexOf('\n', startIdx);
     if (nextNewline === -1) {
       return undefined;
     }
     startIdx = nextNewline + 1;
   }
-  const endIdx = text.indexOf("\n", startIdx);
+  const endIdx = text.indexOf('\n', startIdx);
   if (endIdx === -1) {
     return text.slice(startIdx);
   }
@@ -64,33 +64,33 @@ export function extractMetaString(
   const sectionInfo = ctx.getSectionInfo(containerEl);
 
   if (sectionInfo === null) {
-    return "";
+    return '';
   }
 
   const startLine = getLineAt(sectionInfo.text, sectionInfo.lineStart);
-  if (startLine === undefined) return "";
+  if (startLine === undefined) return '';
 
   // Escape special regex characters in language to prevent syntax errors (e.g., c++)
-  const escapedLanguage = language.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedLanguage = language.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   // regexp to match the text after the code block language
   const regex = new RegExp(
-    "^[^`~]*?\\s*(```+|~~~+)" + escapedLanguage + " (.*)",
+    '^[^`~]*?\\s*(```+|~~~+)' + escapedLanguage + ' (.*)',
   );
   const match = regex.exec(startLine);
   if (match !== null && match[2]) {
     return match[2];
   } else {
-    return "";
+    return '';
   }
 }
 
 export function stripCommonIndentation(source: string): string {
-  const lines = source.split("\n");
+  const lines = source.split('\n');
 
   // Find the minimum common indentation of non-empty lines
   let minIndent: string | null = null;
   for (const line of lines) {
-    if (line.trim() === "") {
+    if (line.trim() === '') {
       continue;
     }
     const match = /^[ \t]*/.exec(line);
@@ -115,18 +115,18 @@ export function stripCommonIndentation(source: string): string {
       }
       return line;
     })
-    .join("\n");
+    .join('\n');
 }
 
 export function calculateListIndentationLevel(source: string): number {
-  const firstLine = source.split("\n")[0] ?? "";
+  const firstLine = source.split('\n')[0] ?? '';
   const match = /^[ \t]*/.exec(firstLine);
-  const indent = match ? match[0] : "";
+  const indent = match ? match[0] : '';
   let spaces = 0;
   let tabs = 0;
   for (const char of indent) {
-    if (char === " ") spaces++;
-    else if (char === "\t") tabs++;
+    if (char === ' ') spaces++;
+    else if (char === '\t') tabs++;
   }
   return tabs + Math.floor(spaces / 4);
 }

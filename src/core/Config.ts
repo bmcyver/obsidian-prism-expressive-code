@@ -2,26 +2,26 @@ import {
   ExpressiveCodeTheme,
   type ExpressiveCodeEngineConfig,
   type ExpressiveCodeThemeInput,
-} from "@expressive-code/core";
-import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
-import { pluginFrames } from "@expressive-code/plugin-frames";
-import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
-import { customPluginPrism } from "../prism/CustomPluginPrism";
-import { pluginTextMarkers } from "@expressive-code/plugin-text-markers";
-import { type ThemeRegistration } from "./types";
+} from '@expressive-code/core';
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
+import { pluginFrames } from '@expressive-code/plugin-frames';
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
+import { customPluginPrism } from '../prism/CustomPluginPrism';
+import { pluginTextMarkers } from '@expressive-code/plugin-text-markers';
+import { type ThemeRegistration } from './types';
 
-import { getECTheme } from "../themes/ThemeManager";
+import { getECTheme } from '../themes/ThemeManager';
 
 export interface EcSettingsProps {
   preferThemeColors: boolean;
   ecDefaultShowLineNumbers: boolean;
   ecDefaultWrap: boolean;
-  ecDefaultFrame: "code" | "terminal" | "none" | "auto";
+  ecDefaultFrame: 'code' | 'terminal' | 'none' | 'auto';
   ecDefaultCollapseStyle:
-    | "github"
-    | "collapsible-start"
-    | "collapsible-end"
-    | "collapsible-auto";
+    | 'github'
+    | 'collapsible-start'
+    | 'collapsible-end'
+    | 'collapsible-auto';
 }
 
 export interface EcConfigInput {
@@ -37,8 +37,8 @@ export const EC_VIRTUAL_SETTINGS: EcSettingsProps = {
   preferThemeColors: true,
   ecDefaultShowLineNumbers: false,
   ecDefaultWrap: false,
-  ecDefaultFrame: "auto",
-  ecDefaultCollapseStyle: "collapsible-auto",
+  ecDefaultFrame: 'auto',
+  ecDefaultCollapseStyle: 'collapsible-auto',
 };
 
 export function createCssVariableThemeBundle(
@@ -48,7 +48,7 @@ export function createCssVariableThemeBundle(
   let placeholderCounter = 0;
 
   const toPlaceholder = (value: string): string => {
-    if (!value.trim().startsWith("var(")) {
+    if (!value.trim().startsWith('var(')) {
       return value;
     }
 
@@ -58,7 +58,7 @@ export function createCssVariableThemeBundle(
     }
 
     // Start offset at 0xE00000 to prevent conflicts with black (#000000) or other very common colors
-    const colorInt = 0xE00000 + placeholderCounter;
+    const colorInt = 0xe00000 + placeholderCounter;
     const placeholder = `#${colorInt.toString(16).toUpperCase()}`;
     placeholderCounter += 1;
     cssVarToPlaceholder.set(value, placeholder);
@@ -132,7 +132,7 @@ export function createEcEngineConfig(
     ].filter(Boolean),
     styleOverrides: getECTheme(useThemeColors),
     minSyntaxHighlightingColorContrast: 0,
-    themeCssRoot: "div.expressive-code",
+    themeCssRoot: 'div.expressive-code',
     defaultProps: {
       showLineNumbers: input.settings.ecDefaultShowLineNumbers,
       wrap: input.settings.ecDefaultWrap,

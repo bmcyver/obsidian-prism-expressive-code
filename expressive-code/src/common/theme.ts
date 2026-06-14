@@ -5,20 +5,20 @@ import {
   VSCodeDefaultColorKey,
   VSCodeThemeType,
   VSCodeWorkbenchColors,
-} from "../internal/vscode-colors";
-import stripJsonComments from "strip-json-comments";
-import type { ThemeRegistration } from "shiki";
+} from '../internal/vscode-colors';
+import stripJsonComments from 'strip-json-comments';
+import type { ThemeRegistration } from 'shiki';
 import {
   chromaticRecolor,
   ChromaticRecolorTarget,
   ensureColorContrastOnBackground,
   onBackground,
-} from "../helpers/color-transforms";
-import { StyleOverrides } from "./style-settings";
+} from '../helpers/color-transforms';
+import { StyleOverrides } from './style-settings';
 
 export class ExpressiveCodeTheme implements Omit<
   ThemeRegistration,
-  "type" | "colors" | "settings"
+  'type' | 'colors' | 'settings'
 > {
   name: string;
   type: VSCodeThemeType;
@@ -41,9 +41,9 @@ export class ExpressiveCodeTheme implements Omit<
    */
   constructor(theme: ExpressiveCodeThemeInput) {
     let themeType = theme.type;
-    if (themeType === "css")
+    if (themeType === 'css')
       throw new Error('Theme type "css" is not supported.');
-    if (themeType !== "dark" && themeType !== "light") {
+    if (themeType !== 'dark' && themeType !== 'light') {
       themeType = guessThemeTypeFromEditorColors(theme.colors);
     }
 
@@ -51,7 +51,7 @@ export class ExpressiveCodeTheme implements Omit<
     const themeColors: typeof theme.colors = { ...theme.colors };
     for (const key in themeColors) {
       if (
-        typeof themeColors[key] !== "string" ||
+        typeof themeColors[key] !== 'string' ||
         !themeColors[key].trim().length
       )
         delete themeColors[key];
@@ -61,13 +61,13 @@ export class ExpressiveCodeTheme implements Omit<
     this.name = theme.name || themeType;
     this.type = themeType as VSCodeThemeType;
     this.colors = resolveVSCodeWorkbenchColors(themeColors, this.type);
-    this.fg = theme.fg || this.colors["editor.foreground"];
-    this.bg = theme.bg || this.colors["editor.background"];
+    this.fg = theme.fg || this.colors['editor.foreground'];
+    this.bg = theme.bg || this.colors['editor.background'];
     this.semanticHighlighting = theme.semanticHighlighting || false;
     // Fix themes that use transparency in unexpected places (e.g. the `rose-pine` themes)
     // by premultiplying the colors of certain elements with the color of their parent element
     const premultiplyTable: [VSCodeDefaultColorKey, VSCodeDefaultColorKey][] = [
-      ["editorGroupHeader.tabsBackground", "editor.background"],
+      ['editorGroupHeader.tabsBackground', 'editor.background'],
     ];
     premultiplyTable.forEach(([colorKey, bgKey]) => {
       this.colors[colorKey] = onBackground(
@@ -174,10 +174,10 @@ export class ExpressiveCodeTheme implements Omit<
     };
 
     // Fix contrast of plain text
-    this.colors["editor.foreground"] = fixContrast(
-      this.colors["editor.foreground"],
+    this.colors['editor.foreground'] = fixContrast(
+      this.colors['editor.foreground'],
     );
-    this.fg = fixContrast(this.colors["editor.foreground"]);
+    this.fg = fixContrast(this.colors['editor.foreground']);
 
     // Fix contrast of token colors
     this.settings.forEach((s) => {
@@ -209,7 +209,7 @@ export class ExpressiveCodeTheme implements Omit<
       } = unknownSetting as ThemeSetting;
       const scope: string[] | undefined = Array.isArray(anyScope)
         ? anyScope.slice()
-        : typeof anyScope === "string"
+        : typeof anyScope === 'string'
           ? (anyScope as string).split(/\s*,\s*/)
           : undefined;
       return {
@@ -237,7 +237,7 @@ export class ExpressiveCodeTheme implements Omit<
 }
 
 export type ExpressiveCodeThemeInput = Partial<
-  Omit<ExpressiveCodeTheme | ThemeRegistration, "type">
+  Omit<ExpressiveCodeTheme | ThemeRegistration, 'type'>
 > & {
   type?: VSCodeThemeType | string | undefined;
   tokenColors?: unknown | undefined;

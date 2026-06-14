@@ -2,7 +2,7 @@ import {
   InlineStyleAnnotation,
   definePlugin,
   type ExpressiveCodePlugin,
-} from "@expressive-code/core";
+} from '@expressive-code/core';
 
 import {
   flattenTokens,
@@ -11,11 +11,11 @@ import {
   splitTokensIntoLines,
   FontStyle,
   type FlatToken,
-} from "./PrismUtils";
-import type * as Prism from "prismjs";
+} from './PrismUtils';
+import type * as Prism from 'prismjs';
 export function customPluginPrism(): ExpressiveCodePlugin {
   return definePlugin({
-    name: "Prism",
+    name: 'Prism',
     hooks: {
       performSyntaxAnalysis: async ({ codeBlock, styleVariants }) => {
         const codeLines = codeBlock.getLines();
@@ -88,7 +88,7 @@ export function customPluginPrism(): ExpressiveCodePlugin {
                     columnStart: charIndex,
                     columnEnd: tokenEndIndex,
                   },
-                  renderPhase: "earliest",
+                  renderPhase: 'earliest',
                 }),
               );
               charIndex = tokenEndIndex;

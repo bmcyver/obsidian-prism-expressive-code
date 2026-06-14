@@ -23,17 +23,17 @@ export function createInlineSvgUrl(
 ): string {
   const { keepSize = false } = options;
   let svgString = Array.isArray(svgContents)
-    ? svgContents.join("")
+    ? svgContents.join('')
     : svgContents;
   // Process attributes inside the svg tag
   svgString = svgString.replace(
     /^\s*(<svg)\s+([^>]+)\s*(\/?>)/,
     (match, tagStart, attrs, tagEnd) => {
-      if (typeof attrs !== "string") return match;
+      if (typeof attrs !== 'string') return match;
       if (!keepSize)
         attrs = attrs.replaceAll(
           /(?:width|height)\s*=\s*(?:(["'])[\w\s]*\1|\d+)\s*/g,
-          "",
+          '',
         );
       return `${tagStart} ${attrs}${tagEnd}`;
     },

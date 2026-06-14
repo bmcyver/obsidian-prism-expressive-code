@@ -1,13 +1,13 @@
-import { coreStyleSettings } from "./core-styles";
-import { ExpressiveCodePlugin, ResolverContext } from "../common/plugin";
+import { coreStyleSettings } from './core-styles';
+import { ExpressiveCodePlugin, ResolverContext } from '../common/plugin';
 import {
   StyleOverrides,
   ResolvedStyleSettingsByPath,
   StyleSettingPath,
   StyleValueOrValues,
   UnresolvedStyleValue,
-} from "../common/style-settings";
-import { ExpressiveCodeTheme } from "../common/theme";
+} from '../common/style-settings';
+import { ExpressiveCodeTheme } from '../common/theme';
 
 /**
  * Resolves all style settings contributed by core & plugins for the given theme.
@@ -78,19 +78,19 @@ export function resolveStyleSettings({
       // Resolve the setting value
       const valueOrResolver = unresolvedByPath.get(settingPath);
       const resolvedDefinition = (
-        typeof valueOrResolver === "function"
+        typeof valueOrResolver === 'function'
           ? valueOrResolver(resolverArgs)
           : valueOrResolver
       ) as StyleValueOrValues;
       result = Array.isArray(resolvedDefinition)
-        ? resolvedDefinition[theme.type === "dark" ? 0 : 1]
+        ? resolvedDefinition[theme.type === 'dark' ? 0 : 1]
         : resolvedDefinition;
 
       // If the resolved result is required to have a unit,
       // ensure that it has one
       if (preventUnitlessValues.has(settingPath)) {
         result = result.trim();
-        if (result in ["", "none"]) result = "0px";
+        if (result in ['', 'none']) result = '0px';
         if (result.match(/^[0-9.]+$/)) result = `${result}px`;
       }
 
@@ -124,7 +124,7 @@ export function getCssVarDeclarations({
 }: {
   resolvedStyleSettings: ResolvedStyleSettingsByPath;
   plugins: readonly ExpressiveCodePlugin[];
-  cssVarName: ResolverContext["cssVarName"];
+  cssVarName: ResolverContext['cssVarName'];
 }): Map<string, string> {
   const cssVarDeclarations = new Map<string, string>();
   const excludedPaths = new Set<StyleSettingPath>();
@@ -156,7 +156,7 @@ function getStyleSettingsByPath(styleSettings: {
   const result: UnresolvedStyleSettingsByPath = new Map();
 
   for (const [key, value] of Object.entries(styleSettings)) {
-    if (typeof value === "object" && !Array.isArray(value)) {
+    if (typeof value === 'object' && !Array.isArray(value)) {
       Object.entries(value).forEach(([subKey, subValue]) => {
         result.set(`${key}.${subKey}` as StyleSettingPath, subValue);
       });

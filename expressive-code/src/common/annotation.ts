@@ -1,7 +1,7 @@
-import type { Element, Parents } from "../hast";
-import { getClassNames, setProperty, h } from "../hast";
-import { ExpressiveCodeLine } from "./line";
-import { ResolverContext } from "./plugin";
+import type { Element, Parents } from '../hast';
+import { getClassNames, setProperty, h } from '../hast';
+import { ExpressiveCodeLine } from './line';
+import { ResolverContext } from './plugin';
 
 export type ExpressiveCodeInlineRange = {
   columnStart: number;
@@ -15,19 +15,19 @@ export type AnnotationRenderOptions = ResolverContext & {
 };
 
 export type AnnotationRenderPhase =
-  | "earliest"
-  | "earlier"
-  | "normal"
-  | "later"
-  | "latest";
+  | 'earliest'
+  | 'earlier'
+  | 'normal'
+  | 'later'
+  | 'latest';
 
 /* c8 ignore next */
 export const AnnotationRenderPhaseOrder: AnnotationRenderPhase[] = [
-  "earliest",
-  "earlier",
-  "normal",
-  "later",
-  "latest",
+  'earliest',
+  'earlier',
+  'normal',
+  'later',
+  'latest',
 ];
 
 export type AnnotationBaseOptions = {
@@ -174,7 +174,7 @@ export class InlineStyleAnnotation extends ExpressiveCodeAnnotation {
     ...baseOptions
   }: InlineStyleAnnotationOptions) {
     super(baseOptions);
-    this.name = "Inline style";
+    this.name = 'Inline style';
     this.color = color;
     this.bgColor = bgColor;
     this.italic = italic;
@@ -190,13 +190,13 @@ export class InlineStyleAnnotation extends ExpressiveCodeAnnotation {
       const varPrefix = `--${variantIndex}`;
       if (this.color) newStyles.set(varPrefix, this.color);
       if (this.bgColor) newStyles.set(`${varPrefix}bg`, this.bgColor);
-      if (this.italic) newStyles.set(`${varPrefix}fs`, "italic");
-      if (this.bold) newStyles.set(`${varPrefix}fw`, "bold");
+      if (this.italic) newStyles.set(`${varPrefix}fs`, 'italic');
+      if (this.bold) newStyles.set(`${varPrefix}fw`, 'bold');
       const textDecorations = [];
-      if (this.underline) textDecorations.push("underline");
-      if (this.strikethrough) textDecorations.push("line-through");
+      if (this.underline) textDecorations.push('underline');
+      if (this.strikethrough) textDecorations.push('line-through');
       if (textDecorations.length)
-        newStyles.set(`${varPrefix}td`, textDecorations.join(" "));
+        newStyles.set(`${varPrefix}td`, textDecorations.join(' '));
     };
     const variantIndices =
       this.styleVariantIndex !== undefined
@@ -206,24 +206,24 @@ export class InlineStyleAnnotation extends ExpressiveCodeAnnotation {
     if (newStyles.size === 0) return nodesToTransform;
 
     const buildStyleString = (styles: Map<string, string>) => {
-      return [...styles].map(([key, value]) => `${key}:${value}`).join(";");
+      return [...styles].map(([key, value]) => `${key}:${value}`).join(';');
     };
 
     const isInlineStyleNode = (node: Element) =>
-      node.tagName === "span" &&
+      node.tagName === 'span' &&
       // Our inline style nodes have no class names
       !getClassNames(node).length &&
       // Our inline style nodes contain CSS variable declarations
-      node.properties?.style?.toString().startsWith("--");
+      node.properties?.style?.toString().startsWith('--');
 
     const modifyExistingStyles = (node: Element, remove = false) => {
       const existingStyles: [string, string][] = (
-        node.properties?.style?.toString() || ""
+        node.properties?.style?.toString() || ''
       )
-        .split(";")
+        .split(';')
         .map((style) => {
-          const declParts = style.split(":");
-          return [declParts[0], declParts.slice(1).join(":")];
+          const declParts = style.split(':');
+          return [declParts[0], declParts.slice(1).join(':')];
         });
       const modifiedStylesMap = new Map(existingStyles);
       newStyles.forEach((value, key) => {
@@ -235,7 +235,7 @@ export class InlineStyleAnnotation extends ExpressiveCodeAnnotation {
       });
       const modifiedStyles = buildStyleString(modifiedStylesMap);
       if (modifiedStyles) {
-        setProperty(node, "style", modifiedStyles);
+        setProperty(node, 'style', modifiedStyles);
       } else if (node.properties?.style) {
         delete node.properties.style;
       }
@@ -250,7 +250,7 @@ export class InlineStyleAnnotation extends ExpressiveCodeAnnotation {
         childIdx--
       ) {
         const child = node.children[childIdx];
-        if (child.type === "element") {
+        if (child.type === 'element') {
           if (isInlineStyleNode(child)) {
             if (!modifyExistingStyles(child, true)) {
               // If the node has no styles left, replace it with its children
@@ -266,13 +266,13 @@ export class InlineStyleAnnotation extends ExpressiveCodeAnnotation {
       // Always remove conflicting styles from the node's children
       removeNestedConflictingStyles(node);
       // If node is already an inline style token, modify its existing styles
-      if (node.type === "element" && isInlineStyleNode(node)) {
+      if (node.type === 'element' && isInlineStyleNode(node)) {
         modifyExistingStyles(node);
         return node;
       }
       // Otherwise, wrap the node in a new inline style token
       const transformedNode = h(
-        "span",
+        'span',
         { style: buildStyleString(newStyles) },
         node,
       );
@@ -286,6 +286,6 @@ export function isInlineStyleAnnotation(
 ): annotation is InlineStyleAnnotation {
   return (
     annotation instanceof InlineStyleAnnotation ||
-    (annotation as ExpressiveCodeAnnotation).name === "Inline style"
+    (annotation as ExpressiveCodeAnnotation).name === 'Inline style'
   );
 }

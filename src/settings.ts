@@ -1,19 +1,19 @@
-import { PluginSettingTab, Setting } from "obsidian";
-import type PrismExpressiveCodePlugin from "./main";
-import { THEME_DISPLAY_NAMES } from "./themes/ThemeManager";
+import { PluginSettingTab, Setting } from 'obsidian';
+import type PrismExpressiveCodePlugin from './main';
+import { THEME_DISPLAY_NAMES } from './themes/ThemeManager';
 
 export enum FrameType {
-  Code = "code",
-  Terminal = "terminal",
-  None = "none",
-  Auto = "auto",
+  Code = 'code',
+  Terminal = 'terminal',
+  None = 'none',
+  Auto = 'auto',
 }
 
 export enum CollapseStyle {
-  Github = "github",
-  CollapsibleStart = "collapsible-start",
-  CollapsibleEnd = "collapsible-end",
-  CollapsibleAuto = "collapsible-auto",
+  Github = 'github',
+  CollapsibleStart = 'collapsible-start',
+  CollapsibleEnd = 'collapsible-end',
+  CollapsibleAuto = 'collapsible-auto',
 }
 
 export interface Settings {
@@ -28,8 +28,8 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  darkTheme: "one-dark-pro",
-  lightTheme: "one-light",
+  darkTheme: 'one-dark-pro',
+  lightTheme: 'one-light',
   preferThemeColors: true,
   inlineHighlighting: true,
   ecDefaultShowLineNumbers: false,
@@ -53,11 +53,11 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
     const themes = THEME_DISPLAY_NAMES;
 
     new Setting(this.containerEl)
-      .setName("All setting changes require a reload of the highlighter")
+      .setName('All setting changes require a reload of the highlighter')
       .addButton((button) => {
         button
           .setCta()
-          .setButtonText("Reload highlighter")
+          .setButtonText('Reload highlighter')
           .onClick(async () => {
             button.setDisabled(true);
             await this.plugin.reloadHighlighter();
@@ -66,9 +66,9 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
       });
 
     new Setting(this.containerEl)
-      .setName("Inline syntax highlighting")
+      .setName('Inline syntax highlighting')
       .setDesc(
-        "Enables syntax highlighting for inline code blocks via `code{:lang}`.",
+        'Enables syntax highlighting for inline code blocks via `code{:lang}`.',
       )
       .addToggle((toggle) => {
         toggle
@@ -79,11 +79,11 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(this.containerEl).setName("Ec defaults").setHeading();
+    new Setting(this.containerEl).setName('Ec defaults').setHeading();
 
     new Setting(this.containerEl)
-      .setName("Show line numbers")
-      .setDesc("Controls whether line numbers are shown by default.")
+      .setName('Show line numbers')
+      .setDesc('Controls whether line numbers are shown by default.')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.ecDefaultShowLineNumbers)
@@ -94,8 +94,8 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
       });
 
     new Setting(this.containerEl)
-      .setName("Wrap")
-      .setDesc("Controls whether code block lines wrap by default.")
+      .setName('Wrap')
+      .setDesc('Controls whether code block lines wrap by default.')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.ecDefaultWrap)
@@ -106,14 +106,14 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
       });
 
     new Setting(this.containerEl)
-      .setName("Frame")
-      .setDesc("Controls the default frame type for code blocks.")
+      .setName('Frame')
+      .setDesc('Controls the default frame type for code blocks.')
       .addDropdown((dropdown) => {
         dropdown.addOptions({
-          [FrameType.Code]: "Code",
-          [FrameType.Terminal]: "Terminal",
-          [FrameType.None]: "None",
-          [FrameType.Auto]: "Auto",
+          [FrameType.Code]: 'Code',
+          [FrameType.Terminal]: 'Terminal',
+          [FrameType.None]: 'None',
+          [FrameType.Auto]: 'Auto',
         });
         dropdown
           .setValue(this.plugin.settings.ecDefaultFrame)
@@ -124,14 +124,14 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
       });
 
     new Setting(this.containerEl)
-      .setName("Collapse style")
-      .setDesc("Controls how collapsible sections behave and are styled.")
+      .setName('Collapse style')
+      .setDesc('Controls how collapsible sections behave and are styled.')
       .addDropdown((dropdown) => {
         dropdown.addOptions({
-          [CollapseStyle.Github]: "GitHub (non-recollapsible)",
-          [CollapseStyle.CollapsibleStart]: "Collapsible Start",
-          [CollapseStyle.CollapsibleEnd]: "Collapsible End",
-          [CollapseStyle.CollapsibleAuto]: "Collapsible Auto",
+          [CollapseStyle.Github]: 'GitHub (non-recollapsible)',
+          [CollapseStyle.CollapsibleStart]: 'Collapsible Start',
+          [CollapseStyle.CollapsibleEnd]: 'Collapsible End',
+          [CollapseStyle.CollapsibleAuto]: 'Collapsible Auto',
         });
         dropdown
           .setValue(this.plugin.settings.ecDefaultCollapseStyle)
@@ -142,10 +142,10 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(this.containerEl).setName("Theme").setHeading();
+    new Setting(this.containerEl).setName('Theme').setHeading();
 
     new Setting(this.containerEl)
-      .setName("Dark theme")
+      .setName('Dark theme')
       .setDesc(
         "The theme for code blocks when Obsidian's base color scheme is dark.",
       )
@@ -160,7 +160,7 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
       });
 
     new Setting(this.containerEl)
-      .setName("Light theme")
+      .setName('Light theme')
       .setDesc(
         "The theme for code blocks when Obsidian's base color scheme is light.",
       )
@@ -175,9 +175,9 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
       });
 
     new Setting(this.containerEl)
-      .setName("Prefer theme colors")
+      .setName('Prefer theme colors')
       .setDesc(
-        "When enabled the plugin will prefer theme colors over CSS variables for things like the code block background.",
+        'When enabled the plugin will prefer theme colors over CSS variables for things like the code block background.',
       )
       .addToggle((toggle) => {
         toggle

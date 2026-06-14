@@ -1,4 +1,4 @@
-import { escapeRegExp } from "../internal/escaping";
+import { escapeRegExp } from '../internal/escaping';
 
 export class MetaOptions {
   constructor(input: string) {
@@ -44,7 +44,7 @@ export class MetaOptions {
       const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
       return keys.some(
         (key) =>
-          (key === "" && !option.key) ||
+          (key === '' && !option.key) ||
           option.key?.toLowerCase() === key.toLowerCase(),
       );
     }) as ReturnType;
@@ -57,13 +57,13 @@ export class MetaOptions {
   ) {
     if (!key)
       throw new Error(
-        "You must specify a non-empty key when using getString, getRange, getRegExp or getBoolean.",
+        'You must specify a non-empty key when using getString, getRange, getRegExp or getBoolean.',
       );
     type OptionType = K extends MetaOptionKind
       ? Extract<MetaOption, { kind: K }>
       : MetaOption;
     return this.list(key, kind)?.pop()?.value as
-      | OptionType["value"]
+      | OptionType['value']
       | undefined;
   }
 
@@ -72,7 +72,7 @@ export class MetaOptions {
    * or without a key by passing an empty string.
    */
   getString(key: string) {
-    return this.value(key, "string");
+    return this.value(key, 'string');
   }
 
   /**
@@ -80,7 +80,7 @@ export class MetaOptions {
    * or without a key by passing an empty string.
    */
   getStrings(keyOrKeys?: string | string[]) {
-    return this.list(keyOrKeys, "string").map((option) => option.value);
+    return this.list(keyOrKeys, 'string').map((option) => option.value);
   }
 
   /**
@@ -88,7 +88,7 @@ export class MetaOptions {
    * or without a key by passing an empty string.
    */
   getRange(key: string) {
-    return this.value(key, "range");
+    return this.value(key, 'range');
   }
 
   /**
@@ -96,7 +96,7 @@ export class MetaOptions {
    * or without a key by passing an empty string.
    */
   getRanges(keyOrKeys?: string | string[]) {
-    return this.list(keyOrKeys, "range").map((option) => option.value);
+    return this.list(keyOrKeys, 'range').map((option) => option.value);
   }
 
   /**
@@ -115,7 +115,7 @@ export class MetaOptions {
     return this.list(keyOrKeys)
       .map((option) => {
         // Skip values that are neither strings nor ranges
-        if (option.kind !== "string" && option.kind !== "range") return NaN;
+        if (option.kind !== 'string' && option.kind !== 'range') return NaN;
         // Skip values that don't look like valid numbers
         if (!/^-?\d+$/.test(option.value.trim())) return NaN;
         // Try to parse the value as an integer and return it
@@ -129,7 +129,7 @@ export class MetaOptions {
    * or without a key by passing an empty string.
    */
   getRegExp(key: string) {
-    return this.value(key, "regexp");
+    return this.value(key, 'regexp');
   }
 
   /**
@@ -137,14 +137,14 @@ export class MetaOptions {
    * or without a key by passing an empty string.
    */
   getRegExps(keyOrKeys?: string | string[]) {
-    return this.list(keyOrKeys, "regexp").map((option) => option.value);
+    return this.list(keyOrKeys, 'regexp').map((option) => option.value);
   }
 
   /**
    * Returns the last boolean value with the given key (case-insensitive).
    */
   getBoolean(key: string) {
-    return this.value(key, "boolean");
+    return this.value(key, 'boolean');
   }
 }
 
@@ -157,16 +157,16 @@ export type MetaOptionBase = {
 };
 
 export type MetaOptionString = MetaOptionBase & {
-  kind: "string";
+  kind: 'string';
   value: string;
 };
-export type MetaOptionRange = MetaOptionBase & { kind: "range"; value: string };
+export type MetaOptionRange = MetaOptionBase & { kind: 'range'; value: string };
 export type MetaOptionRegExp = MetaOptionBase & {
-  kind: "regexp";
+  kind: 'regexp';
   value: RegExp;
 };
 export type MetaOptionBoolean = MetaOptionBase & {
-  kind: "boolean";
+  kind: 'boolean';
   value: boolean;
 };
 
@@ -176,13 +176,13 @@ export type MetaOption =
   | MetaOptionRegExp
   | MetaOptionBoolean;
 
-export type MetaOptionKind = MetaOption["kind"];
+export type MetaOptionKind = MetaOption['kind'];
 
 function parseOptions(
   input: string,
   syntax: DelimitedValuesSyntax = {
-    valueDelimiters: ["'", '"', "/", "{...}"],
-    keyValueSeparator: "=",
+    valueDelimiters: ["'", '"', '/', '{...}'],
+    keyValueSeparator: '=',
   },
 ): { options: MetaOption[]; errors: string[] } {
   const options: MetaOption[] = [];
@@ -202,18 +202,18 @@ function parseOptions(
     }) => {
       inputWithoutDelimited =
         inputWithoutDelimited.slice(0, index) +
-        " ".repeat(raw.length) +
+        ' '.repeat(raw.length) +
         inputWithoutDelimited.slice(index + raw.length);
       // Handle regular expressions
-      if (valueStartDelimiter === "/") {
+      if (valueStartDelimiter === '/') {
         let regExp: RegExp | undefined;
         try {
           // Try to use regular expressions with capture group indices
-          regExp = new RegExp(value, "gd");
+          regExp = new RegExp(value, 'gd');
         } catch {
           try {
             // Use fallback if unsupported
-            regExp = new RegExp(value, "g");
+            regExp = new RegExp(value, 'g');
           } catch (error) {
             /* c8 ignore next */
             const msg =
@@ -225,7 +225,7 @@ function parseOptions(
         options.push({
           index,
           raw,
-          kind: "regexp",
+          kind: 'regexp',
           key,
           value: regExp,
           valueStartDelimiter,
@@ -234,11 +234,11 @@ function parseOptions(
         return;
       }
       // Handle ranges
-      if (valueStartDelimiter === "{") {
+      if (valueStartDelimiter === '{') {
         options.push({
           index,
           raw,
-          kind: "range",
+          kind: 'range',
           key,
           value,
           valueStartDelimiter,
@@ -250,7 +250,7 @@ function parseOptions(
       options.push({
         index,
         raw,
-        kind: "string",
+        kind: 'string',
         key,
         value,
         valueStartDelimiter,
@@ -262,38 +262,38 @@ function parseOptions(
   // Now parse all remaining options
   const escapedSeparator = escapeRegExp(syntax.keyValueSeparator).replace(
     /-/g,
-    "\\-",
+    '\\-',
   );
   const regExp = new RegExp(
     `([^\\s${escapedSeparator}]+)(?:\\s*${escapedSeparator}\\s*(\\S+))?`,
-    "g",
+    'g',
   );
   const simpleOptions = [...inputWithoutDelimited.matchAll(regExp)];
   simpleOptions.forEach((match) => {
     const index = match.index ?? 0;
     const [raw, key, value] = match;
 
-    if (value === "true" || value === "false" || value === undefined) {
+    if (value === 'true' || value === 'false' || value === undefined) {
       // Handle booleans
       options.push({
         index,
         raw,
-        kind: "boolean",
+        kind: 'boolean',
         key,
-        value: value !== "false",
-        valueStartDelimiter: "",
-        valueEndDelimiter: "",
+        value: value !== 'false',
+        valueStartDelimiter: '',
+        valueEndDelimiter: '',
       });
     } else {
       // Treat all other options as strings
       options.push({
         index,
         raw,
-        kind: "string",
+        kind: 'string',
         key,
         value,
-        valueStartDelimiter: "",
-        valueEndDelimiter: "",
+        valueStartDelimiter: '',
+        valueEndDelimiter: '',
       });
     }
   });
@@ -312,7 +312,7 @@ function parseDelimitedValues(
   syntax: DelimitedValuesSyntax,
 ): DelimitedValuesMatch[] {
   const valueDelimiterPairs = syntax.valueDelimiters.map((valueDelimiter) => {
-    const parts = valueDelimiter.split("...");
+    const parts = valueDelimiter.split('...');
     const isPair = parts.length === 2;
     return {
       valueStartDelimiter: isPair ? parts[0] : valueDelimiter,
@@ -322,7 +322,7 @@ function parseDelimitedValues(
   const singleCharValueDelimiters = valueDelimiterPairs
     .map((pair) => pair.valueStartDelimiter)
     .filter((delimiter) => delimiter.length === 1)
-    .join("");
+    .join('');
 
   // Build a regular expression that contains alternatives for all value delimiters
   const regExpParts = valueDelimiterPairs.map(
@@ -335,7 +335,7 @@ function parseDelimitedValues(
           // Start of non-capturing optional group
           `(?:`,
           // Key name (captured)
-          `([^\\s${escapeRegExp((singleCharValueDelimiters + syntax.keyValueSeparator).replace(/-/g, "\\-"))}]+)`,
+          `([^\\s${escapeRegExp((singleCharValueDelimiters + syntax.keyValueSeparator).replace(/-/g, '\\-'))}]+)`,
           // Optional whitespace
           `\\s*`,
           // Key/value separator (e.g. `=`)
@@ -357,10 +357,10 @@ function parseDelimitedValues(
         // Whitespace or end of string
         `(?=\\s|$)`,
       ];
-      return part.flat().join("");
+      return part.flat().join('');
     },
   );
-  const regExp = new RegExp(regExpParts.join("|"), "g");
+  const regExp = new RegExp(regExpParts.join('|'), 'g');
 
   // Now use the regular expression to find all matches
   const matches = [...input.matchAll(regExp)];
@@ -392,11 +392,11 @@ function parseDelimitedValues(
     // that they need to be escaped in the first place.
     const escapedBackslashOrValueEndDelimiter = new RegExp(
       `\\\\(\\\\|${escapeRegExp(valueEndDelimiter)})`,
-      "g",
+      'g',
     );
     const value = escapedValue.replace(
       escapedBackslashOrValueEndDelimiter,
-      "$1",
+      '$1',
     );
 
     return {

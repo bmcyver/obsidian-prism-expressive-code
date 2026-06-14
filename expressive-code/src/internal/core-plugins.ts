@@ -2,14 +2,14 @@ import {
   AnnotationRenderOptions,
   ExpressiveCodeAnnotation,
   isInlineStyleAnnotation,
-} from "../common/annotation";
-import { ExpressiveCodePlugin } from "../common/plugin";
-import { h } from "../hast";
-import tabindexJsModule from "./tabindex-js-module.min";
+} from '../common/annotation';
+import { ExpressiveCodePlugin } from '../common/plugin';
+import { h } from '../hast';
+import tabindexJsModule from './tabindex-js-module.min';
 
 export const corePlugins: ExpressiveCodePlugin[] = [
   {
-    name: "Indent wrapper",
+    name: 'Indent wrapper',
     hooks: {
       postprocessAnnotations: ({ codeBlock }) => {
         codeBlock.getLines().forEach((line) => {
@@ -30,7 +30,7 @@ export const corePlugins: ExpressiveCodePlugin[] = [
             line.addAnnotation(
               new IndentAnnotation({
                 inlineRange: { columnStart: 0, columnEnd: indent },
-                renderPhase: "earlier",
+                renderPhase: 'earlier',
               }),
             );
           }
@@ -39,13 +39,13 @@ export const corePlugins: ExpressiveCodePlugin[] = [
     },
   },
   {
-    name: "Scrollable block tabindex",
+    name: 'Scrollable block tabindex',
     jsModules: [tabindexJsModule],
   },
 ];
 
 class IndentAnnotation extends ExpressiveCodeAnnotation {
   render({ nodesToTransform }: AnnotationRenderOptions) {
-    return nodesToTransform.map((node) => h("span.indent", node));
+    return nodesToTransform.map((node) => h('span.indent', node));
   }
 }

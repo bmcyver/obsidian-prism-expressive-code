@@ -1,16 +1,16 @@
-import { ExpressiveCodeEngine } from "@expressive-code/core";
-import type PrismExpressiveCodePlugin from "../main";
+import { ExpressiveCodeEngine } from '@expressive-code/core';
+import type PrismExpressiveCodePlugin from '../main';
 
-import { ThemeMapper } from "../themes/ThemeManager";
-import { toDom } from "hast-util-to-dom";
-import { createEcEngineConfig } from "./Config";
-import { LANGUAGE_BLACKLIST } from "../prism/PrismUtils";
-import { clearStyleCache, LANGUAGE_ALIASES } from "../prism/PrismUtils";
+import { ThemeMapper } from '../themes/ThemeManager';
+import { toDom } from 'hast-util-to-dom';
+import { createEcEngineConfig } from './Config';
+import { LANGUAGE_BLACKLIST } from '../prism/PrismUtils';
+import { clearStyleCache, LANGUAGE_ALIASES } from '../prism/PrismUtils';
 import {
   InlineHighlighter,
   type TokensResult,
-} from "../prism/InlineHighlighter";
-import type * as Prism from "prismjs";
+} from '../prism/InlineHighlighter';
+import type * as Prism from 'prismjs';
 
 export class CodeHighlighter {
   plugin: PrismExpressiveCodePlugin;
@@ -38,17 +38,17 @@ export class CodeHighlighter {
     }
 
     const loadedPrismLangs = Object.keys(prism.languages).filter(
-      (key) => typeof prism.languages[key] === "object",
+      (key) => typeof prism.languages[key] === 'object',
     );
     this.supportedLanguages = Array.from(
       new Set([
         ...loadedPrismLangs,
         ...Object.keys(LANGUAGE_ALIASES),
-        "plaintext",
-        "txt",
-        "text",
-        "plain",
-        "ansi",
+        'plaintext',
+        'txt',
+        'text',
+        'plain',
+        'ansi',
       ]),
     );
     this.safeLanguagesSet = new Set(
@@ -68,7 +68,7 @@ export class CodeHighlighter {
     }
     const themeStyles = await this.ec.getThemeStyles();
     // eslint-disable-next-line obsidianmd/no-forbidden-elements
-    this.ecStyleElement = activeDocument.head.createEl("style", {
+    this.ecStyleElement = activeDocument.head.createEl('style', {
       text: themeStyles,
     });
   }

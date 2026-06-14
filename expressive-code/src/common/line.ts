@@ -1,14 +1,14 @@
 import type {
   ExpressiveCodeAnnotation,
   ExpressiveCodeInlineRange,
-} from "./annotation";
-import { ExpressiveCodeBlock } from "./block";
-import { getAbsoluteRange } from "../internal/ranges";
-import { isNumber, isString, newTypeError } from "../internal/type-checks";
+} from './annotation';
+import { ExpressiveCodeBlock } from './block';
+import { getAbsoluteRange } from '../internal/ranges';
+import { isNumber, isString, newTypeError } from '../internal/type-checks';
 
 export class ExpressiveCodeLine {
   constructor(text: string) {
-    if (typeof text !== "string")
+    if (typeof text !== 'string')
       throw new Error(
         `Expected code line text to be a string, but got ${JSON.stringify(text)}.`,
       );
@@ -27,7 +27,7 @@ export class ExpressiveCodeLine {
   set parent(value) {
     if (!(value instanceof ExpressiveCodeBlock))
       throw new Error(
-        "When setting the parent of a code line, you must specify a valid code block instance.",
+        'When setting the parent of a code line, you must specify a valid code block instance.',
       );
     if (this.#parent) {
       if (this.#parent === value) return;
@@ -50,7 +50,7 @@ export class ExpressiveCodeLine {
     validateExpressiveCodeAnnotation(annotation);
     if (this.#parent?.state?.canEditAnnotations === false)
       throw new Error(
-        "Cannot edit code line annotations in the current state.",
+        'Cannot edit code line annotations in the current state.',
       );
     this.#annotations.push(annotation);
   }
@@ -59,7 +59,7 @@ export class ExpressiveCodeLine {
     validateExpressiveCodeAnnotation(annotation);
     if (this.#parent?.state?.canEditAnnotations === false)
       throw new Error(
-        "Cannot edit code line annotations in the current state.",
+        'Cannot edit code line annotations in the current state.',
       );
     const index = this.#annotations.indexOf(annotation);
     if (index === -1)
@@ -75,12 +75,12 @@ export class ExpressiveCodeLine {
     newText: string,
   ): string {
     if (columnStart !== undefined && !isNumber(columnStart))
-      throw newTypeError("number", columnStart);
+      throw newTypeError('number', columnStart);
     if (columnEnd !== undefined && !isNumber(columnEnd))
-      throw newTypeError("number", columnEnd);
-    if (!isString(newText)) throw newTypeError("string", newText);
+      throw newTypeError('number', columnEnd);
+    if (!isString(newText)) throw newTypeError('string', newText);
     if (this.#parent?.state?.canEditCode === false)
-      throw new Error("Cannot edit code line text in the current state.");
+      throw new Error('Cannot edit code line text in the current state.');
 
     // Convert the given column positions to an absolute range
     const [editStart, editEnd] = getAbsoluteRange({
@@ -151,18 +151,18 @@ function validateExpressiveCodeInlineRange(
   inlineRange: ExpressiveCodeInlineRange,
 ) {
   if (!isNumber(inlineRange.columnStart) || !isNumber(inlineRange.columnEnd))
-    throw newTypeError("ExpressiveCodeAnnotation", inlineRange, "inlineRange");
+    throw newTypeError('ExpressiveCodeAnnotation', inlineRange, 'inlineRange');
 }
 
 export function validateExpressiveCodeAnnotation(
   annotation: ExpressiveCodeAnnotation,
 ) {
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  if (typeof annotation?.render !== "function")
+  if (typeof annotation?.render !== 'function')
     throw newTypeError(
-      "ExpressiveCodeAnnotation",
+      'ExpressiveCodeAnnotation',
       annotation?.render,
-      "render",
+      'render',
     );
   if (annotation.inlineRange)
     validateExpressiveCodeInlineRange(annotation.inlineRange);

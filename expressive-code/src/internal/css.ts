@@ -4,11 +4,11 @@ import {
   stringify,
   middleware,
   type Element as StylisElement,
-} from "stylis";
-import { escapeRegExp } from "./escaping";
+} from 'stylis';
+import { escapeRegExp } from './escaping';
 
-export const groupWrapperElement = "div";
-export const groupWrapperClassName = "expressive-code";
+export const groupWrapperElement = 'div';
+export const groupWrapperClassName = 'expressive-code';
 
 /**
  * A map of long terms commonly found in style setting paths to shorter alternatives that are
@@ -19,58 +19,58 @@ export const groupWrapperClassName = "expressive-code";
  * to their {@link PluginStyleSettings} object.
  */
 export const cssVarReplacements = new Map<string, string>([
-  ["background", "bg"],
-  ["foreground", "fg"],
-  ["color", "col"],
-  ["border", "brd"],
-  ["padding", "pad"],
-  ["margin", "marg"],
-  ["radius", "rad"],
-  ["opacity", "opa"],
-  ["width", "wd"],
-  ["height", "ht"],
-  ["weight", "wg"],
-  ["block", "blk"],
-  ["inline", "inl"],
-  ["bottom", "btm"],
-  ["value", "val"],
-  ["active", "act"],
-  ["inactive", "inact"],
-  ["highlight", "hl"],
-  ["selection", "sel"],
-  ["indicator", "ind"],
-  ["shadow", "shd"],
-  ["family", "fml"],
-  ["transform", "trf"],
-  ["decoration", "dec"],
-  ["button", "btn"],
-  ["editor", "ed"],
-  ["terminal", "trm"],
-  ["scrollbar", "sb"],
-  ["toolbar", "tb"],
-  ["gutter", "gtr"],
-  ["titlebar", "ttb"],
-  ["textMarkers", "tm"],
-  ["frames", "frm"],
+  ['background', 'bg'],
+  ['foreground', 'fg'],
+  ['color', 'col'],
+  ['border', 'brd'],
+  ['padding', 'pad'],
+  ['margin', 'marg'],
+  ['radius', 'rad'],
+  ['opacity', 'opa'],
+  ['width', 'wd'],
+  ['height', 'ht'],
+  ['weight', 'wg'],
+  ['block', 'blk'],
+  ['inline', 'inl'],
+  ['bottom', 'btm'],
+  ['value', 'val'],
+  ['active', 'act'],
+  ['inactive', 'inact'],
+  ['highlight', 'hl'],
+  ['selection', 'sel'],
+  ['indicator', 'ind'],
+  ['shadow', 'shd'],
+  ['family', 'fml'],
+  ['transform', 'trf'],
+  ['decoration', 'dec'],
+  ['button', 'btn'],
+  ['editor', 'ed'],
+  ['terminal', 'trm'],
+  ['scrollbar', 'sb'],
+  ['toolbar', 'tb'],
+  ['gutter', 'gtr'],
+  ['titlebar', 'ttb'],
+  ['textMarkers', 'tm'],
+  ['frames', 'frm'],
 ]);
 
 const groupWrapperScope = `.${groupWrapperClassName}`;
 const groupWrapperScopeEscaped = escapeRegExp(groupWrapperScope);
 const regExpScopedTopLevel = new RegExp(
   `^${groupWrapperScopeEscaped}\\s+.*(${groupWrapperScopeEscaped}|:root|html|body)`,
-  "g",
+  'g',
 );
 
 /**
  * Custom stylis middleware to handle scoping logic similarly to the original PostCSS plugins.
  */
 function scopeMiddleware(element: StylisElement) {
-  if (element.type === "rule" && element.props) {
+  if (element.type === 'rule' && element.props) {
     const scopeSelector = (selector: string) => {
       // Replace double scoping or root elements scoping:
       // `.expressive-code :root` -> `:root`
       // `.expressive-code .expressive-code` -> `.expressive-code`
-      let resolved = selector.replace(regExpScopedTopLevel, "$1");
+      let resolved = selector.replace(regExpScopedTopLevel, '$1');
 
       // Prevent top-level selectors that are already scoped from being scoped twice
       // e.g. `.expressive-code .expressive-code-something` -> `.expressive-code-something`
@@ -84,7 +84,7 @@ function scopeMiddleware(element: StylisElement) {
 
     if (Array.isArray(element.props)) {
       element.props = element.props.map(scopeSelector);
-    } else if (typeof element.props === "string") {
+    } else if (typeof element.props === 'string') {
       element.props = scopeSelector(element.props);
     }
   }
@@ -158,6 +158,6 @@ export function wrapInCascadeLayer(
   css: string,
   cascadeLayerName: string | undefined,
 ) {
-  if (!cascadeLayerName || cascadeLayerName.trim() === "") return css;
+  if (!cascadeLayerName || cascadeLayerName.trim() === '') return css;
   return `@layer ${cascadeLayerName.trim()}{${css}}`;
 }

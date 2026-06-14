@@ -1,12 +1,12 @@
-import type { Element } from "../hast";
-import { PluginStyles } from "../internal/css";
-import { GroupContents, RenderedGroupContents } from "../internal/render-group";
-import { ExpressiveCodeBlock } from "./block";
-import { ExpressiveCodeLine } from "./line";
-import { ExpressiveCodePlugin, ResolverContext } from "./plugin";
-import { ResolvedExpressiveCodeEngineConfig } from "./engine";
-import { GutterElement } from "./gutter";
-import { logErrorDetails } from "./logger";
+import type { Element } from '../hast';
+import { PluginStyles } from '../internal/css';
+import { GroupContents, RenderedGroupContents } from '../internal/render-group';
+import { ExpressiveCodeBlock } from './block';
+import { ExpressiveCodeLine } from './line';
+import { ExpressiveCodePlugin, ResolverContext } from './plugin';
+import { ResolvedExpressiveCodeEngineConfig } from './engine';
+import { GutterElement } from './gutter';
+import { logErrorDetails } from './logger';
 
 export interface ExpressiveCodeHookContextBase extends ResolverContext {
   codeBlock: ExpressiveCodeBlock;
@@ -61,7 +61,7 @@ export interface ExpressiveCodeHookContext extends ExpressiveCodeHookContextBase
  */
 export interface PostprocessRenderedLineContext extends Omit<
   ExpressiveCodeHookContext,
-  "addGutterElement"
+  'addGutterElement'
 > {
   /**
    * A reference to the line that is currently being rendered. It is read-only at this point,
@@ -108,7 +108,7 @@ export interface PostprocessRenderedLineContext extends Omit<
  */
 export interface PostprocessRenderedBlockContext extends Omit<
   ExpressiveCodeHookContext,
-  "addGutterElement"
+  'addGutterElement'
 > {
   /**
    * Allows modifying the block's rendered output. The `blockAst` property of this object contains

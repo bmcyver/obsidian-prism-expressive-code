@@ -1,24 +1,24 @@
-import path from "node:path";
-import { builtinModules } from "node:module";
-import { defineConfig, type UserConfig } from "vite";
-import { ExpressiveCodeEngine } from "@expressive-code/core";
+import path from 'node:path';
+import { builtinModules } from 'node:module';
+import { defineConfig, type UserConfig } from 'vite';
+import { ExpressiveCodeEngine } from '@expressive-code/core';
 import {
   createCssVariableThemeBundle,
   createEcEngineConfig,
   EC_VIRTUAL_SETTINGS,
-} from "./src/core/Config";
-import oneDarkPro from "shiki/themes/one-dark-pro.mjs";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
+} from './src/core/Config';
+import oneDarkPro from 'shiki/themes/one-dark-pro.mjs';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
-const entryFile = "src/main.ts";
-const EC_RUNTIME_MODULE_ID = "virtual:ec-runtime";
-const EC_STYLES_MODULE_ID = "virtual:ec-styles.css";
+const entryFile = 'src/main.ts';
+const EC_RUNTIME_MODULE_ID = 'virtual:ec-runtime';
+const EC_STYLES_MODULE_ID = 'virtual:ec-styles.css';
 const EC_RUNTIME_RESOLVED_ID = `\0${EC_RUNTIME_MODULE_ID}`;
 const EC_STYLES_RESOLVED_ID = `\0${EC_STYLES_MODULE_ID}`;
 
-const polyfilledNodeBuiltins = new Set(["fs", "path", "url"]);
+const polyfilledNodeBuiltins = new Set(['fs', 'path', 'url']);
 const externalNodeBuiltins = builtinModules.filter(
-  (moduleName) => !polyfilledNodeBuiltins.has(moduleName.replace(/^node:/, "")),
+  (moduleName) => !polyfilledNodeBuiltins.has(moduleName.replace(/^node:/, '')),
 );
 
 function expressiveCodeBundlePlugin() {
@@ -48,7 +48,7 @@ function expressiveCodeBundlePlugin() {
         ]);
 
         return {
-          runtimeModule: jsModules.join("\n"),
+          runtimeModule: jsModules.join('\n'),
           styles: cssVariableTheme.restoreCssVariables(baseStyles),
         };
       })();
@@ -58,7 +58,7 @@ function expressiveCodeBundlePlugin() {
   };
 
   return {
-    name: "expressive-code-bundle",
+    name: 'expressive-code-bundle',
     resolveId(id: string): string | undefined {
       if (id === EC_RUNTIME_MODULE_ID) {
         return EC_RUNTIME_RESOLVED_ID;
@@ -86,32 +86,32 @@ function expressiveCodeBundlePlugin() {
 }
 
 export default defineConfig(({ mode }) => {
-  const prod = mode === "production";
-  const outDir = "dist/";
+  const prod = mode === 'production';
+  const outDir = 'dist/';
 
   return {
     plugins: [
       expressiveCodeBundlePlugin(),
       nodePolyfills({
-        include: ["path", "url", "process"],
+        include: ['path', 'url', 'process'],
         protocolImports: true,
       }),
     ],
     resolve: {
       alias: {
-        src: path.resolve(__dirname, "./src"),
+        src: path.resolve(__dirname, './src'),
       },
     },
     build: {
       lib: {
         entry: path.resolve(__dirname, entryFile),
-        name: "main",
-        fileName: () => "main.js",
-        formats: ["cjs"],
+        name: 'main',
+        fileName: () => 'main.js',
+        formats: ['cjs'],
       },
       minify: prod,
-      target: "esnext",
-      sourcemap: prod ? false : "inline",
+      target: 'esnext',
+      sourcemap: prod ? false : 'inline',
       cssCodeSplit: false,
       emptyOutDir: false,
       outDir,
@@ -121,24 +121,24 @@ export default defineConfig(({ mode }) => {
         },
         output: {
           dir: outDir,
-          entryFileNames: "main.js",
-          assetFileNames: "styles.css",
+          entryFileNames: 'main.js',
+          assetFileNames: 'styles.css',
           codeSplitting: false,
         },
         external: [
-          "obsidian",
-          "electron",
-          "@codemirror/autocomplete",
-          "@codemirror/collab",
-          "@codemirror/commands",
-          "@codemirror/language",
-          "@codemirror/lint",
-          "@codemirror/search",
-          "@codemirror/state",
-          "@codemirror/view",
-          "@lezer/common",
-          "@lezer/highlight",
-          "@lezer/lr",
+          'obsidian',
+          'electron',
+          '@codemirror/autocomplete',
+          '@codemirror/collab',
+          '@codemirror/commands',
+          '@codemirror/language',
+          '@codemirror/lint',
+          '@codemirror/search',
+          '@codemirror/state',
+          '@codemirror/view',
+          '@lezer/common',
+          '@lezer/highlight',
+          '@lezer/lr',
           ...externalNodeBuiltins,
         ],
       },

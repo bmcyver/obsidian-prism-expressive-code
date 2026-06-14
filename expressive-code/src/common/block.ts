@@ -1,10 +1,10 @@
-import { MetaOptions } from "../helpers/meta-options";
+import { MetaOptions } from '../helpers/meta-options';
 import {
   ExpressiveCodeProcessingState,
   validateExpressiveCodeProcessingState,
-} from "../internal/render-block";
-import { isNumber, isString, newTypeError } from "../internal/type-checks";
-import { ExpressiveCodeLine } from "./line";
+} from '../internal/render-block';
+import { isNumber, isString, newTypeError } from '../internal/type-checks';
+import { ExpressiveCodeLine } from './line';
 
 export interface ExpressiveCodeBlockOptions {
   /**
@@ -139,13 +139,13 @@ export class ExpressiveCodeBlock {
     const {
       code,
       language,
-      meta = "",
+      meta = '',
       props,
       locale,
       parentDocument,
     } = options;
     if (!isString(code) || !isString(language) || !isString(meta))
-      throw newTypeError("object of type ExpressiveCodeBlockOptions", options);
+      throw newTypeError('object of type ExpressiveCodeBlockOptions', options);
     this.#lines = [];
     this.#language = language;
     this.#meta = meta;
@@ -165,12 +165,12 @@ export class ExpressiveCodeBlock {
     if (lines.length) this.insertLines(0, lines);
 
     // Transfer core meta options to props
-    this.props.wrap = this.metaOptions.getBoolean("wrap") ?? this.props.wrap;
+    this.props.wrap = this.metaOptions.getBoolean('wrap') ?? this.props.wrap;
     this.props.preserveIndent =
-      this.metaOptions.getBoolean("preserveIndent") ??
+      this.metaOptions.getBoolean('preserveIndent') ??
       this.props.preserveIndent;
     this.props.hangingIndent =
-      this.metaOptions.getInteger("hangingIndent") ?? this.props.hangingIndent;
+      this.metaOptions.getInteger('hangingIndent') ?? this.props.hangingIndent;
   }
 
   /**
@@ -178,22 +178,22 @@ export class ExpressiveCodeBlock {
    * as the type `ExpressiveCodeBlock` by TypeScript. Without this workaround,
    * plain objects with the same structure would be accepted, but fail at runtime.
    */
-  private _requireInstance = Symbol("ExpressiveCodeBlock");
+  private _requireInstance = Symbol('ExpressiveCodeBlock');
 
   readonly #lines: ExpressiveCodeLine[];
   #language: string;
   #meta: string;
   #metaOptions: MetaOptions;
-  #props: NonNullable<ExpressiveCodeBlockOptions["props"]>;
-  #locale: ExpressiveCodeBlockOptions["locale"];
-  #parentDocument: ExpressiveCodeBlockOptions["parentDocument"];
+  #props: NonNullable<ExpressiveCodeBlockOptions['props']>;
+  #locale: ExpressiveCodeBlockOptions['locale'];
+  #parentDocument: ExpressiveCodeBlockOptions['parentDocument'];
   #state: ExpressiveCodeProcessingState | undefined;
 
   /**
    * Provides read-only access to the code block's plaintext contents.
    */
   get code() {
-    return this.#lines.map((line) => line.text).join("\n");
+    return this.#lines.map((line) => line.text).join('\n');
   }
 
   get language() {
@@ -247,7 +247,7 @@ export class ExpressiveCodeBlock {
    *
    * Props can be modified until rendering starts and become read-only afterwards.
    */
-  get props(): NonNullable<ExpressiveCodeBlockOptions["props"]> {
+  get props(): NonNullable<ExpressiveCodeBlockOptions['props']> {
     if (this.#state?.canEditMetadata === false) {
       return Object.freeze({ ...this.#props });
     }
@@ -313,7 +313,7 @@ export class ExpressiveCodeBlock {
    */
   getLine(index: number): ExpressiveCodeLine | undefined {
     if (!isNumber(index) || index < 0)
-      throw new Error("Line index must be a non-negative number.");
+      throw new Error('Line index must be a non-negative number.');
     return this.getLines(index, index + 1)[0];
   }
 
@@ -350,9 +350,9 @@ export class ExpressiveCodeBlock {
       indices.length === 0 ||
       indices.some((index) => !isNumber(index) || index < 0)
     )
-      throw newTypeError("non-empty non-negative number[]", indices);
+      throw newTypeError('non-empty non-negative number[]', indices);
     if (this.#state?.canEditCode === false)
-      throw new Error("Cannot delete code block lines in the current state.");
+      throw new Error('Cannot delete code block lines in the current state.');
 
     // Sort line indices in reverse order and delete them
     const sorted = [...indices].sort((a, b) => b - a);
@@ -389,15 +389,15 @@ export class ExpressiveCodeBlock {
   insertLines(index: number, textLines: string[]) {
     // Validate arguments
     if (!isNumber(index) || index < 0)
-      throw newTypeError("non-negative number", index);
+      throw newTypeError('non-negative number', index);
     if (
       !Array.isArray(textLines) ||
       textLines.length === 0 ||
       textLines.some((textLine) => !isString(textLine))
     )
-      throw newTypeError("non-empty string[]", textLines);
+      throw newTypeError('non-empty string[]', textLines);
     if (this.#state?.canEditCode === false)
-      throw new Error("Cannot insert code block lines in the current state.");
+      throw new Error('Cannot insert code block lines in the current state.');
     // Note: To allow inserting a line after the last one, we need to use `<=` instead of `<`
     const isValidIndex = index >= 0 && index <= this.#lines.length;
     if (!isValidIndex)

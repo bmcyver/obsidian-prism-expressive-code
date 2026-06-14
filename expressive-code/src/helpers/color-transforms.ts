@@ -1,4 +1,4 @@
-import { TinyColor, readability } from "@ctrl/tinycolor";
+import { TinyColor, readability } from '@ctrl/tinycolor';
 import {
   RgbaColor,
   Hsl,
@@ -11,9 +11,9 @@ import {
   parseCssLchColor,
   parseCssOklchColor,
   rgbaToOklch,
-} from "../internal/color-spaces";
-import { binarySearch } from "../internal/search-algorithms";
-import { StyleVariant } from "../common/style-variants";
+} from '../internal/color-spaces';
+import { binarySearch } from '../internal/search-algorithms';
+import { StyleVariant } from '../common/style-variants';
 
 /**
  * Overrides the alpha value of a color with the given value.
@@ -51,7 +51,7 @@ export function setLuminance(input: string, targetLuminance: number) {
   return withParsedColor(input, (color) => {
     targetLuminance = minMaxRounded(targetLuminance);
     const increasing = targetLuminance > color.getLuminance();
-    const mixColor = increasing ? "#fff" : "#000";
+    const mixColor = increasing ? '#fff' : '#000';
     const mixAmount = binarySearch({
       getValueFn: (amount) => {
         return toTinyColor(color)
@@ -81,7 +81,7 @@ export function lighten(input: string, amount: number) {
     const { h, s, a: alpha } = hsl;
     return toHexColor(
       toTinyColor({
-        mode: "hsl",
+        mode: 'hsl',
         h,
         s,
         l: minMaxRounded(l + l * amount),
@@ -304,11 +304,11 @@ export function getFirstStaticColor(...inputs: (string | undefined)[]) {
 export function getStaticBackgroundColor(styleVariant: StyleVariant) {
   // Try to find an actual static color based on the given style variant
   const color = getFirstStaticColor(
-    styleVariant.resolvedStyleSettings.get("codeBackground"),
+    styleVariant.resolvedStyleSettings.get('codeBackground'),
     styleVariant.theme.bg,
   );
   // If no color was found, use white for light themes and dark grey for dark themes
-  return color ?? (styleVariant.theme.type === "dark" ? "#202020" : "#fff");
+  return color ?? (styleVariant.theme.type === 'dark' ? '#202020' : '#fff');
 }
 
 export type ChromaticRecolorTarget = {
@@ -352,7 +352,7 @@ export function chromaticRecolor(
   let targetHue: number;
   let targetChroma: number;
   let targetChromaMeasuredAtLightness: number | undefined;
-  if (typeof target === "string") {
+  if (typeof target === 'string') {
     const targetOklch = rgbaToOklch(toTinyColor(target));
     targetHue = targetOklch.h ?? 0;
     targetChroma = targetOklch.c;
@@ -410,7 +410,7 @@ function withParsedColor(
   const color = input && toTinyColor(input);
   if (!color || !color.isValid) {
     const fallbackOrInput = fallback !== undefined ? fallback : input;
-    return !fallbackOrInput || typeof fallbackOrInput === "string"
+    return !fallbackOrInput || typeof fallbackOrInput === 'string'
       ? fallbackOrInput
       : toHexColor(fallbackOrInput);
   }
@@ -422,7 +422,7 @@ function toTinyColor(input: string | TinyColor | RgbaColor | Hsl | Oklch) {
     // We use this instead of clone() because clone performs unwanted rounding
     return new TinyColor(input.toRgb());
   }
-  if (typeof input === "string") {
+  if (typeof input === 'string') {
     // Detect CSS lab() color notation as input and convert it to RGBA
     // as this color space is not supported by TinyColor yet
     const labColor = parseCssLabColor(input);
@@ -444,11 +444,11 @@ function toTinyColor(input: string | TinyColor | RgbaColor | Hsl | Oklch) {
     return new TinyColor(input);
   }
   // Detect known color object types
-  if (typeof input === "object" && "mode" in input) {
+  if (typeof input === 'object' && 'mode' in input) {
     // HSL
-    if (input.mode === "hsl") return new TinyColor(hslToRgba(input));
+    if (input.mode === 'hsl') return new TinyColor(hslToRgba(input));
     // OKLCH
-    if (input.mode === "oklch") return new TinyColor(oklchToRgba(input));
+    if (input.mode === 'oklch') return new TinyColor(oklchToRgba(input));
   }
   return new TinyColor(input);
 }

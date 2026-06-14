@@ -26,7 +26,7 @@ export function formatTemplate(
       text: string;
     }[] = choices.map((choice) => {
       const condition = choice.match(/^\s*(<|>|)\s*(-?[0-9.]+?)\s*=\s?/);
-      if (!condition) return { text: choice.replace(/^\s/, "") };
+      if (!condition) return { text: choice.replace(/^\s/, '') };
       const [fullMatch, operator, conditionValue] = condition;
 
       const number = Number.parseFloat(conditionValue);
@@ -34,14 +34,14 @@ export function formatTemplate(
         throw new Error(
           `Expected condition value "${conditionValue}" to be a number in string template "${template}".`,
         );
-      if (typeof value !== "number")
+      if (typeof value !== 'number')
         throw new Error(
           `Condition "${operator}${conditionValue}" in string template "${template}" requires variable "${varName}" to be a number, but it's ${JSON.stringify(value)}.`,
         );
 
       return {
         condition: {
-          operator: operator || "=",
+          operator: operator || '=',
           number,
         },
         text: choice.slice(fullMatch.length),
@@ -56,24 +56,24 @@ export function formatTemplate(
       );
     for (const { condition, text } of parsedChoices) {
       if (!condition) return text;
-      if (typeof value !== "number") continue;
+      if (typeof value !== 'number') continue;
       const conditionIsMatching =
         // Less than
-        (condition.operator === "<" && value < condition.number) ||
+        (condition.operator === '<' && value < condition.number) ||
         // Greater than
-        (condition.operator === ">" && value > condition.number) ||
+        (condition.operator === '>' && value > condition.number) ||
         // Equals
-        (condition.operator === "=" && value === condition.number);
+        (condition.operator === '=' && value === condition.number);
       if (conditionIsMatching) return text;
     }
-    return "";
+    return '';
   };
 
   // Temporarily replace escaped curly brackets
   let result = template;
-  result = result.replace(/(?<!\\)\\{/g, "\f(").replace(/(?<!\\)\\}/g, "\f)");
+  result = result.replace(/(?<!\\)\\{/g, '\f(').replace(/(?<!\\)\\}/g, '\f)');
   // Replace escaped escape characters with a single escape
-  result = result.replace(/\\(\\[{}])/g, "$1");
+  result = result.replace(/\\(\\[{}])/g, '$1');
 
   // Replace all placeholders until no more are found
   const innermostPlaceholderRegex = /\{([^{]*?)\}/g;
@@ -84,16 +84,16 @@ export function formatTemplate(
       innermostPlaceholderRegex,
       (match: string, contents: string) => {
         keepGoing = true;
-        const [varName, ...choices] = contents.split(";");
+        const [varName, ...choices] = contents.split(';');
         return getReplacement(varName, ...choices)
-          .replace(/{/g, "\f(")
-          .replace(/}/g, "\f)");
+          .replace(/{/g, '\f(')
+          .replace(/}/g, '\f)');
       },
     );
   }
 
   // Revert replaced escaped curly brackets with regular ones
-  result = result.replace(/\f\(/g, "{").replace(/\f\)/g, "}");
+  result = result.replace(/\f\(/g, '{').replace(/\f\)/g, '}');
 
   return result;
 }

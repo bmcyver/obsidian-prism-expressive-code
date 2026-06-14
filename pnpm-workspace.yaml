@@ -1,6 +1,6 @@
 packages:
-  - "."
-  - "expressive-code"
+  - '.'
+  - 'expressive-code'
 
 overrides:
-  "@expressive-code/core": "workspace:*"
+  '@expressive-code/core': 'workspace:*'

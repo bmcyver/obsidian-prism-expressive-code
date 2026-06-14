@@ -4,14 +4,14 @@
  */
 function updateTabIndex(el: Element) {
   if (!el) return;
-  const hasTabIndex = el.getAttribute("tabindex") !== null;
+  const hasTabIndex = el.getAttribute('tabindex') !== null;
   const needsTabIndex = el.scrollWidth > el.clientWidth;
   if (needsTabIndex && !hasTabIndex) {
-    el.setAttribute("tabindex", "0");
-    el.setAttribute("role", "region");
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'region');
   } else if (!needsTabIndex && hasTabIndex) {
-    el.removeAttribute("tabindex");
-    el.removeAttribute("role");
+    el.removeAttribute('tabindex');
+    el.removeAttribute('role');
   }
 }
 
@@ -56,7 +56,7 @@ function initCodeBlocks(
   resizeObserver: ResizeObserver,
 ) {
   container
-    .querySelectorAll?.(".expressive-code pre > code")
+    .querySelectorAll?.('.expressive-code pre > code')
     .forEach((code) => {
       const pre = code.parentElement;
       if (!pre) return;
@@ -81,6 +81,6 @@ const mutationObserver = new MutationObserver((mutations) =>
 mutationObserver.observe(document.body, { childList: true, subtree: true });
 
 // Also re-initialize all code blocks after view transitions initiated by popular frameworks
-document.addEventListener("astro:page-load", () => {
+document.addEventListener('astro:page-load', () => {
   initCodeBlocks(document, resizeObserver);
 });

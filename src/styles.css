@@ -122,6 +122,6 @@ span.pec-ul {
 }
 
 /* Apply list indentation for code blocks in Live Preview */
-.markdown-source-view .pec-code-block[style*="--pec-indent-level"] {
+.markdown-source-view .pec-code-block[style*='--pec-indent-level'] {
   margin-left: calc(var(--pec-indent-level, 0) * var(--list-indent)) !important;
 }

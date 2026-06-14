@@ -1,18 +1,18 @@
-import type { Element, Parents } from "../hast";
-import { h } from "../hast";
-import { ExpressiveCodeLine } from "../common/line";
+import type { Element, Parents } from '../hast';
+import { h } from '../hast';
+import { ExpressiveCodeLine } from '../common/line';
 import {
   AnnotationRenderPhase,
   AnnotationRenderPhaseOrder,
   ExpressiveCodeAnnotation,
-} from "../common/annotation";
-import { codeLineClass } from "../common/style-settings";
+} from '../common/annotation';
+import { codeLineClass } from '../common/style-settings';
 import {
   ExpressiveCodeHookContextBase,
   RenderEmptyLineFn,
-} from "../common/plugin-hooks";
-import { GutterElement } from "../common/gutter";
-import { isHastElement, newTypeError } from "./type-checks";
+} from '../common/plugin-hooks';
+import { GutterElement } from '../common/gutter';
+import { isHastElement, newTypeError } from './type-checks';
 
 export function splitLineAtAnnotationBoundaries(line: ExpressiveCodeLine) {
   const textParts: string[] = [];
@@ -204,13 +204,13 @@ export function renderLineToAst({
   // If we have any gutter elements, wrap a gutter container around the elements
   // and add it to the line's nodes
   if (renderedGutterElements.length) {
-    lineNode.children.push(h("div.gutter", renderedGutterElements));
+    lineNode.children.push(h('div.gutter', renderedGutterElements));
   }
 
   // Now also wrap the code in a container and add it to the line's nodes
   // (in case the line is empty, insert a line break to ensure it still gets rendered)
   lineNode.children.push(
-    h("div.code", partNodes.length > 0 ? partNodes : h(null, "\n")),
+    h('div.code', partNodes.length > 0 ? partNodes : h(null, '\n')),
   );
 
   // Render line-level annotations
@@ -226,9 +226,9 @@ export function renderLineToAst({
     lineNode = renderOutput[0] as Element;
     if (!isHastElement(lineNode)) {
       throw newTypeError(
-        "hast Element",
+        'hast Element',
         lineNode,
-        "line-level annotation render output",
+        'line-level annotation render output',
       );
     }
   });
@@ -275,12 +275,12 @@ export function getRenderEmptyLineFn(
     // If we have any gutter elements, wrap a gutter container around the elements
     // and add it to the line's nodes
     const gutterWrapper = renderedGutterElements.length
-      ? h("div.gutter", renderedGutterElements)
+      ? h('div.gutter', renderedGutterElements)
       : undefined;
     if (gutterWrapper) lineAst.children.push(gutterWrapper);
 
     // Now also wrap the code in a container and add it to the line's nodes
-    const codeWrapper = h("div.code");
+    const codeWrapper = h('div.code');
     lineAst.children.push(codeWrapper);
 
     return {
@@ -295,8 +295,8 @@ function renderPhaseSortFn(
   a: { renderPhase?: AnnotationRenderPhase | undefined },
   b: { renderPhase?: AnnotationRenderPhase | undefined },
 ) {
-  const indexA = AnnotationRenderPhaseOrder.indexOf(a.renderPhase || "normal");
-  const indexB = AnnotationRenderPhaseOrder.indexOf(b.renderPhase || "normal");
+  const indexA = AnnotationRenderPhaseOrder.indexOf(a.renderPhase || 'normal');
+  const indexB = AnnotationRenderPhaseOrder.indexOf(b.renderPhase || 'normal');
   return indexA - indexB;
 }
 

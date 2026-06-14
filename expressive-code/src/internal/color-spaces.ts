@@ -1,4 +1,4 @@
-import type { Rgb, Hsl, Oklch } from "culori/fn";
+import type { Rgb, Hsl, Oklch } from 'culori/fn';
 import {
   convertHslToRgb,
   convertRgbToHsl,
@@ -6,8 +6,8 @@ import {
   convertLabToLch,
   convertOklabToRgb,
   convertRgbToOklab,
-} from "culori/fn";
-import { bisect } from "./search-algorithms";
+} from 'culori/fn';
+import { bisect } from './search-algorithms';
 
 /**
  * RGBA color space, with all color channels ranging from 0 to 255,
@@ -186,7 +186,7 @@ export function lchabToRgba(
 function rgbaToCulori(rgba: RgbaColor): Rgb {
   const { r, g, b, a } = rgba;
   return {
-    mode: "rgb",
+    mode: 'rgb',
     r: r / 255,
     g: g / 255,
     b: b / 255,
@@ -214,13 +214,13 @@ export function hslToRgba(input: Hsl): RgbaColor {
 
 export function rgbaToOklch(input: RgbaColor): Oklch {
   const oklab = convertRgbToOklab(rgbaToCulori(input));
-  return convertLabToLch(oklab, "oklch");
+  return convertLabToLch(oklab, 'oklch');
 }
 
 export function oklchToRgba(input: Oklch, clampChroma = true): RgbaColor {
   const convert = (oklch: Oklch) => {
     // @ts-expect-error Types are missing the `mode` argument
-    const oklab = convertLchToLab(oklch, "oklab");
+    const oklab = convertLchToLab(oklch, 'oklab');
     const rgb = convertOklabToRgb(oklab);
     const minChannel = Math.min(rgb.r, rgb.g, rgb.b);
     const maxChannel = Math.max(rgb.r, rgb.g, rgb.b);
@@ -312,7 +312,7 @@ export function parseCssOklchColor(oklchString: string): Oklch | undefined {
   const [, l, c, h, alpha] = match;
 
   return {
-    mode: "oklch",
+    mode: 'oklch',
     l: parseCssValue(l, 0, 1),
     c: parseCssValue(c, 0, 0.5, 0.4),
     h: parseAngle(h),
@@ -326,7 +326,7 @@ function parseCssValue(
   max: number,
   valueFor100Percent?: number,
 ): number {
-  const isPercentage = value.endsWith("%");
+  const isPercentage = value.endsWith('%');
   const floatValue = parseFloat(value);
   const convertedValue = isPercentage
     ? (floatValue * (valueFor100Percent ?? max)) / 100

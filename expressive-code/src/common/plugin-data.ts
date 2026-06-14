@@ -1,5 +1,5 @@
-import { GroupContents, RenderedGroupContents } from "../internal/render-group";
-import { ExpressiveCodeBlock } from "./block";
+import { GroupContents, RenderedGroupContents } from '../internal/render-group';
+import { ExpressiveCodeBlock } from './block';
 
 export type PluginDataTarget =
   | ExpressiveCodeBlock

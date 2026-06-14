@@ -1,4 +1,4 @@
-import djb2a from "djb2a";
+import djb2a from 'djb2a';
 
 /**
  * Returns a JSON-like string representation of the given object that is stable,
@@ -18,9 +18,9 @@ export function stableStringify(
   const visited = new WeakSet();
 
   const toJson = (value: unknown): unknown => {
-    if (typeof value === "object" && value !== null) {
+    if (typeof value === 'object' && value !== null) {
       if (visited.has(value)) {
-        return "[Circular]";
+        return '[Circular]';
       }
 
       visited.add(value);
@@ -42,14 +42,14 @@ export function stableStringify(
       return result;
     }
 
-    if (typeof value === "function") {
-      return includeFunctionContents ? value.toString() : "[Function]";
+    if (typeof value === 'function') {
+      return includeFunctionContents ? value.toString() : '[Function]';
     }
 
     return value;
   };
 
-  if (obj === undefined) return "undefined";
+  if (obj === undefined) return 'undefined';
 
   return JSON.stringify(toJson(obj));
 }
@@ -70,6 +70,6 @@ export function getStableObjectHash(
 ): string {
   const { includeFunctionContents = false, hashLength = 5 } = options;
   const numericHash = djb2a(stableStringify(obj, { includeFunctionContents }));
-  const padding = "0".repeat(hashLength);
+  const padding = '0'.repeat(hashLength);
   return (padding + numericHash.toString(36)).slice(-hashLength);
 }

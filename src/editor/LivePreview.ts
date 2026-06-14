@@ -1,21 +1,21 @@
-import type PrismExpressiveCodePlugin from "../main";
+import type PrismExpressiveCodePlugin from '../main';
 import {
   Decoration,
   type DecorationSet,
   EditorView,
   ViewPlugin,
   type ViewUpdate,
-} from "@codemirror/view";
+} from '@codemirror/view';
 import {
   type Range,
   StateEffect,
   StateField,
   type Extension,
-} from "@codemirror/state";
-import { type ThemedToken } from "../prism/InlineHighlighter";
-import { LRUCache } from "../utils";
-import { debounce } from "obsidian";
-import { SyntaxTreeParser, DecorationUpdateType } from "./Parser";
+} from '@codemirror/state';
+import { type ThemedToken } from '../prism/InlineHighlighter';
+import { LRUCache } from '../utils';
+import { debounce } from 'obsidian';
+import { SyntaxTreeParser, DecorationUpdateType } from './Parser';
 
 const decorationCache = new LRUCache<string, Decoration>(200);
 
@@ -27,7 +27,7 @@ export class DecorationBuilder {
     language: string,
     content: string,
   ): Promise<Range<Decoration>[]> {
-    if (language === "") {
+    if (language === '') {
       return [];
     }
 
@@ -51,7 +51,7 @@ export class DecorationBuilder {
 
       const tokenStyle =
         plugin.highlighter.inlineHighlighter.getTokenStyle(token);
-      const classStr = tokenStyle.classes.join(" ");
+      const classStr = tokenStyle.classes.join(' ');
       const cacheKey = `${tokenStyle.style}|${classStr}`;
 
       let dec = decorationCache.get(cacheKey);

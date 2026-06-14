@@ -1,31 +1,31 @@
-import githubDark from "shiki/themes/github-dark.mjs";
-import githubLight from "shiki/themes/github-light.mjs";
-import { ExpressiveCodePlugin, ResolverContext } from "./plugin";
+import githubDark from 'shiki/themes/github-dark.mjs';
+import githubLight from 'shiki/themes/github-light.mjs';
+import { ExpressiveCodePlugin, ResolverContext } from './plugin';
 import {
   renderGroup,
   RenderInput,
   RenderOptions,
-} from "../internal/render-group";
-import { ExpressiveCodeTheme } from "./theme";
+} from '../internal/render-group';
+import { ExpressiveCodeTheme } from './theme';
 import {
   PluginStyles,
   scopeAndMinifyNestedCss,
   processPluginStyles,
   wrapInCascadeLayer,
   cssVarReplacements,
-} from "../internal/css";
-import { getCoreBaseStyles, getCoreThemeStyles } from "../internal/core-styles";
-import { StyleVariant, resolveStyleVariants } from "./style-variants";
+} from '../internal/css';
+import { getCoreBaseStyles, getCoreThemeStyles } from '../internal/core-styles';
+import { StyleVariant, resolveStyleVariants } from './style-variants';
 import {
   StyleOverrides,
   StyleSettingPath,
   getCssVarName,
-} from "./style-settings";
-import { ExpressiveCodeLogger, ExpressiveCodeLoggerOptions } from "./logger";
-import { resolveStyleSettings } from "../internal/style-resolving";
-import { getFirstStaticColor } from "../helpers/color-transforms";
-import { ExpressiveCodeBlock } from "./block";
-import { corePlugins } from "../internal/core-plugins";
+} from './style-settings';
+import { ExpressiveCodeLogger, ExpressiveCodeLoggerOptions } from './logger';
+import { resolveStyleSettings } from '../internal/style-resolving';
+import { getFirstStaticColor } from '../helpers/color-transforms';
+import { ExpressiveCodeBlock } from './block';
+import { corePlugins } from '../internal/core-plugins';
 
 export interface ExpressiveCodeEngineConfig {
   /**
@@ -179,7 +179,7 @@ export interface ExpressiveCodeEngineConfig {
    * by default, saving you from having to manually set this option on every single code block.
    */
   defaultProps?:
-    | (ExpressiveCodeBlock["props"] & {
+    | (ExpressiveCodeBlock['props'] & {
         /**
          * Allows to override the default props based on a code block's
          * syntax highlighting language.
@@ -199,7 +199,7 @@ export interface ExpressiveCodeEngineConfig {
          * ```
          */
         overridesByLang?:
-          | Record<string, ExpressiveCodeBlock["props"]>
+          | Record<string, ExpressiveCodeBlock['props']>
           | undefined;
       })
     | undefined;
@@ -230,10 +230,10 @@ export interface ExpressiveCodeEngineConfig {
 export type ResolvedExpressiveCodeEngineConfig = {
   [P in keyof Omit<
     ExpressiveCodeEngineConfig,
-    "customizeTheme" | "plugins" | "theme" | "logger"
+    'customizeTheme' | 'plugins' | 'theme' | 'logger'
   >]-?: Exclude<ExpressiveCodeEngineConfig[P], undefined>;
 } & {
-  customizeTheme: ExpressiveCodeEngineConfig["customizeTheme"];
+  customizeTheme: ExpressiveCodeEngineConfig['customizeTheme'];
   plugins: readonly ExpressiveCodePlugin[];
   logger: ExpressiveCodeLogger;
 };
@@ -256,7 +256,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
    */
   constructor(config: ExpressiveCodeEngineConfig) {
     // Transfer deprecated `theme` option to `themes` without triggering the deprecation warning
-    const deprecatedConfig: Omit<ExpressiveCodeEngineConfig, "theme"> & {
+    const deprecatedConfig: Omit<ExpressiveCodeEngineConfig, 'theme'> & {
       theme?: ExpressiveCodeTheme | undefined;
     } = config;
     if (deprecatedConfig.theme && !config.themes) {
@@ -278,16 +278,16 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
     this.useDarkModeMediaQuery =
       config.useDarkModeMediaQuery ??
       (this.themes.length === 2 && this.themes[0].type !== this.themes[1].type);
-    this.themeCssRoot = config.themeCssRoot ?? ":root";
+    this.themeCssRoot = config.themeCssRoot ?? ':root';
     this.themeCssSelector =
       config.themeCssSelector ?? ((theme) => `[data-theme='${theme.name}']`);
-    this.cascadeLayer = config.cascadeLayer ?? "";
+    this.cascadeLayer = config.cascadeLayer ?? '';
     this.useStyleReset = config.useStyleReset ?? true;
     this.customizeTheme = config.customizeTheme;
     this.useThemedScrollbars = config.useThemedScrollbars ?? true;
     this.useThemedSelectionColors = config.useThemedSelectionColors ?? false;
     this.styleOverrides = { ...config.styleOverrides };
-    this.defaultLocale = config.defaultLocale || "en-US";
+    this.defaultLocale = config.defaultLocale || 'en-US';
     this.defaultProps = config.defaultProps || {};
     this.plugins = [...corePlugins, ...(config.plugins?.flat() || [])];
     this.logger = new ExpressiveCodeLogger(config.logger);
@@ -315,7 +315,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
         });
         // Use the code background color when ensuring contrast
         const codeBg = getFirstStaticColor(
-          themeStyleSettings.get("codeBackground"),
+          themeStyleSettings.get('codeBackground'),
         );
         theme.ensureMinSyntaxHighlightingColorContrast(
           this.minSyntaxHighlightingColorContrast,
@@ -380,7 +380,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
     const resolverContext = this.getResolverContext();
     // Add core base styles
     pluginStyles.push({
-      pluginName: "core",
+      pluginName: 'core',
       styles: getCoreBaseStyles({
         ...resolverContext,
         useStyleReset: this.useStyleReset,
@@ -392,7 +392,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
     for (const plugin of this.plugins) {
       if (!plugin.baseStyles) continue;
       const resolvedStyles =
-        typeof plugin.baseStyles === "function"
+        typeof plugin.baseStyles === 'function'
           ? await plugin.baseStyles(resolverContext)
           : plugin.baseStyles;
       if (!resolvedStyles) continue;
@@ -403,7 +403,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
     }
     // Process styles (scoping, minifying, etc.)
     const processedStyles = await processPluginStyles(pluginStyles);
-    return wrapInCascadeLayer([...processedStyles].join(""), this.cascadeLayer);
+    return wrapInCascadeLayer([...processedStyles].join(''), this.cascadeLayer);
   }
 
   /**
@@ -431,7 +431,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
     const renderDeclarations = (declarations: Map<string, string>) =>
       [...declarations]
         .map(([varName, varValue]) => `${varName}:${varValue}`)
-        .join(";");
+        .join(';');
 
     // Generate CSS styles for the first theme (the "base theme")
     const { cssVarDeclarations: baseVars, theme: baseTheme } =
@@ -443,7 +443,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
       this.themeCssSelector(baseTheme, { styleVariants: this.styleVariants });
     const notBaseThemeSelector = baseThemeSelector
       ? `:not(${baseThemeSelector})`
-      : "";
+      : '';
     const baseThemeBlockInsideAlternateThemeRoot =
       notBaseThemeSelector &&
       `${this.themeCssRoot}${notBaseThemeSelector} &${baseThemeSelector}`;
@@ -454,15 +454,15 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
       baseThemeBlockInsideAlternateThemeRoot,
     ]
       .filter((selector) => selector)
-      .join(",");
+      .join(',');
     const baseThemeStyleSelectors = [
       // Code blocks with no specific theme selector
-      "&",
+      '&',
       // Code blocks with base theme selector inside root with non-base theme selector
       baseThemeBlockInsideAlternateThemeRoot,
     ]
       .filter((selector) => selector)
-      .join(",");
+      .join(',');
     themeStyles.push(
       await scopeAndMinifyNestedCss(`
 				${baseVarSelectors} {
@@ -506,7 +506,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
     // of the alternate type (dark/light) when it's matching the user's system preferences
     if (this.useDarkModeMediaQuery) {
       const baseTheme = this.styleVariants[0].theme;
-      const altType = baseTheme.type === "dark" ? "light" : "dark";
+      const altType = baseTheme.type === 'dark' ? 'light' : 'dark';
       const firstAltVariant = alternateVariants.find(
         (variant) => variant.theme.type === altType,
       );
@@ -517,8 +517,8 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
             `one dark and one light theme, but the following themes were given:`,
             this.themes
               .map((theme) => `${theme.name} (${theme.type})`)
-              .join(", "),
-          ].join(" "),
+              .join(', '),
+          ].join(' '),
         );
       const darkModeMediaQuery = await scopeAndMinifyNestedCss(`
 				@media (prefers-color-scheme: ${altType}) {
@@ -551,7 +551,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
         );
       }
     }
-    return wrapInCascadeLayer(themeStyles.join(""), this.cascadeLayer);
+    return wrapInCascadeLayer(themeStyles.join(''), this.cascadeLayer);
   }
 
   /**
@@ -570,7 +570,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
     const jsModules = new Set<string>();
     for (const plugin of this.plugins) {
       const pluginModules =
-        typeof plugin.jsModules === "function"
+        typeof plugin.jsModules === 'function'
           ? await plugin.jsModules(this.getResolverContext())
           : plugin.jsModules;
       pluginModules?.forEach((moduleCode) => {
@@ -582,7 +582,7 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
   }
 
   private cssVar(styleSetting: StyleSettingPath, fallbackValue?: string) {
-    return `var(${getCssVarName(styleSetting)}${fallbackValue ? `, ${fallbackValue}` : ""})`;
+    return `var(${getCssVarName(styleSetting)}${fallbackValue ? `, ${fallbackValue}` : ''})`;
   }
 
   private getResolverContext(): ResolverContext {
@@ -599,18 +599,18 @@ export class ExpressiveCodeEngine implements ResolvedExpressiveCodeEngineConfig 
   readonly useDarkModeMediaQuery: boolean;
   readonly themeCssRoot: string;
   readonly themeCssSelector: NonNullable<
-    ExpressiveCodeEngineConfig["themeCssSelector"]
+    ExpressiveCodeEngineConfig['themeCssSelector']
   >;
   readonly cascadeLayer: string;
   readonly useStyleReset: boolean;
-  readonly customizeTheme: ExpressiveCodeEngineConfig["customizeTheme"];
+  readonly customizeTheme: ExpressiveCodeEngineConfig['customizeTheme'];
   readonly useThemedScrollbars: boolean;
   readonly useThemedSelectionColors: boolean;
   readonly styleOverrides: StyleOverrides;
   readonly styleVariants: StyleVariant[];
   readonly defaultLocale: string;
   readonly defaultProps: NonNullable<
-    ExpressiveCodeEngineConfig["defaultProps"]
+    ExpressiveCodeEngineConfig['defaultProps']
   >;
   readonly plugins: readonly ExpressiveCodePlugin[];
   readonly logger: ExpressiveCodeLogger;

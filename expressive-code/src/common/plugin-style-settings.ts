@@ -1,4 +1,4 @@
-import { UnresolvedStyleSettings, StyleSettingPath } from "./style-settings";
+import { UnresolvedStyleSettings, StyleSettingPath } from './style-settings';
 
 /**
  * Represents a strongly typed set of style settings provided by a plugin (or core).

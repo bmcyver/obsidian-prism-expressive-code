@@ -1,20 +1,20 @@
-import type { Element } from "../hast";
-import { h } from "../hast";
+import type { Element } from '../hast';
+import { h } from '../hast';
 import {
   ExpressiveCodeBlock,
   ExpressiveCodeBlockOptions,
-} from "../common/block";
-import { ExpressiveCodePlugin, ResolverContext } from "../common/plugin";
-import { ResolvedExpressiveCodeEngineConfig } from "../common/engine";
-import { runHooks } from "../common/plugin-hooks";
+} from '../common/block';
+import { ExpressiveCodePlugin, ResolverContext } from '../common/plugin';
+import { ResolvedExpressiveCodeEngineConfig } from '../common/engine';
+import { runHooks } from '../common/plugin-hooks';
 import {
   groupWrapperClassName,
   groupWrapperElement,
   PluginStyles,
   processPluginStyles,
-} from "./css";
-import { renderBlock } from "./render-block";
-import { isHastElement, newTypeError } from "./type-checks";
+} from './css';
+import { renderBlock } from './render-block';
+import { isHastElement, newTypeError } from './type-checks';
 
 export type RenderInput =
   | ExpressiveCodeBlockOptions
@@ -111,7 +111,7 @@ export async function renderGroup({
     config,
   };
   await runHooks(
-    "postprocessRenderedBlockGroup",
+    'postprocessRenderedBlockGroup',
     runHooksContext,
     async ({ hookFn, plugin }) => {
       await hookFn({
@@ -124,9 +124,9 @@ export async function renderGroup({
       // The hook may have replaced the group AST though, so ensure it's still valid
       if (!isHastElement(groupRenderData.groupAst)) {
         throw newTypeError(
-          "hast Element",
+          'hast Element',
           groupRenderData.groupAst,
-          "groupAst",
+          'groupAst',
         );
       }
     },

@@ -8,18 +8,12 @@ import {
   EC_VIRTUAL_SETTINGS,
 } from './src/core/Config';
 import oneDarkPro from 'shiki/themes/one-dark-pro.mjs';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const entryFile = 'src/main.ts';
 const EC_RUNTIME_MODULE_ID = 'virtual:ec-runtime';
 const EC_STYLES_MODULE_ID = 'virtual:ec-styles.css';
 const EC_RUNTIME_RESOLVED_ID = `\0${EC_RUNTIME_MODULE_ID}`;
 const EC_STYLES_RESOLVED_ID = `\0${EC_STYLES_MODULE_ID}`;
-
-const polyfilledNodeBuiltins = new Set(['fs', 'path', 'url']);
-const externalNodeBuiltins = builtinModules.filter(
-  (moduleName) => !polyfilledNodeBuiltins.has(moduleName.replace(/^node:/, '')),
-);
 
 function expressiveCodeBundlePlugin() {
   let bundlePromise:
@@ -90,13 +84,7 @@ export default defineConfig(({ mode }) => {
   const outDir = 'dist/';
 
   return {
-    plugins: [
-      expressiveCodeBundlePlugin(),
-      nodePolyfills({
-        include: ['path', 'url', 'process'],
-        protocolImports: true,
-      }),
-    ],
+    plugins: [expressiveCodeBundlePlugin()],
     resolve: {
       alias: {
         src: path.resolve(__dirname, './src'),
@@ -139,7 +127,7 @@ export default defineConfig(({ mode }) => {
           '@lezer/common',
           '@lezer/highlight',
           '@lezer/lr',
-          ...externalNodeBuiltins,
+          ...builtinModules,
         ],
       },
     },

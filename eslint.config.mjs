@@ -12,13 +12,16 @@ export default defineConfig(
         project: true,
       },
     },
+    rules: {
+      'obsidianmd/ui/sentence-case': 'off',
+    },
   },
   globalIgnores([
-    'dist/**',
-    'node_modules/**',
-    'expressive-code/**',
+    'dist',
+    'node_modules',
     '*.json',
-    '*.mts',
     '*.mjs',
+    '*.mts',
+    'expressive-code',
   ]),
 );

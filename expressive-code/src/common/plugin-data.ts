@@ -2,9 +2,7 @@ import { GroupContents, RenderedGroupContents } from '../internal/render-group';
 import { ExpressiveCodeBlock } from './block';
 
 export type PluginDataTarget =
-  | ExpressiveCodeBlock
-  | GroupContents
-  | RenderedGroupContents;
+  ExpressiveCodeBlock | GroupContents | RenderedGroupContents;
 
 /**
  * A class that allows plugins to attach custom data to objects like code blocks,

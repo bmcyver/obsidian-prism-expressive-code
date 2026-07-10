@@ -275,16 +275,14 @@ export interface ExpressiveCodePluginHooks_Rendering {
    * Allows editing the AST of a single line of code after all annotations were rendered.
    */
   postprocessRenderedLine?:
-    | ExpressiveCodeHook<PostprocessRenderedLineContext>
-    | undefined;
+    ExpressiveCodeHook<PostprocessRenderedLineContext> | undefined;
 
   /**
    * Allows editing the AST of the entire code block after all annotations were rendered
    * and all lines were postprocessed.
    */
   postprocessRenderedBlock?:
-    | ExpressiveCodeHook<PostprocessRenderedBlockContext>
-    | undefined;
+    ExpressiveCodeHook<PostprocessRenderedBlockContext> | undefined;
 
   /**
    * Allows editing the ASTs of all code blocks that were rendered as part of the same group,
@@ -299,8 +297,7 @@ export interface ExpressiveCodePluginHooks_Rendering {
    * Standalone code blocks are treated like a group containing only a single block.
    */
   postprocessRenderedBlockGroup?:
-    | ExpressiveCodeHook<PostprocessRenderedBlockGroupContext>
-    | undefined;
+    ExpressiveCodeHook<PostprocessRenderedBlockGroupContext> | undefined;
 }
 
 export interface ExpressiveCodePluginHooks

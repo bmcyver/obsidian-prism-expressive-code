@@ -131,8 +131,7 @@ export interface ExpressiveCodeEngineConfig {
    * and modify it without affecting the original instance.
    */
   customizeTheme?:
-    | ((theme: ExpressiveCodeTheme) => ExpressiveCodeTheme | void)
-    | undefined;
+    ((theme: ExpressiveCodeTheme) => ExpressiveCodeTheme | void) | undefined;
   /**
    * Whether the themes are allowed to style the scrollbars. Defaults to `true`.
    *
@@ -199,8 +198,7 @@ export interface ExpressiveCodeEngineConfig {
          * ```
          */
         overridesByLang?:
-          | Record<string, ExpressiveCodeBlock['props']>
-          | undefined;
+          Record<string, ExpressiveCodeBlock['props']> | undefined;
       })
     | undefined;
   /**
@@ -228,10 +226,12 @@ export interface ExpressiveCodeEngineConfig {
 }
 
 export type ResolvedExpressiveCodeEngineConfig = {
-  [P in keyof Omit<
-    ExpressiveCodeEngineConfig,
-    'customizeTheme' | 'plugins' | 'theme' | 'logger'
-  >]-?: Exclude<ExpressiveCodeEngineConfig[P], undefined>;
+  [
+    P in keyof Omit<
+      ExpressiveCodeEngineConfig,
+      'customizeTheme' | 'plugins' | 'theme' | 'logger'
+    >
+  ]-?: Exclude<ExpressiveCodeEngineConfig[P], undefined>;
 } & {
   customizeTheme: ExpressiveCodeEngineConfig['customizeTheme'];
   plugins: readonly ExpressiveCodePlugin[];

@@ -1,16 +1,6 @@
-import {
-  InlineStyleAnnotation,
-  definePlugin,
-  type ExpressiveCodePlugin,
-} from '@expressive-code/core';
-import type * as Prism from 'prismjs';
-import { type ThemeMapper } from '../themes/ThemeManager';
 import { LRUCache } from '../utils';
 
-// some languages break obsidian's `registerMarkdownCodeBlockProcessor`, so we blacklist them
 export const LANGUAGE_BLACKLIST = new Set(['c++', 'c#', 'f#', 'mermaid']);
-
-// some languages are considered special
 export const LANGUAGE_SPECIAL = new Set([
   'plaintext',
   'txt',
@@ -18,7 +8,6 @@ export const LANGUAGE_SPECIAL = new Set([
   'plain',
   'ansi',
 ]);
-
 export const LANGUAGE_ALIASES: Record<string, string> = {
   zsh: 'bash',
   asm: 'nasm',
@@ -40,9 +29,7 @@ export interface ThemeLike {
   fg?: string;
 }
 
-// A mapping from Prism token types to TextMate scopes for theme matching
 export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
-  // Standard core tokens
   comment: ['comment'],
   prolog: ['comment'],
   doctype: ['comment'],
@@ -76,13 +63,9 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   important: ['invalid'],
   bold: ['strong'],
   italic: ['emphasis'],
-
-  // HTML / XML / Markup specific
   'attr-value': ['string'],
   'special-attr': ['entity.other.attribute-name'],
   'tag-id': ['entity.name.tag'],
-
-  // CSS / SCSS / LESS specific
   value: ['support.constant.property-value'],
   unit: ['keyword.other.unit'],
   id: ['entity.other.attribute-name.id'],
@@ -90,8 +73,6 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   pseudo_element: ['entity.other.attribute-name.pseudo-element'],
   pseudo_class: ['entity.other.attribute-name.pseudo-class'],
   color: ['constant.other.color'],
-
-  // C / C++ / Objective-C specific
   macro: [
     'entity.name.function.macro',
     'support.function.macro',
@@ -102,37 +83,25 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   'double-colon': ['punctuation.accessor', 'punctuation'],
   namespace: ['entity.name.namespace', 'support.other.namespace'],
   type: ['entity.name.type', 'support.type', 'storage.type'],
-
-  // Rust specific
   lifetime: ['entity.name.type.lifetime', 'storage.modifier.lifetime'],
   attribute: ['meta.attribute', 'entity.name.type.class'],
   generics: ['entity.name.type'],
-
-  // Python specific
   decorator: ['meta.function.decorator', 'entity.name.function.decorator'],
   'built-in': ['support.function', 'support.type'],
-
-  // JSON / YAML / TOML data formats
   key: [
     'support.type.property-name',
     'variable.other.property',
     'entity.name.tag',
   ],
   atrule: ['keyword.control', 'keyword'],
-
-  // Markdown specific
   title: ['entity.name.section', 'markup.heading'],
   code: ['markup.inline.raw'],
   blockquote: ['markup.quote'],
   list: ['markup.list'],
   link: ['string.other.link'],
-
-  // Shell / Bash specific
   command: ['entity.name.function', 'support.function'],
   environment: ['variable.other.constant'],
   file: ['string'],
-
-  // SQL specific
   'data-type': ['support.type', 'storage.type'],
 };
 
@@ -153,7 +122,6 @@ export function getColorForScopes(
     for (const ruleScope of ruleScopes) {
       for (const targetScope of scopes) {
         if (targetScope === ruleScope) {
-          // Exact match: highest score
           const score = ruleScope.length * 2 + 10;
           if (score > bestScore) {
             bestScore = score;
@@ -163,7 +131,6 @@ export function getColorForScopes(
             };
           }
         } else if (targetScope.startsWith(ruleScope + '.')) {
-          // Target (e.g. comment.line) is more specific than rule (e.g. comment)
           const score = ruleScope.length * 2;
           if (score > bestScore) {
             bestScore = score;
@@ -173,8 +140,6 @@ export function getColorForScopes(
             };
           }
         } else if (ruleScope.startsWith(targetScope + '.')) {
-          // Rule (e.g. comment.line) is more specific than target (e.g. comment)
-          // This allows generic Prism tokens to match specific theme rules
           const score = targetScope.length * 2 - 1;
           if (score > bestScore) {
             bestScore = score;
@@ -329,7 +294,6 @@ export function getStyleForPrismTypes(
 
   const lowerLang = lang?.toLowerCase();
 
-  // Iterate from right to left (most specific/leaf type to least specific/parent type)
   for (let i = types.length - 1; i >= 0; i--) {
     const type = types[i];
     if (!type) continue;
@@ -397,8 +361,6 @@ export function flattenTokens(
         typeKey: parentTypes.join(','),
       });
     } else {
-      // To ensure actual type overrides aliases (fallbacks), place aliases before the actual type.
-      // Priority: parent types -> aliases -> actual type (most specific, checked first in reverse search)
       const currentTypes = [...parentTypes];
       if (token.alias) {
         if (Array.isArray(token.alias)) {
@@ -457,219 +419,4 @@ export function splitTokensIntoLines(flatTokens: FlatToken[]): FlatToken[][] {
     }
   }
   return lines;
-}
-
-export interface ThemedToken {
-  content: string;
-  color?: string;
-  bgColor?: string;
-  fontStyle?: FontStyle;
-  offset: number;
-}
-
-export interface TokensResult {
-  tokens: ThemedToken[];
-}
-
-export class InlineHighlighter {
-  private themeMapper: ThemeMapper;
-  private tokenCache = new LRUCache<string, TokensResult>(50);
-
-  constructor(themeMapper: ThemeMapper) {
-    this.themeMapper = themeMapper;
-  }
-
-  public clearCache(): void {
-    this.tokenCache.clear();
-  }
-
-  public async getHighlightTokens(
-    code: string,
-    lang: string,
-    prism: typeof Prism,
-    safeLanguagesSet: Set<string>,
-    supportedLanguages: string[],
-  ): Promise<TokensResult | undefined> {
-    if (!prism || !supportedLanguages) {
-      return undefined;
-    }
-    let lowerLang = lang.toLowerCase();
-    lowerLang = LANGUAGE_ALIASES[lowerLang] ?? lowerLang;
-    if (!safeLanguagesSet.has(lowerLang)) {
-      return undefined;
-    }
-
-    const cacheKey = `${lowerLang}:${code}`;
-    const cached = this.tokenCache.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    const grammar = prism.languages[lowerLang];
-    if (!grammar) {
-      return undefined;
-    }
-
-    const prismTokens = prism.tokenize(code, grammar);
-    const flatTokens = flattenTokens(prismTokens);
-    const theme = await this.themeMapper.getThemeForEC();
-    const themedTokens = this.convertToThemedTokens(
-      flatTokens,
-      theme as ThemeLike,
-      lowerLang,
-    );
-
-    const result = {
-      tokens: themedTokens,
-    };
-
-    this.tokenCache.set(cacheKey, result);
-
-    return result;
-  }
-
-  private convertToThemedTokens(
-    flatTokens: FlatToken[],
-    theme: ThemeLike,
-    lang?: string,
-  ): ThemedToken[] {
-    const tokens: ThemedToken[] = [];
-    let currentOffset = 0;
-
-    for (const token of flatTokens) {
-      const style = getStyleForPrismTypes(
-        theme,
-        token.types,
-        token.typeKey,
-        lang,
-      );
-      tokens.push({
-        content: token.content,
-        color: style.color ?? theme.fg ?? 'var(--pec-code-normal)',
-        fontStyle: style.fontStyle,
-        offset: currentOffset,
-      });
-      currentOffset += token.content.length;
-    }
-
-    return tokens;
-  }
-
-  public renderTokens(tokens: ThemedToken[], parent: HTMLElement): void {
-    for (const token of tokens) {
-      this.tokenToSpan(token, parent);
-    }
-  }
-
-  public tokenToSpan(token: ThemedToken, parent: HTMLElement): void {
-    const tokenStyle = this.getTokenStyle(token);
-    parent.createSpan({
-      text: token.content,
-      cls: tokenStyle.classes.join(' '),
-      attr: { style: tokenStyle.style },
-    });
-  }
-
-  public getTokenStyle(token: ThemedToken): {
-    style: string;
-    classes: string[];
-  } {
-    const fontStyle = token.fontStyle ?? FontStyle.None;
-
-    return {
-      style: `color: ${token.color}`,
-      classes: [
-        (fontStyle & FontStyle.Italic) !== 0 ? 'pec-italic' : undefined,
-        (fontStyle & FontStyle.Bold) !== 0 ? 'pec-bold' : undefined,
-        (fontStyle & FontStyle.Underline) !== 0 ? 'pec-ul' : undefined,
-      ].filter(Boolean) as string[],
-    };
-  }
-}
-
-export function customPluginPrism(): ExpressiveCodePlugin {
-  return definePlugin({
-    name: 'Prism',
-    hooks: {
-      performSyntaxAnalysis: async ({ codeBlock, styleVariants }) => {
-        const codeLines = codeBlock.getLines();
-        const code = codeBlock.code;
-
-        let prism: typeof Prism | undefined;
-        try {
-          prism = (window as unknown as { Prism: typeof Prism }).Prism;
-        } catch (err) {
-          const error = err instanceof Error ? err : new Error(String(err));
-          throw new Error(
-            `Failed to load shared Prism syntax highlighter: "${error.message}"`,
-            {
-              cause: err,
-            },
-          );
-        }
-
-        if (!prism) {
-          return;
-        }
-
-        const rawLanguage = codeBlock.language;
-        let lowerLang = rawLanguage.toLowerCase();
-        lowerLang = LANGUAGE_ALIASES[lowerLang] ?? lowerLang;
-        const grammar = prism.languages[lowerLang];
-
-        const finalGrammar =
-          grammar ?? prism.languages.plaintext ?? prism.languages.text;
-        if (!finalGrammar) return;
-        const prismTokens = prism.tokenize(code, finalGrammar);
-        const flatTokens = flattenTokens(prismTokens);
-
-        // Split flat tokens into lines once (outside of theme variants loop)
-        const lines = splitTokensIntoLines(flatTokens);
-
-        for (
-          let styleVariantIndex = 0;
-          styleVariantIndex < styleVariants.length;
-          styleVariantIndex++
-        ) {
-          const variant = styleVariants[styleVariantIndex];
-          if (!variant) continue;
-          const theme = variant.theme;
-
-          // Annotate each line
-          lines.forEach((line: FlatToken[], lineIndex: number) => {
-            let charIndex = 0;
-            line.forEach((token: FlatToken) => {
-              const tokenLength = token.content.length;
-              const tokenEndIndex = charIndex + tokenLength;
-              const style = getStyleForPrismTypes(
-                theme,
-                token.types,
-                token.typeKey,
-                lowerLang,
-              );
-
-              const fs = style.fontStyle ?? FontStyle.None;
-
-              codeLines[lineIndex]?.addAnnotation(
-                new InlineStyleAnnotation({
-                  styleVariantIndex,
-                  color: style.color ?? theme.fg,
-                  italic: (fs & FontStyle.Italic) !== 0,
-                  bold: (fs & FontStyle.Bold) !== 0,
-                  underline: (fs & FontStyle.Underline) !== 0,
-                  strikethrough: (fs & FontStyle.Strikethrough) !== 0,
-                  inlineRange: {
-                    columnStart: charIndex,
-                    columnEnd: tokenEndIndex,
-                  },
-                  renderPhase: 'earliest',
-                }),
-              );
-              charIndex = tokenEndIndex;
-            });
-          });
-        }
-      },
-    },
-  });
 }

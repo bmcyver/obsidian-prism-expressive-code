@@ -18,9 +18,7 @@ export type VSCodeDefaultColorTransform =
     ];
 
 export type VSCodeDefaultColorDefinition =
-  | string
-  | VSCodeDefaultColorTransform
-  | null;
+  string | VSCodeDefaultColorTransform | null;
 
 /**
  * Either two colors based on the theme type in the order `[dark, light]`,

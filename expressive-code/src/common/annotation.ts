@@ -15,11 +15,7 @@ export type AnnotationRenderOptions = ResolverContext & {
 };
 
 export type AnnotationRenderPhase =
-  | 'earliest'
-  | 'earlier'
-  | 'normal'
-  | 'later'
-  | 'latest';
+  'earliest' | 'earlier' | 'normal' | 'later' | 'latest';
 
 /* c8 ignore next */
 export const AnnotationRenderPhaseOrder: AnnotationRenderPhase[] = [

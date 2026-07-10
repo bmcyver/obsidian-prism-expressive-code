@@ -63,8 +63,7 @@ export class MetaOptions {
       ? Extract<MetaOption, { kind: K }>
       : MetaOption;
     return this.list(key, kind)?.pop()?.value as
-      | OptionType['value']
-      | undefined;
+      OptionType['value'] | undefined;
   }
 
   /**
@@ -171,10 +170,7 @@ export type MetaOptionBoolean = MetaOptionBase & {
 };
 
 export type MetaOption =
-  | MetaOptionString
-  | MetaOptionRange
-  | MetaOptionRegExp
-  | MetaOptionBoolean;
+  MetaOptionString | MetaOptionRange | MetaOptionRegExp | MetaOptionBoolean;
 
 export type MetaOptionKind = MetaOption['kind'];
 

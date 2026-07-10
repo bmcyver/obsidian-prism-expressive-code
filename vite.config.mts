@@ -6,7 +6,7 @@ import {
   createCssVariableThemeBundle,
   createEcEngineConfig,
   EC_VIRTUAL_SETTINGS,
-} from './src/core/Highlighter';
+} from './src/core/Config';
 import oneDarkPro from 'shiki/themes/one-dark-pro.mjs';
 
 const entryFile = 'src/main.ts';
@@ -17,8 +17,7 @@ const EC_STYLES_RESOLVED_ID = `\0${EC_STYLES_MODULE_ID}`;
 
 function expressiveCodeBundlePlugin() {
   let bundlePromise:
-    | Promise<{ runtimeModule: string; styles: string }>
-    | undefined;
+    Promise<{ runtimeModule: string; styles: string }> | undefined;
 
   const getBundle = async (): Promise<{
     runtimeModule: string;

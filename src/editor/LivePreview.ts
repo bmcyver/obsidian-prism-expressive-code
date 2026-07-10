@@ -12,7 +12,7 @@ import {
   StateField,
   type Extension,
 } from '@codemirror/state';
-import { type ThemedToken } from '../prism/InlineHighlighter';
+import { type ThemedToken } from '../prism/PrismHighlighter';
 import { LRUCache } from '../utils';
 import { debounce } from 'obsidian';
 import { SyntaxTreeParser, DecorationUpdateType } from './Parser';

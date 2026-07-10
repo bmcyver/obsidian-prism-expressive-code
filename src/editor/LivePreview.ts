@@ -100,6 +100,7 @@ export function createLivePreviewPlugin(
   const viewPlugin = ViewPlugin.fromClass(
     class Cm6ViewPlugin {
       view: EditorView;
+      isDestroyed = false;
 
       pendingDocChanged = false;
       updateFn: () => Promise<void>;
@@ -220,7 +221,11 @@ export function createLivePreviewPlugin(
 
         const highlightResults = await Promise.all(highlightPromises);
 
-        if (this.view.state !== capturedState || this.view.composing) {
+        if (
+          this.view.state !== capturedState ||
+          this.view.composing ||
+          this.isDestroyed
+        ) {
           return;
         }
 
@@ -265,10 +270,15 @@ export function createLivePreviewPlugin(
 
         if (
           (removeRanges.length > 0 || newDecorationsList.length > 0) &&
-          this.view.state === capturedState
+          this.view.state === capturedState &&
+          !this.isDestroyed
         ) {
           window.requestAnimationFrame(() => {
-            if (this.view.state === capturedState && !this.view.composing) {
+            if (
+              this.view.state === capturedState &&
+              !this.view.composing &&
+              !this.isDestroyed
+            ) {
               this.view.dispatch({
                 effects: updateDecorationsEffect.of(finalDecorations),
               });
@@ -278,6 +288,7 @@ export function createLivePreviewPlugin(
       }
 
       destroy(): void {
+        this.isDestroyed = true;
         this.cancelAllDebounces();
         plugin.activeCm6Plugins.delete(this.updateFn);
       }

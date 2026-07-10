@@ -77,6 +77,15 @@ export default class PrismExpressiveCodePlugin extends Plugin {
       }),
     );
 
+    this.registerEvent(
+      this.app.workspace.on('window-open', (winInfo) => {
+        const win = (winInfo as unknown as { win: Window }).win || winInfo;
+        if (win && win.document) {
+          void this.highlighter.injectStyles(win.document);
+        }
+      }),
+    );
+
     this.addCommand({
       id: 'reload-highlighter',
       name: 'Reload highlighter',
@@ -99,24 +108,42 @@ export default class PrismExpressiveCodePlugin extends Plugin {
     await this.updateCm6Plugins();
   }
 
+  prismHookBeforeHighlight = (env: unknown): void => {
+    const environment = env as { elements?: Element[] };
+    if (environment.elements) {
+      environment.elements = environment.elements.filter((element: Element) => {
+        return !element.matches('div.expressive-code pre code');
+      });
+    }
+  };
+
   async registerPrismPlugin(): Promise<void> {
     const prism = (window as unknown as { Prism: typeof import('prismjs') })
       .Prism;
     if (prism && prism.hooks) {
-      prism.hooks.add('before-all-elements-highlight', (env: unknown) => {
-        const environment = env as { elements?: Element[] };
-        if (environment.elements) {
-          environment.elements = environment.elements.filter(
-            (element: Element) => {
-              return !element.matches('div.expressive-code pre code');
-            },
-          );
-        }
-      });
+      this.unregisterPrismPlugin();
+      prism.hooks.add(
+        'before-all-elements-highlight',
+        this.prismHookBeforeHighlight,
+      );
+    }
+  }
+
+  unregisterPrismPlugin(): void {
+    const prism = (window as unknown as { Prism: typeof import('prismjs') })
+      .Prism;
+    if (prism && prism.hooks && prism.hooks.all) {
+      const hooks = prism.hooks.all['before-all-elements-highlight'];
+      if (hooks) {
+        prism.hooks.all['before-all-elements-highlight'] = hooks.filter(
+          (hook) => hook !== this.prismHookBeforeHighlight,
+        );
+      }
     }
   }
 
   onunload(): void {
+    this.unregisterPrismPlugin();
     void this.highlighter.unload();
   }
 

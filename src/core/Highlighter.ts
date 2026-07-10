@@ -18,7 +18,7 @@ export class CodeHighlighter {
   inlineHighlighter: InlineHighlighter;
 
   ec!: ExpressiveCodeEngine;
-  ecStyleElement: HTMLElement | undefined;
+  ecStyleElements = new Map<Document, HTMLStyleElement>();
   supportedLanguages!: string[];
   safeLanguagesSet!: Set<string>;
 
@@ -63,21 +63,62 @@ export class CodeHighlighter {
       }),
     );
 
-    if (this.ecStyleElement) {
-      this.ecStyleElement.remove();
+    this.clearAllStyles();
+
+    const docs = this.getAllDocuments();
+    for (const doc of docs) {
+      await this.injectStyles(doc);
     }
-    const themeStyles = await this.ec.getThemeStyles();
-    // eslint-disable-next-line obsidianmd/no-forbidden-elements
-    this.ecStyleElement = activeDocument.head.createEl('style', {
-      text: themeStyles,
+  }
+
+  private getAllDocuments(): Set<Document> {
+    const docs = new Set<Document>();
+    if (typeof activeDocument !== 'undefined') {
+      docs.add(activeDocument);
+    }
+    if (this.plugin.app.workspace.containerEl?.ownerDocument) {
+      docs.add(this.plugin.app.workspace.containerEl.ownerDocument);
+    }
+    this.plugin.app.workspace.iterateAllLeaves((leaf) => {
+      if (leaf.view?.containerEl?.ownerDocument) {
+        docs.add(leaf.view.containerEl.ownerDocument);
+      }
     });
+    return docs;
+  }
+
+  public async injectStyles(doc: Document): Promise<void> {
+    if (!this.ec) return;
+    this.removeStyles(doc);
+    try {
+      const themeStyles = await this.ec.getThemeStyles();
+      // eslint-disable-next-line obsidianmd/no-forbidden-elements
+      const styleEl = doc.head.createEl('style', {
+        text: themeStyles,
+      });
+      this.ecStyleElements.set(doc, styleEl);
+    } catch (e) {
+      console.warn('Failed to inject Expressive Code styles into document', e);
+    }
+  }
+
+  public removeStyles(doc: Document): void {
+    const styleEl = this.ecStyleElements.get(doc);
+    if (styleEl) {
+      styleEl.remove();
+      this.ecStyleElements.delete(doc);
+    }
+  }
+
+  private clearAllStyles(): void {
+    for (const styleEl of this.ecStyleElements.values()) {
+      styleEl.remove();
+    }
+    this.ecStyleElements.clear();
   }
 
   async unload(): Promise<void> {
-    if (this.ecStyleElement) {
-      this.ecStyleElement.remove();
-      this.ecStyleElement = undefined;
-    }
+    this.clearAllStyles();
     this.inlineHighlighter.clearCache();
     clearStyleCache();
   }

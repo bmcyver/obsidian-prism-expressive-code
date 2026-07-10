@@ -70,18 +70,38 @@ export function extractMetaString(
   const startLine = getLineAt(sectionInfo.text, sectionInfo.lineStart);
   if (startLine === undefined) return '';
 
-  // Escape special regex characters in language to prevent syntax errors (e.g., c++)
-  const escapedLanguage = language.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // regexp to match the text after the code block language
-  const regex = new RegExp(
-    '^[^`~]*?\\s*(```+|~~~+)' + escapedLanguage + ' (.*)',
-  );
-  const match = regex.exec(startLine);
-  if (match !== null && match[2]) {
-    return match[2];
-  } else {
+  const trimmed = startLine.trim();
+  // Find where the block starts (either ``` or ~~~)
+  let markerIdx = trimmed.indexOf('```');
+  let markerLength = 3;
+  if (markerIdx === -1) {
+    markerIdx = trimmed.indexOf('~~~');
+  }
+  if (markerIdx === -1) {
     return '';
   }
+
+  // Count if there are more than 3 backticks/tildes
+  const markerChar = trimmed[markerIdx];
+  if (markerChar) {
+    while (trimmed[markerIdx + markerLength] === markerChar) {
+      markerLength++;
+    }
+  }
+
+  const afterMarker = trimmed.slice(markerIdx + markerLength).trimStart();
+  const lowerAfterMarker = afterMarker.toLowerCase();
+  const lowerLanguage = language.toLowerCase();
+
+  if (lowerAfterMarker.startsWith(lowerLanguage)) {
+    const afterLang = afterMarker.slice(lowerLanguage.length);
+    // There must be a space after the language name to have metadata
+    if (afterLang.startsWith(' ')) {
+      return afterLang.trimStart();
+    }
+  }
+
+  return '';
 }
 
 export function stripCommonIndentation(source: string): string {

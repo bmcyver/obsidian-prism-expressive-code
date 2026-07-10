@@ -6,7 +6,7 @@ import {
   createCssVariableThemeBundle,
   createEcEngineConfig,
   EC_VIRTUAL_SETTINGS,
-} from './src/core/Config';
+} from './src/core/Highlighter';
 import oneDarkPro from 'shiki/themes/one-dark-pro.mjs';
 
 const entryFile = 'src/main.ts';

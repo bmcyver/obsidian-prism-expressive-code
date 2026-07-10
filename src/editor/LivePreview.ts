@@ -18,7 +18,7 @@ import { syntaxTree } from '@codemirror/language';
 import { editorLivePreviewField, debounce } from 'obsidian';
 import type PrismExpressiveCodePlugin from '../main';
 import { INLINE_CODE_REGEX, LRUCache } from '../utils';
-import { type ThemedToken } from '../prism/InlineHighlighter';
+import { type ThemedToken } from '../prism/PrismHighlighter';
 
 export class EditorUtil {
   /**
@@ -105,7 +105,7 @@ export class SyntaxTreeParser {
     return state.field(editorLivePreviewField);
   }
 
-  static isCodeBlockNode(node: SyntaxNode): boolean {
+  static getCodeBlockNode(node: SyntaxNode): SyntaxNode | null {
     let curr: typeof node | null = node;
     while (curr) {
       const name = curr.type.name;
@@ -115,11 +115,11 @@ export class SyntaxTreeParser {
           isCode = name.toLowerCase().includes('codeblock');
           isCodeBlockCache.set(name, isCode);
         }
-        if (isCode) return true;
+        if (isCode) return curr;
       }
       curr = curr.parent;
     }
-    return false;
+    return null;
   }
 
   static getExpandedViewportRange(view: EditorView): {
@@ -134,25 +134,18 @@ export class SyntaxTreeParser {
       return { from, to };
     }
 
-    // Expand from backwards to include the beginning of any intersecting code blocks
-    while (from > 0) {
-      const line = view.state.doc.lineAt(from);
-      const node = tree.resolveInner(line.from, 1);
-      if (!this.isCodeBlockNode(node)) {
-        break;
-      }
-      from = Math.max(0, line.from - 1);
+    // Resolve node at the start of viewport and find if it's within a code block
+    const startNode = tree.resolveInner(from, 1);
+    const startCodeBlock = this.getCodeBlockNode(startNode);
+    if (startCodeBlock) {
+      from = Math.max(0, startCodeBlock.from);
     }
 
-    // Expand to forwards to include the end of any intersecting code blocks
-    const docLength = view.state.doc.length;
-    while (to < docLength) {
-      const line = view.state.doc.lineAt(to);
-      const node = tree.resolveInner(line.to, -1);
-      if (!this.isCodeBlockNode(node)) {
-        break;
-      }
-      to = Math.min(docLength, line.to + 1);
+    // Resolve node at the end of viewport and find if it's within a code block
+    const endNode = tree.resolveInner(to, -1);
+    const endCodeBlock = this.getCodeBlockNode(endNode);
+    if (endCodeBlock) {
+      to = Math.min(view.state.doc.length, endCodeBlock.to);
     }
 
     return { from, to };

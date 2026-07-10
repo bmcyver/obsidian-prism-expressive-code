@@ -4,12 +4,13 @@ import type PrismExpressiveCodePlugin from '../main';
 import { ThemeMapper } from '../themes/ThemeManager';
 import { toDom } from 'hast-util-to-dom';
 import { createEcEngineConfig } from './Config';
-import { LANGUAGE_BLACKLIST } from '../prism/PrismUtils';
-import { clearStyleCache, LANGUAGE_ALIASES } from '../prism/PrismUtils';
 import {
+  clearStyleCache,
   InlineHighlighter,
+  LANGUAGE_ALIASES,
+  LANGUAGE_BLACKLIST,
   type TokensResult,
-} from '../prism/InlineHighlighter';
+} from '../prism/PrismHighlighter';
 import type * as Prism from 'prismjs';
 
 export class CodeHighlighter {

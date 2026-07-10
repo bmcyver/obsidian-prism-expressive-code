@@ -6,7 +6,7 @@ import {
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { pluginFrames } from '@expressive-code/plugin-frames';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
-import { customPluginPrism } from '../prism/CustomPluginPrism';
+import { customPluginPrism } from '../prism/PrismHighlighter';
 import { pluginTextMarkers } from '@expressive-code/plugin-text-markers';
 import { type ThemeRegistration } from './types';
 

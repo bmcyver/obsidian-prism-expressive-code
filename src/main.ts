@@ -2,10 +2,8 @@ import { debounce, loadPrism, Plugin } from 'obsidian';
 import { createLivePreviewPlugin } from './editor/LivePreview';
 import { DEFAULT_SETTINGS, type Settings } from './settings';
 import { PrismExpressiveCodeSettingTab } from './settings';
-import { CodeHighlighter } from './core/Highlighter';
+import { CodeHighlighter, CodeBlockManager, MarkdownProcessorRegistry } from './core/Highlighter';
 import { VALID_THEME_IDS } from './themes/ThemeManager';
-import { CodeBlockManager } from './core/Processors';
-import { MarkdownProcessorRegistry } from './core/Processors';
 
 import 'src/styles.css';
 import 'virtual:ec-styles.css';

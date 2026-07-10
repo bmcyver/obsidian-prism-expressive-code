@@ -1,7 +1,6 @@
 import type PrismExpressiveCodePlugin from '../main';
 import { TFile } from 'obsidian';
-import { type BaseCodeBlock, CodeBlock, InlineCodeBlock } from './CodeBlocks';
-import { INLINE_CODE_REGEX } from '../utils';
+import { type BaseCodeBlock } from './CodeBlock';
 
 export class CodeBlockManager {
   plugin: PrismExpressiveCodePlugin;
@@ -71,73 +70,5 @@ export class CodeBlockManager {
       }
     }
     await Promise.all(promises);
-  }
-}
-
-export class MarkdownProcessorRegistry {
-  plugin: PrismExpressiveCodePlugin;
-
-  constructor(plugin: PrismExpressiveCodePlugin) {
-    this.plugin = plugin;
-  }
-
-  public registerProcessors(): void {
-    this.registerCodeBlockProcessors();
-    this.registerInlineCodeProcessor();
-  }
-
-  private registerCodeBlockProcessors(): void {
-    const languages = this.plugin.highlighter.obsidianSafeLanguageNames();
-
-    for (const language of languages) {
-      try {
-        this.plugin.registerMarkdownCodeBlockProcessor(
-          language,
-          async (source, el, ctx) => {
-            if (el.parentElement?.classList.contains('mod-frontmatter')) {
-              return;
-            }
-
-            const codeBlock = new CodeBlock(
-              this.plugin,
-              el,
-              source,
-              language,
-              ctx,
-            );
-
-            ctx.addChild(codeBlock);
-          },
-          1000,
-        );
-      } catch (e) {
-        console.warn(
-          `Failed to register code block processor for ${language}.`,
-          e,
-        );
-      }
-    }
-  }
-
-  private registerInlineCodeProcessor(): void {
-    this.plugin.registerMarkdownPostProcessor(async (el, ctx) => {
-      const inlineCodes = el.findAll(':not(pre) > code');
-      for (const codeElm of inlineCodes) {
-        const match = INLINE_CODE_REGEX.exec(codeElm.textContent ?? '');
-        if (!match || !match[1] || !match[2]) {
-          continue;
-        }
-
-        const codeBlock = new InlineCodeBlock(
-          this.plugin,
-          codeElm,
-          match[1],
-          match[2],
-          ctx,
-        );
-
-        ctx.addChild(codeBlock);
-      }
-    });
   }
 }

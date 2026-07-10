@@ -1,4 +1,4 @@
-import { LRUCache } from '../utils';
+import { LRUCache } from '../utils/LRUCache';
 
 export const LANGUAGE_BLACKLIST = new Set(['c++', 'c#', 'f#', 'mermaid']);
 export const LANGUAGE_SPECIAL = new Set([

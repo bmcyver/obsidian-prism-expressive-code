@@ -13,9 +13,9 @@ import {
 } from '@codemirror/view';
 import { debounce } from 'obsidian';
 import type PrismExpressiveCodePlugin from '../main';
-import { LRUCache } from '../utils';
-import { type ThemedToken } from '../prism/InlineHighlighter';
-import { SyntaxTreeParser, DecorationUpdateType } from './Parser';
+import { LRUCache } from '../utils/LRUCache';
+import { type ThemedToken } from './InlineHighlighter';
+import { SyntaxTreeParser, DecorationUpdateType } from './InlineParser';
 
 const decorationCache = new LRUCache<string, Decoration>(200);
 
@@ -31,7 +31,7 @@ export class DecorationBuilder {
       return [];
     }
 
-    const highlight = await plugin.highlighter.getHighlightTokens(
+    const highlight = await plugin.inlineHighlighter.getHighlightTokens(
       content,
       language.toLowerCase(),
     );
@@ -50,7 +50,7 @@ export class DecorationBuilder {
       const nextToken: ThemedToken | undefined = tokens[i + 1];
 
       const tokenStyle =
-        plugin.highlighter.inlineHighlighter.getTokenStyle(token);
+        plugin.inlineHighlighter.getTokenStyle(token);
       const classStr = tokenStyle.classes.join(' ');
       const cacheKey = `${tokenStyle.style}|${classStr}`;
 

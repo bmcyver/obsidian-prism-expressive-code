@@ -7,7 +7,7 @@ import {
   extractMetaString,
   stripCommonIndentation,
   calculateListIndentationLevel,
-} from '../utils';
+} from './CodeBlockUtils';
 
 export abstract class BaseCodeBlock extends MarkdownRenderChild {
   plugin: PrismExpressiveCodePlugin;
@@ -107,52 +107,5 @@ export class CodeBlock extends BaseCodeBlock {
     super.onload();
     this.cachedMetaString = this.getMetaString();
     void this.render(this.cachedMetaString);
-  }
-}
-
-export class InlineCodeBlock extends BaseCodeBlock {
-  constructor(
-    plugin: PrismExpressiveCodePlugin,
-    containerEl: HTMLElement,
-    source: string,
-    language: string,
-    ctx: MarkdownPostProcessorContext,
-  ) {
-    super(plugin, containerEl, source, language, ctx);
-  }
-
-  private async render(): Promise<void> {
-    if (!this.plugin.highlighter) {
-      return;
-    }
-    this.containerEl.empty();
-    this.containerEl.classList.add('pec-inline');
-
-    const highlight = await this.plugin.highlighter.getHighlightTokens(
-      this.source,
-      this.language,
-    );
-    const tokens = highlight?.tokens;
-    if (!tokens?.length) {
-      return;
-    }
-
-    this.plugin.highlighter.inlineHighlighter.renderTokens(
-      tokens,
-      this.containerEl,
-    );
-  }
-
-  public async rerenderOnNoteChange(): Promise<void> {
-    // noop for inline code blocks
-  }
-
-  public async forceRerender(): Promise<void> {
-    await this.render();
-  }
-
-  public onload(): void {
-    super.onload();
-    void this.render();
   }
 }

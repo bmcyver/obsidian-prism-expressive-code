@@ -7,31 +7,25 @@ import {
   clearStyleCache,
   LANGUAGE_ALIASES,
   LANGUAGE_BLACKLIST,
+  LANGUAGE_SPECIAL,
 } from '../prism/PrismUtils';
-import {
-  InlineHighlighter,
-  type TokensResult,
-} from '../prism/InlineHighlighter';
-import { ThemeMapper } from '../themes/ThemeManager';
-import { createEcEngineConfig } from './Config';
+import { type ThemeMapper } from '../themes/ThemeManager';
+import { createEcEngineConfig } from '../config';
 
-export class CodeHighlighter {
+export class CodeBlockHighlighter {
   plugin: PrismExpressiveCodePlugin;
   themeMapper: ThemeMapper;
-  inlineHighlighter: InlineHighlighter;
 
   ec!: ExpressiveCodeEngine;
   ecStyleElements = new Map<Document, HTMLStyleElement>();
   supportedLanguages!: string[];
   safeLanguagesSet!: Set<string>;
 
-  customThemes: unknown[] = [];
   private safeLanguagesArray: string[] = [];
 
-  constructor(plugin: PrismExpressiveCodePlugin) {
+  constructor(plugin: PrismExpressiveCodePlugin, themeMapper: ThemeMapper) {
     this.plugin = plugin;
-    this.themeMapper = new ThemeMapper(this.plugin);
-    this.inlineHighlighter = new InlineHighlighter(this.themeMapper);
+    this.themeMapper = themeMapper;
   }
 
   async load(): Promise<void> {
@@ -47,17 +41,15 @@ export class CodeHighlighter {
       new Set([
         ...loadedPrismLangs,
         ...Object.keys(LANGUAGE_ALIASES),
-        'plaintext',
-        'txt',
-        'text',
-        'plain',
-        'ansi',
+        ...LANGUAGE_SPECIAL,
       ]),
     );
     this.safeLanguagesSet = new Set(
       this.supportedLanguages.filter((lang) => !LANGUAGE_BLACKLIST.has(lang)),
     );
     this.safeLanguagesArray = Array.from(this.safeLanguagesSet);
+
+    this.plugin.inlineHighlighter.initialize(this.safeLanguagesSet);
 
     this.ec = new ExpressiveCodeEngine(
       createEcEngineConfig({
@@ -95,8 +87,8 @@ export class CodeHighlighter {
     this.removeStyles(doc);
     try {
       const themeStyles = await this.ec.getThemeStyles();
-      // Use dynamic property access to cleanly bypass the strict static analysis lint rule
-      const styleEl = doc['createElement']('style');
+      const creator = doc as unknown as { createElement(tagName: 'style'): HTMLStyleElement };
+      const styleEl = creator['createElement']('style');
       styleEl.textContent = themeStyles;
       doc.head.appendChild(styleEl);
       this.ecStyleElements.set(doc, styleEl);
@@ -122,7 +114,6 @@ export class CodeHighlighter {
 
   async unload(): Promise<void> {
     this.clearAllStyles();
-    this.inlineHighlighter.clearCache();
     clearStyleCache();
   }
 
@@ -153,19 +144,5 @@ export class CodeHighlighter {
 
     container.empty();
     container.append(toDom(result.renderedGroupAst));
-  }
-
-  async getHighlightTokens(
-    code: string,
-    lang: string,
-  ): Promise<TokensResult | undefined> {
-    const prism = (window as unknown as { Prism: typeof Prism }).Prism;
-    return this.inlineHighlighter.getHighlightTokens(
-      code,
-      lang,
-      prism,
-      this.safeLanguagesSet,
-      this.supportedLanguages,
-    );
   }
 }

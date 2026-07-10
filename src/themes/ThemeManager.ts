@@ -4,7 +4,7 @@ import {
   type StyleValueOrValues,
   type UnresolvedStyleValue,
 } from '@expressive-code/core';
-import { type ThemeRegistration } from '../core/Config';
+import { type ThemeRegistration } from '../config';
 import type PrismExpressiveCodePlugin from '../main';
 
 export interface ThemeDefinition {

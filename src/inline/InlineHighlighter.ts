@@ -5,8 +5,8 @@ import {
   FontStyle,
   type FlatToken,
   type ThemeLike,
-} from './PrismUtils';
-import { LRUCache } from '../utils';
+} from '../prism/PrismUtils';
+import { LRUCache } from '../utils/LRUCache';
 import { type ThemeMapper } from '../themes/ThemeManager';
 import type * as Prism from 'prismjs';
 
@@ -25,9 +25,14 @@ export interface TokensResult {
 export class InlineHighlighter {
   private themeMapper: ThemeMapper;
   private tokenCache = new LRUCache<string, TokensResult>(50);
+  private safeLanguagesSet: Set<string> = new Set();
 
   constructor(themeMapper: ThemeMapper) {
     this.themeMapper = themeMapper;
+  }
+
+  public initialize(safeLanguagesSet: Set<string>): void {
+    this.safeLanguagesSet = safeLanguagesSet;
   }
 
   public clearCache(): void {
@@ -37,16 +42,14 @@ export class InlineHighlighter {
   public async getHighlightTokens(
     code: string,
     lang: string,
-    prism: typeof Prism,
-    safeLanguagesSet: Set<string>,
-    supportedLanguages: string[],
   ): Promise<TokensResult | undefined> {
-    if (!prism || !supportedLanguages) {
+    const prism = (window as unknown as { Prism?: typeof Prism }).Prism;
+    if (!prism || this.safeLanguagesSet.size === 0) {
       return undefined;
     }
     let lowerLang = lang.toLowerCase();
     lowerLang = LANGUAGE_ALIASES[lowerLang] ?? lowerLang;
-    if (!safeLanguagesSet.has(lowerLang)) {
+    if (!this.safeLanguagesSet.has(lowerLang)) {
       return undefined;
     }
 

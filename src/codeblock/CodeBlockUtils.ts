@@ -1,45 +1,5 @@
 import { type MarkdownPostProcessorContext } from 'obsidian';
 
-export const INLINE_CODE_REGEX = /^(.*)\{:([a-zA-Z0-9_\-+#]+)\}$/; // format: `code{:lang}`
-
-export class LRUCache<K, V> {
-  private max: number;
-  private cache: Map<K, V>;
-
-  constructor(max = 100) {
-    this.max = Math.max(1, max);
-    this.cache = new Map();
-  }
-
-  get(key: K): V | undefined {
-    if (!this.cache.has(key)) return undefined;
-    const val = this.cache.get(key)!;
-    this.cache.delete(key);
-    this.cache.set(key, val);
-    return val;
-  }
-
-  set(key: K, val: V): void {
-    if (this.cache.has(key)) {
-      this.cache.delete(key);
-    } else if (this.cache.size >= this.max) {
-      const oldestKey = this.cache.keys().next().value;
-      if (oldestKey !== undefined) {
-        this.cache.delete(oldestKey);
-      }
-    }
-    this.cache.set(key, val);
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-
-  get size(): number {
-    return this.cache.size;
-  }
-}
-
 function getLineAt(text: string, lineIndex: number): string | undefined {
   let startIdx = 0;
   for (let i = 0; i < lineIndex; i++) {

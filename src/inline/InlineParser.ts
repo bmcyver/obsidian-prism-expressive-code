@@ -4,7 +4,8 @@ import { type SyntaxNode } from '@lezer/common';
 import { syntaxTree } from '@codemirror/language';
 import { editorLivePreviewField } from 'obsidian';
 import type PrismExpressiveCodePlugin from '../main';
-import { INLINE_CODE_REGEX } from '../utils';
+
+export const INLINE_CODE_REGEX = /^(.*)\{:([a-zA-Z0-9_\-+#]+)\}$/; // format: `code{:lang}`
 
 export class EditorUtil {
   /**

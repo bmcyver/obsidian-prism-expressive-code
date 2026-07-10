@@ -7,8 +7,8 @@ import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-s
 import { pluginFrames } from '@expressive-code/plugin-frames';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 import { pluginTextMarkers } from '@expressive-code/plugin-text-markers';
-import { customPluginPrism } from '../prism/CustomPluginPrism';
-import { getECTheme } from '../themes/ThemeManager';
+import { customPluginPrism } from './prism/CustomPluginPrism';
+import { getECTheme } from './themes/ThemeManager';
 
 export interface ThemeRegistration {
   name: string;
@@ -26,7 +26,10 @@ export interface EcSettingsProps {
   ecDefaultWrap: boolean;
   ecDefaultFrame: 'code' | 'terminal' | 'none' | 'auto';
   ecDefaultCollapseStyle:
-    'github' | 'collapsible-start' | 'collapsible-end' | 'collapsible-auto';
+    | 'github'
+    | 'collapsible-start'
+    | 'collapsible-end'
+    | 'collapsible-auto';
 }
 
 export interface EcConfigInput {

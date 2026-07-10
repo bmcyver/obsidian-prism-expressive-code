@@ -47,6 +47,10 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
+  getSettingDefinitions(): [] {
+    return [];
+  }
+
   display(): void {
     this.containerEl.empty();
 

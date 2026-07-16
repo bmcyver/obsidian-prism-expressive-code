@@ -125,6 +125,91 @@ export class SyntaxTreeParser {
     return { from, to };
   }
 
+  private static getNodesRange(state: EditorState, nodes: SyntaxNode[]): { start: number; end: number } | null {
+    const firstNode = nodes[0];
+    const lastNode = nodes[nodes.length - 1];
+    if (firstNode && lastNode) {
+      try {
+        const start = state.doc.lineAt(firstNode.from).from;
+        const end = state.doc.lineAt(lastNode.to).to;
+        return { start, end };
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private static handleInlineCode(
+    node: SyntaxNode,
+    state: EditorState,
+    plugin: PrismExpressiveCodePlugin,
+    decorationUpdates: DecorationUpdate[]
+  ): void {
+    const content = EditorUtil.getContent(state, node.from, node.to);
+
+    if (content.endsWith('}') && plugin.settings.inlineHighlighting) {
+      const match = content.match(INLINE_CODE_REGEX); // format: `code{:lang}`
+      if (match && match[1] && match[2]) {
+        const hasSelectionOverlap =
+          EditorUtil.checkSelectionAndRangeOverlap(
+            state.selection,
+            node.from - 1,
+            node.to + 1,
+          );
+
+        decorationUpdates.push({
+          type: DecorationUpdateType.Insert,
+          from: node.from,
+          to: node.to,
+          lang: match[2],
+          content: match[1],
+          hideLang:
+            this.isLivePreview(state) && !hasSelectionOverlap,
+          codeStart: node.from,
+          codeEnd: node.from + match[1].length,
+          hideStart: node.from + match[1].length,
+          hideEnd: node.to,
+        });
+      }
+    } else {
+      // we don't want to highlight normal inline code blocks, thus we remove any of our decorations
+      decorationUpdates.push({
+        type: DecorationUpdateType.Remove,
+        from: node.from,
+        to: node.to,
+      });
+    }
+  }
+
+  private static handleCodeBlockEnd(
+    state: EditorState,
+    lang: string,
+    codeBlockNodes: SyntaxNode[],
+    decorationUpdates: DecorationUpdate[]
+  ): void {
+    if (codeBlockNodes.length === 0) return;
+
+    const range = this.getNodesRange(state, codeBlockNodes);
+    if (!range) return;
+
+    if (lang !== '') {
+      decorationUpdates.push({
+        type: DecorationUpdateType.Insert,
+        from: range.start,
+        to: range.end,
+        lang,
+        content: EditorUtil.getContent(state, range.start, range.end),
+      });
+    } else {
+      decorationUpdates.push({
+        type: DecorationUpdateType.Remove,
+        from: range.start,
+        to: range.end,
+      });
+    }
+  }
+
   static getDecorationUpdates(
     view: EditorView,
     plugin: PrismExpressiveCodePlugin,
@@ -154,40 +239,7 @@ export class SyntaxTreeParser {
         }
 
         if (props.has('inline-code')) {
-          const content = EditorUtil.getContent(view.state, node.from, node.to);
-
-          if (content.endsWith('}') && plugin.settings.inlineHighlighting) {
-            const match = content.match(INLINE_CODE_REGEX); // format: `code{:lang}`
-            if (match && match[1] && match[2]) {
-              const hasSelectionOverlap =
-                EditorUtil.checkSelectionAndRangeOverlap(
-                  view.state.selection,
-                  node.from - 1,
-                  node.to + 1,
-                );
-
-              decorationUpdates.push({
-                type: DecorationUpdateType.Insert,
-                from: node.from,
-                to: node.to,
-                lang: match[2],
-                content: match[1],
-                hideLang:
-                  this.isLivePreview(view.state) && !hasSelectionOverlap,
-                codeStart: node.from,
-                codeEnd: node.from + match[1].length,
-                hideStart: node.from + match[1].length,
-                hideEnd: node.to,
-              });
-            }
-          } else {
-            // we don't want to highlight normal inline code blocks, thus we remove any of our decorations
-            decorationUpdates.push({
-              type: DecorationUpdateType.Remove,
-              from: node.from,
-              to: node.to,
-            });
-          }
+          this.handleInlineCode(node, view.state, plugin, decorationUpdates);
           return;
         }
 
@@ -224,38 +276,7 @@ export class SyntaxTreeParser {
         }
 
         if (props.has('HyperMD-codeblock-end')) {
-          if (codeBlockNodes.length > 0 && lang !== '') {
-            const firstNode = codeBlockNodes[0];
-            const lastNode = codeBlockNodes[codeBlockNodes.length - 1];
-            if (firstNode && lastNode) {
-              const start = view.state.doc.lineAt(firstNode.from).from;
-              const end = view.state.doc.lineAt(lastNode.to).to;
-
-              decorationUpdates.push({
-                type: DecorationUpdateType.Insert,
-                from: start,
-                to: end,
-                lang,
-                content: EditorUtil.getContent(view.state, start, end),
-              });
-            }
-          }
-
-          if (codeBlockNodes.length > 0 && lang === '') {
-            const firstNode = codeBlockNodes[0];
-            const lastNode = codeBlockNodes[codeBlockNodes.length - 1];
-            if (firstNode && lastNode) {
-              const start = view.state.doc.lineAt(firstNode.from).from;
-              const end = view.state.doc.lineAt(lastNode.to).to;
-
-              decorationUpdates.push({
-                type: DecorationUpdateType.Remove,
-                from: start,
-                to: end,
-              });
-            }
-          }
-
+          this.handleCodeBlockEnd(view.state, lang, codeBlockNodes, decorationUpdates);
           lang = '';
           codeBlockNodes = [];
           beginLineEndOffset = -1;

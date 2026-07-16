@@ -3,13 +3,14 @@ import { toDom } from 'hast-util-to-dom';
 import type * as Prism from 'prismjs';
 
 import type PrismExpressiveCodePlugin from '../main';
+import { getPrism } from '../prism/getPrism';
 import {
-  clearStyleCache,
   LANGUAGE_ALIASES,
   LANGUAGE_BLACKLIST,
   LANGUAGE_SPECIAL,
-} from '../prism/PrismUtils';
-import { type ThemeMapper } from '../themes/ThemeManager';
+} from '../prism/constants';
+import { clearStyleCache } from '../prism/scopeMapping';
+import { type ThemeMapper } from '../themes/ThemeMapper';
 import { createEcEngineConfig } from '../config';
 
 export class CodeBlockHighlighter {
@@ -29,7 +30,7 @@ export class CodeBlockHighlighter {
   }
 
   async load(): Promise<void> {
-    const prism = (window as unknown as { Prism?: typeof Prism }).Prism;
+    const prism = getPrism();
     if (!prism) {
       return;
     }
@@ -87,8 +88,7 @@ export class CodeBlockHighlighter {
     this.removeStyles(doc);
     try {
       const themeStyles = await this.ec.getThemeStyles();
-      const creator = doc as unknown as { createElement(tagName: 'style'): HTMLStyleElement };
-      const styleEl = creator['createElement']('style');
+      const styleEl = doc.createElement('style');
       styleEl.textContent = themeStyles;
       doc.head.appendChild(styleEl);
       this.ecStyleElements.set(doc, styleEl);
@@ -122,27 +122,5 @@ export class CodeBlockHighlighter {
    */
   obsidianSafeLanguageNames(): string[] {
     return this.safeLanguagesArray;
-  }
-
-  /**
-   * Highlights code with EC and renders it to the passed container element.
-   */
-  async renderWithEc(
-    code: string,
-    language: string,
-    meta: string,
-    container: HTMLElement,
-  ): Promise<void> {
-    if (!this.ec) {
-      return;
-    }
-    const result = await this.ec.render({
-      code,
-      language,
-      meta,
-    });
-
-    container.empty();
-    container.append(toDom(result.renderedGroupAst));
   }
 }

@@ -1,18 +1,5 @@
 import { LRUCache } from '../utils/LRUCache';
 
-export const LANGUAGE_BLACKLIST = new Set(['c++', 'c#', 'f#', 'mermaid']);
-export const LANGUAGE_SPECIAL = new Set([
-  'plaintext',
-  'txt',
-  'text',
-  'plain',
-  'ansi',
-]);
-export const LANGUAGE_ALIASES: Record<string, string> = {
-  zsh: 'bash',
-  asm: 'nasm',
-};
-
 export interface ThemeSetting {
   scope?: string | string[];
   settings?: {
@@ -155,105 +142,63 @@ export function getColorForScopes(
   return bestMatch;
 }
 
+/**
+ * Fallback patterns: if a Prism token type isn't in PRISM_TO_SCOPE_MAP,
+ * we check if its lowercased name contains any of these keywords.
+ */
+const FALLBACK_SCOPE_PATTERNS: [string[], string[]][] = [
+  [['comment', 'prolog', 'doctype', 'cdata'], ['comment']],
+  [['string', 'char', 'value', 'literal', 'url'], ['string']],
+  [
+    [
+      'keyword', 'control', 'statement', 'operator', 'atrule',
+      'directive', 'modifier', 'specifier', 'op-code', 'instruction',
+    ],
+    ['keyword'],
+  ],
+  [
+    [
+      'number', 'digit', 'boolean', 'null', 'constant',
+      'symbol', 'float', 'int',
+    ],
+    ['constant'],
+  ],
+  [
+    ['func', 'method', 'macro', 'proc', 'handler', 'call', 'command'],
+    ['entity.name.function'],
+  ],
+  [
+    [
+      'class', 'type', 'struct', 'enum', 'interface',
+      'model', 'namespace', 'module',
+    ],
+    ['entity.name.type'],
+  ],
+  [
+    [
+      'var', 'prop', 'attr', 'param', 'arg', 'field',
+      'key', 'property', 'identifier', 'label',
+    ],
+    ['variable'],
+  ],
+  [
+    [
+      'punctuation', 'bracket', 'brace', 'paren', 'delimiter',
+      'comma', 'colon', 'semi', 'accessor', 'dot',
+    ],
+    ['punctuation'],
+  ],
+];
+
 export function getScopesForPrismType(type: string): string[] {
-  if (PRISM_TO_SCOPE_MAP[type]) {
-    return PRISM_TO_SCOPE_MAP[type];
-  }
+  const mapped = PRISM_TO_SCOPE_MAP[type];
+  if (mapped) return mapped;
 
   const lower = type.toLowerCase();
-  if (
-    lower.includes('comment') ||
-    lower.includes('prolog') ||
-    lower.includes('doctype') ||
-    lower.includes('cdata')
-  ) {
-    return ['comment'];
-  }
-  if (
-    lower.includes('string') ||
-    lower.includes('char') ||
-    lower.includes('value') ||
-    lower.includes('literal') ||
-    lower.includes('url')
-  ) {
-    return ['string'];
-  }
-  if (
-    lower.includes('keyword') ||
-    lower.includes('control') ||
-    lower.includes('statement') ||
-    lower.includes('operator') ||
-    lower.includes('atrule') ||
-    lower.includes('directive') ||
-    lower.includes('modifier') ||
-    lower.includes('specifier') ||
-    lower.includes('op-code') ||
-    lower.includes('instruction')
-  ) {
-    return ['keyword'];
-  }
-  if (
-    lower.includes('number') ||
-    lower.includes('digit') ||
-    lower.includes('boolean') ||
-    lower.includes('null') ||
-    lower.includes('constant') ||
-    lower.includes('symbol') ||
-    lower.includes('float') ||
-    lower.includes('int')
-  ) {
-    return ['constant'];
-  }
-  if (
-    lower.includes('func') ||
-    lower.includes('method') ||
-    lower.includes('macro') ||
-    lower.includes('proc') ||
-    lower.includes('handler') ||
-    lower.includes('call') ||
-    lower.includes('command')
-  ) {
-    return ['entity.name.function'];
-  }
-  if (
-    lower.includes('class') ||
-    lower.includes('type') ||
-    lower.includes('struct') ||
-    lower.includes('enum') ||
-    lower.includes('interface') ||
-    lower.includes('model') ||
-    lower.includes('namespace') ||
-    lower.includes('module')
-  ) {
-    return ['entity.name.type'];
-  }
-  if (
-    lower.includes('var') ||
-    lower.includes('prop') ||
-    lower.includes('attr') ||
-    lower.includes('param') ||
-    lower.includes('arg') ||
-    lower.includes('field') ||
-    lower.includes('key') ||
-    lower.includes('property') ||
-    lower.includes('identifier') ||
-    lower.includes('label')
-  ) {
-    return ['variable'];
-  }
-  if (
-    lower.includes('punctuation') ||
-    lower.includes('bracket') ||
-    lower.includes('brace') ||
-    lower.includes('paren') ||
-    lower.includes('delimiter') ||
-    lower.includes('comma') ||
-    lower.includes('colon') ||
-    lower.includes('semi') ||
-    lower.includes('accessor') ||
-    lower.includes('dot')
-  ) {
-    return ['punctuation'];
+  for (const [keywords, scopes] of FALLBACK_SCOPE_PATTERNS) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      return scopes;
+    }
   }
 
   return [type];
@@ -334,89 +279,4 @@ export function getStyleForPrismTypes(
   };
   styleCache.set(cacheKey, result);
   return result;
-}
-
-export interface FlatToken {
-  content: string;
-  types: string[];
-  typeKey: string;
-}
-
-export interface PrismTokenLike {
-  type: string;
-  content: string | PrismTokenLike | (string | PrismTokenLike)[];
-  alias?: string | string[];
-}
-
-export function flattenTokens(
-  tokens: (string | PrismTokenLike)[],
-  parentTypes: string[] = [],
-  result: FlatToken[] = [],
-): FlatToken[] {
-  for (const token of tokens) {
-    if (typeof token === 'string') {
-      result.push({
-        content: token,
-        types: parentTypes,
-        typeKey: parentTypes.join(','),
-      });
-    } else {
-      const currentTypes = [...parentTypes];
-      if (token.alias) {
-        if (Array.isArray(token.alias)) {
-          currentTypes.push(...token.alias);
-        } else {
-          currentTypes.push(token.alias);
-        }
-      }
-      currentTypes.push(token.type);
-
-      if (typeof token.content === 'string') {
-        result.push({
-          content: token.content,
-          types: currentTypes,
-          typeKey: currentTypes.join(','),
-        });
-      } else if (Array.isArray(token.content)) {
-        flattenTokens(token.content, currentTypes, result);
-      } else {
-        flattenTokens([token.content], currentTypes, result);
-      }
-    }
-  }
-  return result;
-}
-
-export function splitTokensIntoLines(flatTokens: FlatToken[]): FlatToken[][] {
-  const lines: FlatToken[][] = [[]];
-  for (const token of flatTokens) {
-    const content = token.content;
-
-    if (!content.includes('\n')) {
-      if (content.length > 0) {
-        const lastLine = lines[lines.length - 1];
-        if (lastLine) {
-          lastLine.push(token);
-        }
-      }
-    } else {
-      const parts = content.split('\n');
-      for (let i = 0; i < parts.length; i++) {
-        if (i > 0) {
-          lines.push([]);
-        }
-        const part = parts[i];
-        if (part && part.length > 0) {
-          const lastLine = lines[lines.length - 1];
-          if (lastLine) {
-            lastLine.push({
-              ...token,
-              content: part,
-            });
-          }
-        }
-      }
-    }
-  }
-  return lines;
 }

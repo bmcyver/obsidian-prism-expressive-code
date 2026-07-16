@@ -1,54 +1,16 @@
 import type PrismExpressiveCodePlugin from '../main';
-import {
-  type MarkdownPostProcessorContext,
-  MarkdownRenderChild,
-} from 'obsidian';
+import { type MarkdownPostProcessorContext } from 'obsidian';
+import { toDom } from 'hast-util-to-dom';
+import { BaseCodeBlock } from './BaseCodeBlock';
 import {
   extractMetaString,
   stripCommonIndentation,
   calculateListIndentationLevel,
 } from './CodeBlockUtils';
 
-export abstract class BaseCodeBlock extends MarkdownRenderChild {
-  plugin: PrismExpressiveCodePlugin;
-  source: string;
-  language: string;
-  ctx: MarkdownPostProcessorContext;
-  currentFilePath: string;
-
-  constructor(
-    plugin: PrismExpressiveCodePlugin,
-    containerEl: HTMLElement,
-    source: string,
-    language: string,
-    ctx: MarkdownPostProcessorContext,
-  ) {
-    super(containerEl);
-
-    this.plugin = plugin;
-    this.source = source;
-    this.language = language;
-    this.ctx = ctx;
-    this.currentFilePath = ctx.sourcePath;
-  }
-
-  public abstract rerenderOnNoteChange(): Promise<void>;
-  public abstract forceRerender(): Promise<void>;
-
-  public onload(): void {
-    super.onload();
-    this.plugin.codeBlockManager.add(this);
-  }
-
-  public onunload(): void {
-    super.onunload();
-    this.plugin.codeBlockManager.remove(this);
-    this.containerEl.empty();
-  }
-}
-
 export class CodeBlock extends BaseCodeBlock {
   cachedMetaString: string;
+  rendered = false;
 
   constructor(
     plugin: PrismExpressiveCodePlugin,
@@ -58,11 +20,16 @@ export class CodeBlock extends BaseCodeBlock {
     ctx: MarkdownPostProcessorContext,
   ) {
     super(plugin, containerEl, source, language, ctx);
-    this.cachedMetaString = '';
+    this.cachedMetaString = this.getMetaString();
   }
 
   private getMetaString(): string {
     return extractMetaString(this.ctx, this.containerEl, this.language);
+  }
+
+  public async startRender(): Promise<void> {
+    if (this.rendered) return;
+    await this.render(this.cachedMetaString);
   }
 
   private async render(metaString: string): Promise<void> {
@@ -71,41 +38,67 @@ export class CodeBlock extends BaseCodeBlock {
     }
 
     const level = calculateListIndentationLevel(this.source);
-
-    this.containerEl.classList.add('pec-code-block');
-    if (level > 0) {
-      this.containerEl.style.setProperty(
-        '--pec-indent-level',
-        level.toString(),
-      );
-    } else {
-      this.containerEl.style.removeProperty('--pec-indent-level');
-    }
-
     const cleanedSource = stripCommonIndentation(this.source);
-    await this.plugin.highlighter.renderWithEc(
-      cleanedSource,
-      this.language,
-      metaString,
-      this.containerEl,
-    );
+
+    const result = await this.plugin.highlighter.ec.render({
+      code: cleanedSource,
+      language: this.language,
+      meta: metaString,
+    });
+
+    const win = this.containerEl.ownerDocument?.defaultView || window;
+    win.requestAnimationFrame(() => {
+      if (!this.isLoaded) return;
+
+      this.containerEl.classList.add('pec-code-block');
+      if (level > 0) {
+        this.containerEl.style.setProperty(
+          '--pec-indent-level',
+          level.toString(),
+        );
+      } else {
+        this.containerEl.style.removeProperty('--pec-indent-level');
+      }
+
+      this.containerEl.empty();
+      this.containerEl.append(toDom(result.renderedGroupAst));
+      this.containerEl.style.removeProperty('min-height');
+      this.rendered = true;
+    });
   }
 
   public async rerenderOnNoteChange(): Promise<void> {
     const newMetaString = this.getMetaString();
     if (newMetaString !== this.cachedMetaString) {
       this.cachedMetaString = newMetaString;
-      await this.render(newMetaString);
+      if (this.rendered) {
+        await this.render(newMetaString);
+      }
     }
   }
 
   public async forceRerender(): Promise<void> {
-    await this.render(this.cachedMetaString);
+    if (this.rendered) {
+      await this.render(this.cachedMetaString);
+    } else {
+      await this.startRender();
+    }
   }
 
   public onload(): void {
     super.onload();
-    this.cachedMetaString = this.getMetaString();
-    void this.render(this.cachedMetaString);
+    
+    // Estimate height to prevent Cumulative Layout Shift (CLS)
+    const lineCount = this.source.split('\n').length;
+    const estimatedHeight = lineCount * 22.5 + 50;
+    this.containerEl.style.minHeight = `${estimatedHeight}px`;
+
+    // Render immediately on load, just like the original-plugin
+    void this.startRender();
+  }
+
+  public onunload(): void {
+    super.onunload();
+    this.rendered = false;
   }
 }

@@ -1,6 +1,6 @@
 import type PrismExpressiveCodePlugin from '../main';
 import { TFile } from 'obsidian';
-import { type BaseCodeBlock } from './CodeBlock';
+import { type BaseCodeBlock } from './BaseCodeBlock';
 
 export class CodeBlockManager {
   plugin: PrismExpressiveCodePlugin;

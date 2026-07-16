@@ -109,6 +109,18 @@ export function createLivePreviewPlugin(
       debouncedViewportUpdate: (() => void) & { cancel(): void };
       debouncedCompositionEndUpdate: (() => void) & { cancel(): void };
 
+      createDebouncedUpdate(delay: number) {
+        return debounce(
+          () => {
+            const docChanged = this.pendingDocChanged;
+            this.pendingDocChanged = false;
+            void this.updateWidgets(this.view, docChanged);
+          },
+          delay,
+          true,
+        );
+      }
+
       constructor(view: EditorView) {
         this.view = view;
         void this.updateWidgets(view);
@@ -118,35 +130,9 @@ export function createLivePreviewPlugin(
         };
         plugin.activeCm6Plugins.add(this.updateFn);
 
-        this.debouncedDocChangedUpdate = debounce(
-          () => {
-            const docChanged = this.pendingDocChanged;
-            this.pendingDocChanged = false;
-            void this.updateWidgets(this.view, docChanged);
-          },
-          300,
-          true,
-        );
-
-        this.debouncedViewportUpdate = debounce(
-          () => {
-            const docChanged = this.pendingDocChanged;
-            this.pendingDocChanged = false;
-            void this.updateWidgets(this.view, docChanged);
-          },
-          150,
-          true,
-        );
-
-        this.debouncedCompositionEndUpdate = debounce(
-          () => {
-            const docChanged = this.pendingDocChanged;
-            this.pendingDocChanged = false;
-            void this.updateWidgets(this.view, docChanged);
-          },
-          100,
-          true,
-        );
+        this.debouncedDocChangedUpdate = this.createDebouncedUpdate(300);
+        this.debouncedViewportUpdate = this.createDebouncedUpdate(150);
+        this.debouncedCompositionEndUpdate = this.createDebouncedUpdate(100);
       }
 
       cancelAllDebounces(): void {

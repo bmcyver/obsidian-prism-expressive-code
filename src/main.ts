@@ -1,13 +1,15 @@
 import { debounce, loadPrism, Plugin } from 'obsidian';
 import { createLivePreviewPlugin } from './inline/InlineLivePreview';
-import { DEFAULT_SETTINGS, type Settings } from './settings';
-import { PrismExpressiveCodeSettingTab } from './settings';
+import { DEFAULT_SETTINGS, type Settings } from './settings/types';
+import { PrismExpressiveCodeSettingTab } from './settings/SettingsTab';
 import { CodeBlockHighlighter } from './codeblock/CodeBlockHighlighter';
 import { CodeBlockManager } from './codeblock/CodeBlockManager';
 import { CodeBlockProcessor } from './codeblock/CodeBlockProcessor';
 import { InlineProcessor } from './inline/InlineProcessor';
 import { InlineHighlighter } from './inline/InlineHighlighter';
-import { ThemeMapper, VALID_THEME_IDS } from './themes/ThemeManager';
+import { ThemeMapper } from './themes/ThemeMapper';
+import { VALID_THEME_IDS } from './themes/definitions';
+import { registerPrismHook, unregisterPrismHook, filterExpressiveCodeElements } from './prism/prismHook';
 
 import 'src/styles.css';
 import 'virtual:ec-styles.css';
@@ -117,38 +119,12 @@ export default class PrismExpressiveCodePlugin extends Plugin {
     await this.updateCm6Plugins();
   }
 
-  prismHookBeforeHighlight = (env: unknown): void => {
-    const environment = env as { elements?: Element[] };
-    if (environment.elements) {
-      environment.elements = environment.elements.filter((element: Element) => {
-        return !element.matches('div.expressive-code pre code');
-      });
-    }
-  };
-
   async registerPrismPlugin(): Promise<void> {
-    const prism = (window as unknown as { Prism: typeof import('prismjs') })
-      .Prism;
-    if (prism && prism.hooks) {
-      this.unregisterPrismPlugin();
-      prism.hooks.add(
-        'before-all-elements-highlight',
-        this.prismHookBeforeHighlight,
-      );
-    }
+    registerPrismHook(filterExpressiveCodeElements);
   }
 
   unregisterPrismPlugin(): void {
-    const prism = (window as unknown as { Prism: typeof import('prismjs') })
-      .Prism;
-    if (prism && prism.hooks && prism.hooks.all) {
-      const hooks = prism.hooks.all['before-all-elements-highlight'];
-      if (hooks) {
-        prism.hooks.all['before-all-elements-highlight'] = hooks.filter(
-          (hook) => hook !== this.prismHookBeforeHighlight,
-        );
-      }
-    }
+    unregisterPrismHook(filterExpressiveCodeElements);
   }
 
   onunload(): void {

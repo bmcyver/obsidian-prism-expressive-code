@@ -6,12 +6,15 @@ import {
 
 import {
   flattenTokens,
-  getStyleForPrismTypes,
-  LANGUAGE_ALIASES,
   splitTokensIntoLines,
-  FontStyle,
   type FlatToken,
-} from './PrismUtils';
+} from './tokenizer';
+import {
+  getStyleForPrismTypes,
+  FontStyle,
+} from './scopeMapping';
+import { LANGUAGE_ALIASES } from './constants';
+import { getPrism } from './getPrism';
 import type * as Prism from 'prismjs';
 
 export function customPluginPrism(): ExpressiveCodePlugin {
@@ -24,7 +27,7 @@ export function customPluginPrism(): ExpressiveCodePlugin {
 
         let prism: typeof Prism | undefined;
         try {
-          prism = (window as unknown as { Prism: typeof Prism }).Prism;
+          prism = getPrism();
         } catch (err) {
           const error = err instanceof Error ? err : new Error(String(err));
           throw new Error(

@@ -1,13 +1,9 @@
-import {
-  flattenTokens,
-  getStyleForPrismTypes,
-  LANGUAGE_ALIASES,
-  FontStyle,
-  type FlatToken,
-  type ThemeLike,
-} from '../prism/PrismUtils';
+import { flattenTokens, type FlatToken } from '../prism/tokenizer';
+import { getStyleForPrismTypes, FontStyle, type ThemeLike } from '../prism/scopeMapping';
+import { LANGUAGE_ALIASES } from '../prism/constants';
+import { getPrism } from '../prism/getPrism';
 import { LRUCache } from '../utils/LRUCache';
-import { type ThemeMapper } from '../themes/ThemeManager';
+import { type ThemeMapper } from '../themes/ThemeMapper';
 import type * as Prism from 'prismjs';
 
 export interface ThemedToken {
@@ -43,7 +39,7 @@ export class InlineHighlighter {
     code: string,
     lang: string,
   ): Promise<TokensResult | undefined> {
-    const prism = (window as unknown as { Prism?: typeof Prism }).Prism;
+    const prism = getPrism();
     if (!prism || this.safeLanguagesSet.size === 0) {
       return undefined;
     }

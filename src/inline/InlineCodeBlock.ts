@@ -1,6 +1,6 @@
 import type PrismExpressiveCodePlugin from '../main';
 import { type MarkdownPostProcessorContext } from 'obsidian';
-import { BaseCodeBlock } from '../codeblock/CodeBlock';
+import { BaseCodeBlock } from '../codeblock/BaseCodeBlock';
 
 export class InlineCodeBlock extends BaseCodeBlock {
   constructor(

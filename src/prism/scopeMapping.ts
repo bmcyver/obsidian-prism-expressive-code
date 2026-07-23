@@ -37,7 +37,8 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   'attr-name': ['entity.other.attribute-name'],
   string: ['string'],
   char: ['string.char'],
-  builtin: ['support.type', 'support.class', 'support.function'],
+  // builtin: 내장 함수를 타입보다 앞세워 make(), append() 등의 함수 색상 보호
+  builtin: ['support.function.builtin', 'support.function', 'support.type', 'support.class'],
   inserted: ['markup.inserted'],
   operator: ['keyword.operator'],
   entity: ['entity.name', 'constant.character.entity'],
@@ -47,7 +48,10 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   'class-name': ['entity.name.type.class', 'support.class'],
   function: ['entity.name.function', 'support.function'],
   regex: ['string.regexp'],
-  important: ['invalid'],
+  'regex-flags': ['storage.modifier.regex', 'keyword.other.regex'],
+  'regex-delimiter': ['punctuation.definition.string.regex', 'punctuation'],
+  // important: invalid(오류 빨간색) 오매핑 보정
+  important: ['keyword.other.important.css', 'keyword.other', 'keyword'],
   bold: ['strong'],
   italic: ['emphasis'],
   'attr-value': ['string'],
@@ -57,39 +61,84 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   unit: ['keyword.other.unit'],
   id: ['entity.other.attribute-name.id'],
   class: ['entity.other.attribute-name.class'],
+  // pseudo_element, pseudo_class: 하이픈/언더스코어 모두 호환 보정
+  'pseudo-element': ['entity.other.attribute-name.pseudo-element'],
+  'pseudo-class': ['entity.other.attribute-name.pseudo-class'],
   pseudo_element: ['entity.other.attribute-name.pseudo-element'],
   pseudo_class: ['entity.other.attribute-name.pseudo-class'],
   color: ['constant.other.color'],
-  macro: [
-    'entity.name.function.macro',
-    'support.function.macro',
-    'entity.name.function',
-  ],
+  hexcode: ['constant.other.color.rgb-value', 'constant.other.color'],
+  // macro & command: outer container Bleed 방지를 위해 meta 계열로 격리
+  macro: ['meta.preprocessor.macro', 'meta.preprocessor'],
+  'macro-name': ['entity.name.function.preprocessor', 'entity.name.function.macro', 'entity.name.function'],
+  command: ['entity.name.function.command', 'entity.name.function', 'support.function', 'meta.command'],
+  option: ['meta.argument.option', 'entity.other.attribute-name.option', 'variable.parameter'],
+  shebang: ['comment.line.shebang', 'punctuation.definition.comment', 'comment'],
   directive: ['keyword.control.directive', 'keyword.control', 'keyword'],
   'directive-hash': ['punctuation.definition.directive', 'punctuation'],
+  include: ['keyword.control.import.include', 'keyword.control.import'],
+  'header-name': ['string.quoted.other.lt-gt.include', 'string'],
+  style: ['meta.embedded.block.css', 'source.css'],
+  script: ['meta.embedded.block.javascript', 'source.js'],
+  'language-css': ['meta.embedded.block.css', 'source.css'],
+  'language-javascript': ['meta.embedded.block.javascript', 'source.js'],
   'double-colon': ['punctuation.accessor', 'punctuation'],
   namespace: ['entity.name.namespace', 'support.other.namespace'],
   type: ['entity.name.type', 'support.type', 'storage.type'],
+  datatype: ['support.type', 'storage.type'],
   lifetime: ['entity.name.type.lifetime', 'storage.modifier.lifetime'],
-  attribute: ['meta.attribute', 'entity.name.type.class'],
+  // attribute: entity.name.type.class 제거하여 클래스 색상 오염 방지
+  attribute: ['meta.attribute', 'entity.other.attribute-name'],
   generics: ['entity.name.type'],
   decorator: ['meta.function.decorator', 'entity.name.function.decorator'],
   'built-in': ['support.function', 'support.type'],
   key: [
+    'entity.name.tag.yaml',
+    'entity.name.tag',
     'support.type.property-name',
     'variable.other.property',
-    'entity.name.tag',
+    'variable.object.property',
+    'entity.name.variable',
+    'entity.name',
   ],
   atrule: ['keyword.control', 'keyword'],
   title: ['entity.name.section', 'markup.heading'],
   code: ['markup.inline.raw'],
+  'code-block': ['markup.raw.block', 'markup.raw'],
+  strike: ['markup.strikethrough'],
+  strikethrough: ['markup.strikethrough'],
   blockquote: ['markup.quote'],
   list: ['markup.list'],
   link: ['string.other.link'],
-  command: ['entity.name.function', 'support.function'],
+  'url-link': ['markup.underline.link', 'string.other.link'],
   environment: ['variable.other.constant'],
   file: ['string'],
   'data-type': ['support.type', 'storage.type'],
+  instruction: ['meta.instruction', 'meta'],
+
+  // === 추가: JS/TS 보간 및 JSX ===
+  'template-string': ['string.template', 'string.quoted.template', 'string'],
+  'template-literal': ['string.template', 'string.quoted.template', 'string'],
+  interpolation: ['meta.template.expression'],
+  'interpolation-punctuation': ['punctuation.definition.template-expression', 'punctuation'],
+
+  // === 추가: Python f-string & docstring ===
+  'f-string': ['string.interpolated', 'string.quoted.fstring', 'string'],
+  'format-spec': ['meta.format.specifier', 'storage.type.format'],
+  docstring: ['comment.block.documentation', 'comment', 'string.quoted.docstring'],
+  'triple-quoted-string': ['comment.block.documentation', 'comment', 'string.quoted.triple', 'string'],
+
+  // === 추가: Java/Kotlin annotation & template-field ===
+  annotation: ['storage.type.annotation', 'entity.name.type.annotation'],
+  'annotation-punctuation': ['punctuation.definition.annotation', 'punctuation'],
+  'template-field': ['meta.template.expression', 'entity.string.template.element'],
+
+  // === 추가: Go package & import ===
+  package: ['keyword.other.package', 'keyword'],
+  import: ['keyword.control.import', 'keyword'],
+  'package-name': ['entity.name.package', 'entity.name.namespace'],
+  'import-path': ['string.quoted.double', 'string'],
+  null: ['constant.language.null', 'constant.language'],
 };
 
 export function getColorForScopes(
@@ -152,7 +201,8 @@ const FALLBACK_SCOPE_PATTERNS: [string[], string[]][] = [
   [
     [
       'keyword', 'control', 'statement', 'operator', 'atrule',
-      'directive', 'modifier', 'specifier', 'op-code', 'instruction',
+      'directive', 'modifier', 'specifier', 'op-code',
+      'import', 'package',
     ],
     ['keyword'],
   ],
@@ -170,13 +220,14 @@ const FALLBACK_SCOPE_PATTERNS: [string[], string[]][] = [
   [
     [
       'class', 'type', 'struct', 'enum', 'interface',
-      'model', 'namespace', 'module',
+      'model', 'namespace', 'module', 'annotation',
     ],
     ['entity.name.type'],
   ],
   [
     [
-      'var', 'prop', 'attr', 'param', 'arg', 'field',
+      'var', 'prop', 'attr', 'param', 'arg',
+      // 'field' 제거! (Kotlin template-field가 variable로 잘못 오매핑되는 현상 차단)
       'key', 'property', 'identifier', 'label',
     ],
     ['variable'],

@@ -45,10 +45,17 @@ body {
   }
 }
 
-/* Disable ligatures in code blocks, as they can cause incorrect highlighting */
-div.expressive-code {
+div.expressive-code code {
   font-variant-ligatures: no-contextual;
+}
+
+div.expressive-code {
   margin-inline: 0 !important;
+  contain: layout paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 150px;
+  will-change: scroll-position;
+  transform: translateZ(0);
 
   & > figure {
     margin-inline: 0 !important;
@@ -105,9 +112,7 @@ span.pec-ul {
   min-width: 250px;
 }
 
-/* Hide empty opening/closing fenced code block lines in Live Preview when not active (i.e. when preview widget is visible next to them) */
-.markdown-source-view.mod-cm6
-  div.HyperMD-codeblock-begin:has(+ .cm-preview-code-block),
+/* Hide empty closing fenced code block lines in Live Preview when active */
 .markdown-source-view.mod-cm6
   div.cm-preview-code-block
   + div.HyperMD-codeblock-end {
@@ -122,6 +127,6 @@ span.pec-ul {
 }
 
 /* Apply list indentation for code blocks in Live Preview */
-.markdown-source-view .pec-code-block[style*='--pec-indent-level'] {
+.markdown-source-view .pec-code-block[data-indent-level] {
   margin-left: calc(var(--pec-indent-level, 0) * var(--list-indent)) !important;
 }

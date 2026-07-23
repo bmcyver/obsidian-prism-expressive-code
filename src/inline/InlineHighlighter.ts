@@ -4,7 +4,6 @@ import { LANGUAGE_ALIASES } from '../prism/constants';
 import { getPrism } from '../prism/getPrism';
 import { LRUCache } from '../utils/LRUCache';
 import { type ThemeMapper } from '../themes/ThemeMapper';
-import type * as Prism from 'prismjs';
 
 export interface ThemedToken {
   content: string;
@@ -18,9 +17,11 @@ export interface TokensResult {
   tokens: ThemedToken[];
 }
 
+import { cacheManager } from '../utils/CacheManager';
+
 export class InlineHighlighter {
   private themeMapper: ThemeMapper;
-  private tokenCache = new LRUCache<string, TokensResult>(50);
+  private tokenCache = cacheManager.register(new LRUCache<string, TokensResult>(500));
   private safeLanguagesSet: Set<string> = new Set();
 
   constructor(themeMapper: ThemeMapper) {

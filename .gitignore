@@ -3,3 +3,5 @@ dist
 obsidian-plugin
 test-vault
 *.md
+
+Trace*.json

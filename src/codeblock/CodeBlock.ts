@@ -11,6 +11,8 @@ import {
 export class CodeBlock extends BaseCodeBlock {
   cachedMetaString: string;
   rendered = false;
+  private renderedSource = '';
+  private renderedMeta = '';
 
   constructor(
     plugin: PrismExpressiveCodePlugin,
@@ -37,8 +39,20 @@ export class CodeBlock extends BaseCodeBlock {
       return;
     }
 
-    const level = calculateListIndentationLevel(this.source);
     const cleanedSource = stripCommonIndentation(this.source);
+
+    // Early return if already rendered with the exact same content & meta
+    if (this.rendered && this.renderedSource === cleanedSource && this.renderedMeta === metaString) {
+      return;
+    }
+
+    const level = calculateListIndentationLevel(this.source);
+
+    // Maintain min-height to prevent container collapse / CLS during async rendering
+    const lineCount = cleanedSource.split('\n').length;
+    const currentHeight = this.containerEl.offsetHeight;
+    const estimatedHeight = Math.max(currentHeight, lineCount * 24 + 40);
+    this.containerEl.style.minHeight = `${estimatedHeight}px`;
 
     const result = await this.plugin.highlighter.ec.render({
       code: cleanedSource,
@@ -56,13 +70,21 @@ export class CodeBlock extends BaseCodeBlock {
           '--pec-indent-level',
           level.toString(),
         );
+        this.containerEl.setAttribute('data-indent-level', level.toString());
       } else {
         this.containerEl.style.removeProperty('--pec-indent-level');
+        this.containerEl.removeAttribute('data-indent-level');
       }
 
+      const domNode = toDom(result.renderedGroupAst);
+      const fragment = this.containerEl.ownerDocument.createDocumentFragment();
+      fragment.appendChild(domNode);
+
       this.containerEl.empty();
-      this.containerEl.append(toDom(result.renderedGroupAst));
+      this.containerEl.appendChild(fragment);
       this.containerEl.style.removeProperty('min-height');
+      this.renderedSource = cleanedSource;
+      this.renderedMeta = metaString;
       this.rendered = true;
     });
   }
@@ -90,7 +112,8 @@ export class CodeBlock extends BaseCodeBlock {
     
     // Estimate height to prevent Cumulative Layout Shift (CLS)
     const lineCount = this.source.split('\n').length;
-    const estimatedHeight = lineCount * 22.5 + 50;
+    // Use fallback baseline line-height (~24px per line + padding)
+    const estimatedHeight = lineCount * 24 + 40;
     this.containerEl.style.minHeight = `${estimatedHeight}px`;
 
     // Render immediately on load, just like the original-plugin

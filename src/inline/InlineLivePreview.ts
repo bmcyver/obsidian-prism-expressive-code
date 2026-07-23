@@ -17,11 +17,16 @@ import { LRUCache } from '../utils/LRUCache';
 import { type ThemedToken } from './InlineHighlighter';
 import { SyntaxTreeParser, DecorationUpdateType } from './InlineParser';
 
-const decorationCache = new LRUCache<string, Decoration>(200);
+import { cacheManager } from '../utils/CacheManager';
+
+const decorationCache = cacheManager.register(new LRUCache<string, Decoration>(1000));
+
+const HIDE_REPLACE_DECORATION = Decoration.replace({});
 
 export class DecorationBuilder {
   static async buildDecorations(
     plugin: PrismExpressiveCodePlugin,
+    view: EditorView,
     from: number,
     to: number,
     language: string,
@@ -41,8 +46,32 @@ export class DecorationBuilder {
     }
 
     const tokens = highlight.tokens;
-
+    const doc = view.state.doc;
+    const docLength = doc.length;
     const decorations: Range<Decoration>[] = [];
+
+    const clampedFrom = Math.max(0, Math.min(docLength, from));
+    const clampedTo = Math.max(clampedFrom, Math.min(docLength, to));
+
+    if (clampedFrom >= clampedTo) {
+      return [];
+    }
+
+    // Pre-fetch line boundaries once for the target slice range [clampedFrom, clampedTo]
+    const startLine = doc.lineAt(clampedFrom);
+    const endLine = doc.lineAt(clampedTo);
+
+    const lineRanges: { from: number; to: number }[] = [];
+    if (startLine.number === endLine.number) {
+      lineRanges.push({ from: startLine.from, to: startLine.to });
+    } else {
+      let curLineNum = startLine.number;
+      while (curLineNum <= endLine.number) {
+        const line = doc.line(curLineNum);
+        lineRanges.push({ from: line.from, to: line.to });
+        curLineNum++;
+      }
+    }
 
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
@@ -64,12 +93,37 @@ export class DecorationBuilder {
         decorationCache.set(cacheKey, dec);
       }
 
-      decorations.push(
-        dec.range(
-          from + token.offset,
-          nextToken ? from + nextToken.offset : to,
-        ),
-      );
+      const rawTokenFrom = from + token.offset;
+      const rawTokenTo = nextToken ? from + nextToken.offset : to;
+
+      const tokenFrom = Math.max(0, Math.min(docLength, rawTokenFrom));
+      const tokenTo = Math.max(tokenFrom, Math.min(docLength, rawTokenTo));
+
+      if (tokenFrom >= tokenTo) continue;
+
+      if (lineRanges.length === 1) {
+        // Single line code slice fast-path: push directly without line splitting loop
+        decorations.push(dec.range(tokenFrom, tokenTo));
+      } else {
+        // Multi-line code slice: split across pre-fetched line boundaries
+        let pos = tokenFrom;
+        let lineIdx = 0;
+        while (lineIdx < lineRanges.length) {
+          const curRange = lineRanges[lineIdx];
+          if (!curRange || curRange.to >= pos) break;
+          lineIdx++;
+        }
+        while (pos < tokenTo && lineIdx < lineRanges.length) {
+          const curRange = lineRanges[lineIdx];
+          if (!curRange) break;
+          const lineEnd = Math.min(tokenTo, curRange.to);
+          if (pos < lineEnd) {
+            decorations.push(dec.range(pos, lineEnd));
+          }
+          pos = curRange.to + 1;
+          lineIdx++;
+        }
+      }
     }
 
     return decorations;
@@ -101,6 +155,7 @@ export function createLivePreviewPlugin(
     class Cm6ViewPlugin {
       view: EditorView;
       isDestroyed = false;
+      generation = 0;
 
       pendingDocChanged = false;
       updateFn: () => Promise<void>;
@@ -131,7 +186,7 @@ export function createLivePreviewPlugin(
         plugin.activeCm6Plugins.add(this.updateFn);
 
         this.debouncedDocChangedUpdate = this.createDebouncedUpdate(300);
-        this.debouncedViewportUpdate = this.createDebouncedUpdate(150);
+        this.debouncedViewportUpdate = this.createDebouncedUpdate(250);
         this.debouncedCompositionEndUpdate = this.createDebouncedUpdate(100);
       }
 
@@ -149,6 +204,11 @@ export function createLivePreviewPlugin(
         ) {
           this.view = update.view;
           this.pendingDocChanged = this.pendingDocChanged || update.docChanged;
+
+          // When viewport updates during scroll (without doc changes), bump generation to cancel in-flight async operations
+          if (update.viewportChanged && !update.docChanged) {
+            this.generation++;
+          }
 
           this.cancelAllDebounces();
 
@@ -168,18 +228,21 @@ export function createLivePreviewPlugin(
         view: EditorView,
         docChanged: boolean = true,
       ): Promise<void> {
-        if (view.composing) {
+        if (view.composing || this.isDestroyed) {
           return;
         }
 
+        const currentGen = ++this.generation;
         const capturedState = view.state;
         const newDecorationsList: Range<Decoration>[] = [];
         const removeRanges: { from: number; to: number }[] = [];
 
+        const existingDecorations = view.state.field(pecDecorationsField, false);
         const decorationUpdates = SyntaxTreeParser.getDecorationUpdates(
           view,
           plugin,
           docChanged,
+          existingDecorations,
         );
 
         const highlightPromises = decorationUpdates.map(async (node) => {
@@ -192,6 +255,7 @@ export function createLivePreviewPlugin(
           } else {
             const decorations = await DecorationBuilder.buildDecorations(
               plugin,
+              view,
               node.codeStart ?? node.from,
               node.codeEnd ?? node.to,
               node.lang,
@@ -208,6 +272,7 @@ export function createLivePreviewPlugin(
         const highlightResults = await Promise.all(highlightPromises);
 
         if (
+          this.generation !== currentGen ||
           this.view.state !== capturedState ||
           this.view.composing ||
           this.isDestroyed
@@ -227,7 +292,7 @@ export function createLivePreviewPlugin(
               node.hideEnd !== undefined
             ) {
               decorations.unshift(
-                Decoration.replace({}).range(node.hideStart, node.hideEnd),
+                HIDE_REPLACE_DECORATION.range(node.hideStart, node.hideEnd),
               );
             }
             newDecorationsList.push(...decorations);
@@ -236,11 +301,25 @@ export function createLivePreviewPlugin(
 
         let finalDecorations =
           this.view.state.field(pecDecorationsField, false) ?? Decoration.none;
-        for (const r of removeRanges) {
+
+        if (removeRanges.length > 0) {
+          removeRanges.sort((a, b) => a.from - b.from);
+          const firstRange = removeRanges[0];
+          const minFrom = firstRange ? firstRange.from : 0;
+          const maxTo = Math.max(...removeRanges.map((r) => r.to));
+
           finalDecorations = finalDecorations.update({
-            filterFrom: r.from,
-            filterTo: r.to,
-            filter: () => false,
+            filterFrom: minFrom,
+            filterTo: maxTo,
+            filter: (from, to) => {
+              for (let i = 0; i < removeRanges.length; i++) {
+                const r = removeRanges[i];
+                if (r && from <= r.to && to >= r.from) {
+                  return false;
+                }
+              }
+              return true;
+            },
           });
         }
 
@@ -256,25 +335,20 @@ export function createLivePreviewPlugin(
 
         if (
           (removeRanges.length > 0 || newDecorationsList.length > 0) &&
+          this.generation === currentGen &&
           this.view.state === capturedState &&
+          !this.view.composing &&
           !this.isDestroyed
         ) {
-          window.requestAnimationFrame(() => {
-            if (
-              this.view.state === capturedState &&
-              !this.view.composing &&
-              !this.isDestroyed
-            ) {
-              this.view.dispatch({
-                effects: updateDecorationsEffect.of(finalDecorations),
-              });
-            }
+          this.view.dispatch({
+            effects: updateDecorationsEffect.of(finalDecorations),
           });
         }
       }
 
       destroy(): void {
         this.isDestroyed = true;
+        this.generation++;
         this.cancelAllDebounces();
         plugin.activeCm6Plugins.delete(this.updateFn);
       }

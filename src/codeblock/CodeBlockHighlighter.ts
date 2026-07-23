@@ -1,6 +1,4 @@
 import { ExpressiveCodeEngine } from '@expressive-code/core';
-import { toDom } from 'hast-util-to-dom';
-import type * as Prism from 'prismjs';
 
 import type PrismExpressiveCodePlugin from '../main';
 import { getPrism } from '../prism/getPrism';
@@ -85,12 +83,17 @@ export class CodeBlockHighlighter {
 
   public async injectStyles(doc: Document): Promise<void> {
     if (!this.ec) return;
-    this.removeStyles(doc);
     try {
       const themeStyles = await this.ec.getThemeStyles();
-      const styleEl = doc.createElement('style');
-      styleEl.textContent = themeStyles;
-      doc.head.appendChild(styleEl);
+      let styleEl = doc.getElementById('pec-theme-styles') as HTMLStyleElement | null;
+      if (!styleEl) {
+        styleEl = doc.createElement('style');
+        styleEl.id = 'pec-theme-styles';
+        doc.head.appendChild(styleEl);
+      }
+      if (styleEl.textContent !== themeStyles) {
+        styleEl.textContent = themeStyles;
+      }
       this.ecStyleElements.set(doc, styleEl);
     } catch (e) {
       console.warn('Failed to inject Expressive Code styles into document', e);

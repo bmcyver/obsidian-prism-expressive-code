@@ -65,6 +65,13 @@ export function extractMetaString(
 }
 
 export function stripCommonIndentation(source: string): string {
+  if (source.length === 0) return source;
+
+  // Fast path: if source doesn't start with space/tab and contains no tab/space after newline, skip split
+  if (source[0] !== ' ' && source[0] !== '\t' && !source.includes('\n ') && !source.includes('\n\t')) {
+    return source;
+  }
+
   const lines = source.split('\n');
 
   // Find the minimum common indentation of non-empty lines
@@ -99,7 +106,8 @@ export function stripCommonIndentation(source: string): string {
 }
 
 export function calculateListIndentationLevel(source: string): number {
-  const firstLine = source.split('\n')[0] ?? '';
+  const newlineIdx = source.indexOf('\n');
+  const firstLine = newlineIdx === -1 ? source : source.slice(0, newlineIdx);
   const match = /^[ \t]*/.exec(firstLine);
   const indent = match ? match[0] : '';
   let spaces = 0;

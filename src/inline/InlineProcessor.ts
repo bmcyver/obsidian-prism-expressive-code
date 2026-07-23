@@ -11,6 +11,7 @@ export class InlineProcessor {
 
   public register(): void {
     this.plugin.registerMarkdownPostProcessor(async (el, ctx) => {
+      if (!el.querySelector('code')) return;
       const inlineCodes = el.findAll(':not(pre) > code');
       for (const codeElm of inlineCodes) {
         const match = INLINE_CODE_REGEX.exec(codeElm.textContent ?? '');

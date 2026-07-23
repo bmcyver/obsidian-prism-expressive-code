@@ -11,6 +11,8 @@ import { ThemeMapper } from './themes/ThemeMapper';
 import { VALID_THEME_IDS } from './themes/definitions';
 import { registerPrismHook, unregisterPrismHook, filterExpressiveCodeElements } from './prism/prismHook';
 
+import { cacheManager } from './utils/CacheManager';
+
 import 'src/styles.css';
 import 'virtual:ec-styles.css';
 import 'virtual:ec-runtime';
@@ -108,7 +110,7 @@ export default class PrismExpressiveCodePlugin extends Plugin {
   async reloadHighlighter(): Promise<void> {
     this.lastDarkMode = this.app.isDarkMode();
     await this.highlighter.unload();
-    this.inlineHighlighter.clearCache();
+    cacheManager.clearAllCaches();
 
     this.loadedSettings = structuredClone(this.settings);
 
@@ -130,7 +132,7 @@ export default class PrismExpressiveCodePlugin extends Plugin {
   onunload(): void {
     this.unregisterPrismPlugin();
     void this.highlighter.unload();
-    this.inlineHighlighter.clearCache();
+    cacheManager.clearAllCaches();
   }
 
   async loadSettings(): Promise<void> {

@@ -50,6 +50,7 @@ div.expressive-code code {
 }
 
 div.expressive-code {
+  contain: style;
   margin-inline: 0 !important;
 
   & > figure {
@@ -107,9 +108,9 @@ span.pec-ul {
   min-width: 250px;
 }
 
-/* Hide empty opening/closing fenced code block lines in Live Preview when not active (i.e. when preview widget is visible next to them) */
-.markdown-source-view.mod-cm6
-  div.HyperMD-codeblock-begin:has(+ .cm-preview-code-block),
+/* Hide empty opening/closing fenced code block lines in Live Preview when not active */
+.markdown-source-view.mod-cm6 div.HyperMD-codeblock-begin.cm-hidden-codeblock,
+.markdown-source-view.mod-cm6 div.HyperMD-codeblock-begin.pec-hide-block-header,
 .markdown-source-view.mod-cm6
   div.cm-preview-code-block
   + div.HyperMD-codeblock-end {
@@ -121,6 +122,10 @@ span.pec-ul {
   margin: 0 !important;
   overflow: hidden !important;
   box-shadow: none !important;
+}
+
+div.cm-preview-code-block {
+  contain: style;
 }
 
 /* Apply list indentation for code blocks in Live Preview */

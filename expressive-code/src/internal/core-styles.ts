@@ -350,6 +350,9 @@ export function getCoreBaseStyles({
 			&::-webkit-scrollbar-thumb:hover {
 				background-color: ${cssVar('scrollbarThumbHoverColor')};
 			}
+      &::-webkit-scrollbar-corner {
+				background: transparent;
+			}
 			`)}
 		}
 

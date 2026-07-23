@@ -2,5 +2,8 @@ packages:
   - '.'
   - 'expressive-code'
 
+allowBuilds:
+  esbuild: true
+
 overrides:
   '@expressive-code/core': 'workspace:*'

@@ -14,6 +14,7 @@ export default defineConfig(
     },
     rules: {
       'obsidianmd/ui/sentence-case': 'off',
+      'obsidianmd/no-forbidden-elements': 'off',
     },
   },
   globalIgnores([
@@ -23,5 +24,6 @@ export default defineConfig(
     '*.mjs',
     '*.mts',
     'expressive-code',
+    'scripts',
   ]),
 );

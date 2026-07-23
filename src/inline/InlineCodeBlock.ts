@@ -29,10 +29,7 @@ export class InlineCodeBlock extends BaseCodeBlock {
       return;
     }
 
-    this.plugin.inlineHighlighter.renderTokens(
-      tokens,
-      this.containerEl,
-    );
+    this.plugin.inlineHighlighter.renderTokens(tokens, this.containerEl);
   }
 
   public async rerenderOnNoteChange(): Promise<void> {

@@ -85,9 +85,15 @@ export class CodeBlockHighlighter {
     if (!this.ec) return;
     try {
       const themeStyles = await this.ec.getThemeStyles();
-      let styleEl = doc.getElementById('pec-theme-styles') as HTMLStyleElement | null;
+      let styleEl = doc.getElementById(
+        'pec-theme-styles',
+      ) as HTMLStyleElement | null;
       if (!styleEl) {
-        styleEl = doc.createElement('style');
+        styleEl = (
+          doc as Document & {
+            win: Window & { createEl: (tag: string) => HTMLStyleElement };
+          }
+        ).win.createEl('style');
         styleEl.id = 'pec-theme-styles';
         doc.head.appendChild(styleEl);
       }

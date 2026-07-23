@@ -68,7 +68,12 @@ export function stripCommonIndentation(source: string): string {
   if (source.length === 0) return source;
 
   // Fast path: if source doesn't start with space/tab and contains no tab/space after newline, skip split
-  if (source[0] !== ' ' && source[0] !== '\t' && !source.includes('\n ') && !source.includes('\n\t')) {
+  if (
+    source[0] !== ' ' &&
+    source[0] !== '\t' &&
+    !source.includes('\n ') &&
+    !source.includes('\n\t')
+  ) {
     return source;
   }
 
@@ -117,4 +122,17 @@ export function calculateListIndentationLevel(source: string): number {
     else if (char === '\t') tabs++;
   }
   return tabs + Math.floor(spaces / 4);
+}
+
+export function estimateCodeBlockHeight(
+  source: string,
+  metaString?: string,
+): number {
+  const cleaned = stripCommonIndentation(source);
+  const lineCount = cleaned.length === 0 ? 1 : cleaned.split('\n').length;
+  const hasMetaOrTitle = Boolean(metaString && metaString.trim().length > 0);
+  const headerHeight = hasMetaOrTitle ? 36 : 0;
+  const paddingAndBorders = 28;
+  const lineHeight = 20;
+  return Math.round(lineCount * lineHeight + paddingAndBorders + headerHeight);
 }

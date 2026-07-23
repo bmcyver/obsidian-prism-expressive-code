@@ -59,6 +59,16 @@ export class CodeBlockManager {
       if (set.size === 0) {
         this.activeCodeBlocks.delete(filePath);
       }
+    } else {
+      for (const [path, set] of this.activeCodeBlocks.entries()) {
+        if (set.has(codeBlock)) {
+          set.delete(codeBlock);
+          if (set.size === 0) {
+            this.activeCodeBlocks.delete(path);
+          }
+          break;
+        }
+      }
     }
   }
 

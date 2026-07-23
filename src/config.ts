@@ -12,7 +12,10 @@ import { getECTheme } from './themes/ecStyleOverrides';
 import { type ThemeRegistration } from './themes/types';
 
 // Re-export for vite.config.mts backwards compatibility
-export { createCssVariableThemeBundle, type CssVariableThemeBundle } from './themes/CssVariableThemeBundle';
+export {
+  createCssVariableThemeBundle,
+  type CssVariableThemeBundle,
+} from './themes/CssVariableThemeBundle';
 export type { ThemeRegistration } from './themes/types';
 
 export interface EcSettingsProps {
@@ -21,10 +24,7 @@ export interface EcSettingsProps {
   ecDefaultWrap: boolean;
   ecDefaultFrame: 'code' | 'terminal' | 'none' | 'auto';
   ecDefaultCollapseStyle:
-    | 'github'
-    | 'collapsible-start'
-    | 'collapsible-end'
-    | 'collapsible-auto';
+    'github' | 'collapsible-start' | 'collapsible-end' | 'collapsible-auto';
 }
 
 export interface EcConfigInput {

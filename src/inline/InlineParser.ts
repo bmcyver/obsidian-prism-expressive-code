@@ -75,7 +75,9 @@ const isCodeBlockCache = new Map<string, boolean>();
 
 export class SyntaxTreeParser {
   static isLivePreview(state: EditorState): boolean {
-    return Boolean((state.field as (field: unknown) => boolean)(editorLivePreviewField));
+    return Boolean(
+      (state.field as (field: unknown) => boolean)(editorLivePreviewField),
+    );
   }
 
   static getCodeBlockNode(node: SyntaxNode): SyntaxNode | null {
@@ -130,7 +132,10 @@ export class SyntaxTreeParser {
     return { from, to };
   }
 
-  private static getNodesRange(state: EditorState, nodes: SyntaxNode[]): { start: number; end: number } | null {
+  private static getNodesRange(
+    state: EditorState,
+    nodes: SyntaxNode[],
+  ): { start: number; end: number } | null {
     const firstNode = nodes[0];
     const lastNode = nodes[nodes.length - 1];
     if (firstNode && lastNode) {
@@ -173,16 +178,18 @@ export class SyntaxTreeParser {
       const match = content.match(INLINE_CODE_REGEX); // format: `code{:lang}`
       if (match && match[1] && match[2]) {
         // If doc didn't change and range is already decorated, skip re-processing to eliminate scroll lag
-        if (!docChanged && this.isRangeDecorated(existingDecorations, node.from, node.to)) {
+        if (
+          !docChanged &&
+          this.isRangeDecorated(existingDecorations, node.from, node.to)
+        ) {
           return;
         }
 
-        const hasSelectionOverlap =
-          EditorUtil.checkSelectionAndRangeOverlap(
-            state.selection,
-            node.from - 1,
-            node.to + 1,
-          );
+        const hasSelectionOverlap = EditorUtil.checkSelectionAndRangeOverlap(
+          state.selection,
+          node.from - 1,
+          node.to + 1,
+        );
 
         decorationUpdates.push({
           type: DecorationUpdateType.Insert,
@@ -190,8 +197,7 @@ export class SyntaxTreeParser {
           to: node.to,
           lang: match[2],
           content: match[1],
-          hideLang:
-            this.isLivePreview(state) && !hasSelectionOverlap,
+          hideLang: this.isLivePreview(state) && !hasSelectionOverlap,
           codeStart: node.from,
           codeEnd: node.from + match[1].length,
           hideStart: node.from + match[1].length,
@@ -225,7 +231,10 @@ export class SyntaxTreeParser {
 
     if (lang !== '') {
       // If doc didn't change and range is already decorated, skip re-parsing Prism tokens during scroll
-      if (!docChanged && this.isRangeDecorated(existingDecorations, range.start, range.end)) {
+      if (
+        !docChanged &&
+        this.isRangeDecorated(existingDecorations, range.start, range.end)
+      ) {
         return;
       }
 
@@ -277,7 +286,20 @@ export class SyntaxTreeParser {
         }
 
         if (props.has('inline-code')) {
-          this.handleInlineCode(node, view.state, plugin, decorationUpdates, docChanged, existingDecorations);
+          this.handleInlineCode(
+            node,
+            view.state,
+            plugin,
+            decorationUpdates,
+            docChanged,
+            existingDecorations,
+          );
+          return;
+        }
+
+        // If !docChanged, then this change was a selection change or viewport scroll.
+        // We only care about inline code blocks in this case, so we can skip full code block parsing.
+        if (!docChanged) {
           return;
         }
 
@@ -308,7 +330,14 @@ export class SyntaxTreeParser {
         }
 
         if (props.has('HyperMD-codeblock-end')) {
-          this.handleCodeBlockEnd(view.state, lang, codeBlockNodes, decorationUpdates, docChanged, existingDecorations);
+          this.handleCodeBlockEnd(
+            view.state,
+            lang,
+            codeBlockNodes,
+            decorationUpdates,
+            docChanged,
+            existingDecorations,
+          );
           lang = '';
           codeBlockNodes = [];
           beginLineEndOffset = -1;

@@ -1,5 +1,4 @@
 import { LRUCache } from './LRUCache';
-import { clearStyleCache } from '../prism/scopeMapping';
 
 export class CacheManager {
   private static instance: CacheManager;
@@ -23,7 +22,6 @@ export class CacheManager {
     for (const cache of this.caches) {
       cache.clear();
     }
-    clearStyleCache();
   }
 }
 

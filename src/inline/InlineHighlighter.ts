@@ -1,5 +1,9 @@
 import { flattenTokens, type FlatToken } from '../prism/tokenizer';
-import { getStyleForPrismTypes, FontStyle, type ThemeLike } from '../prism/scopeMapping';
+import {
+  getStyleForPrismTypes,
+  FontStyle,
+  type ThemeLike,
+} from '../prism/scopeMapping';
 import { LANGUAGE_ALIASES } from '../prism/constants';
 import { getPrism } from '../prism/getPrism';
 import { LRUCache } from '../utils/LRUCache';
@@ -21,7 +25,9 @@ import { cacheManager } from '../utils/CacheManager';
 
 export class InlineHighlighter {
   private themeMapper: ThemeMapper;
-  private tokenCache = cacheManager.register(new LRUCache<string, TokensResult>(500));
+  private tokenCache = cacheManager.register(
+    new LRUCache<string, TokensResult>(500),
+  );
   private safeLanguagesSet: Set<string> = new Set();
 
   constructor(themeMapper: ThemeMapper) {

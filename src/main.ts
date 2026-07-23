@@ -9,7 +9,11 @@ import { InlineProcessor } from './inline/InlineProcessor';
 import { InlineHighlighter } from './inline/InlineHighlighter';
 import { ThemeMapper } from './themes/ThemeMapper';
 import { VALID_THEME_IDS } from './themes/definitions';
-import { registerPrismHook, unregisterPrismHook, filterExpressiveCodeElements } from './prism/prismHook';
+import {
+  registerPrismHook,
+  unregisterPrismHook,
+  filterExpressiveCodeElements,
+} from './prism/prismHook';
 
 import { cacheManager } from './utils/CacheManager';
 
@@ -94,6 +98,9 @@ export default class PrismExpressiveCodePlugin extends Plugin {
         const win = (winInfo as unknown as { win: Window }).win || winInfo;
         if (win && win.document) {
           void this.highlighter.injectStyles(win.document);
+          win.addEventListener('unload', () => {
+            this.highlighter.removeStyles(win.document);
+          });
         }
       }),
     );

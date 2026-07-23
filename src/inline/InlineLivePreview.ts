@@ -19,7 +19,9 @@ import { SyntaxTreeParser, DecorationUpdateType } from './InlineParser';
 
 import { cacheManager } from '../utils/CacheManager';
 
-const decorationCache = cacheManager.register(new LRUCache<string, Decoration>(1000));
+const decorationCache = cacheManager.register(
+  new LRUCache<string, Decoration>(1000),
+);
 
 const HIDE_REPLACE_DECORATION = Decoration.replace({});
 
@@ -78,8 +80,7 @@ export class DecorationBuilder {
       if (!token) continue;
       const nextToken: ThemedToken | undefined = tokens[i + 1];
 
-      const tokenStyle =
-        plugin.inlineHighlighter.getTokenStyle(token);
+      const tokenStyle = plugin.inlineHighlighter.getTokenStyle(token);
       const classStr = tokenStyle.classes.join(' ');
       const cacheKey = `${tokenStyle.style}|${classStr}`;
 
@@ -205,11 +206,6 @@ export function createLivePreviewPlugin(
           this.view = update.view;
           this.pendingDocChanged = this.pendingDocChanged || update.docChanged;
 
-          // When viewport updates during scroll (without doc changes), bump generation to cancel in-flight async operations
-          if (update.viewportChanged && !update.docChanged) {
-            this.generation++;
-          }
-
           this.cancelAllDebounces();
 
           if (update.view.composing) {
@@ -237,7 +233,10 @@ export function createLivePreviewPlugin(
         const newDecorationsList: Range<Decoration>[] = [];
         const removeRanges: { from: number; to: number }[] = [];
 
-        const existingDecorations = view.state.field(pecDecorationsField, false);
+        const existingDecorations = view.state.field(
+          pecDecorationsField,
+          false,
+        );
         const decorationUpdates = SyntaxTreeParser.getDecorationUpdates(
           view,
           plugin,

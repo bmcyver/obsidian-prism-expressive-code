@@ -6,6 +6,7 @@ import {
   extractMetaString,
   stripCommonIndentation,
   calculateListIndentationLevel,
+  estimateCodeBlockHeight,
 } from './CodeBlockUtils';
 
 export class CodeBlock extends BaseCodeBlock {
@@ -42,16 +43,18 @@ export class CodeBlock extends BaseCodeBlock {
     const cleanedSource = stripCommonIndentation(this.source);
 
     // Early return if already rendered with the exact same content & meta
-    if (this.rendered && this.renderedSource === cleanedSource && this.renderedMeta === metaString) {
+    if (
+      this.rendered &&
+      this.renderedSource === cleanedSource &&
+      this.renderedMeta === metaString
+    ) {
       return;
     }
 
     const level = calculateListIndentationLevel(this.source);
 
     // Maintain min-height to prevent container collapse / CLS during async rendering
-    const lineCount = cleanedSource.split('\n').length;
-    const currentHeight = this.containerEl.offsetHeight;
-    const estimatedHeight = Math.max(currentHeight, lineCount * 24 + 40);
+    const estimatedHeight = estimateCodeBlockHeight(cleanedSource, metaString);
     this.containerEl.style.minHeight = `${estimatedHeight}px`;
 
     const result = await this.plugin.highlighter.ec.render({
@@ -77,12 +80,13 @@ export class CodeBlock extends BaseCodeBlock {
       }
 
       const domNode = toDom(result.renderedGroupAst);
-      const fragment = this.containerEl.ownerDocument.createDocumentFragment();
+      const fragment = createFragment();
       fragment.appendChild(domNode);
 
       this.containerEl.empty();
       this.containerEl.appendChild(fragment);
       this.containerEl.style.removeProperty('min-height');
+
       this.renderedSource = cleanedSource;
       this.renderedMeta = metaString;
       this.rendered = true;
@@ -109,11 +113,12 @@ export class CodeBlock extends BaseCodeBlock {
 
   public onload(): void {
     super.onload();
-    
+
     // Estimate height to prevent Cumulative Layout Shift (CLS)
-    const lineCount = this.source.split('\n').length;
-    // Use fallback baseline line-height (~24px per line + padding)
-    const estimatedHeight = lineCount * 24 + 40;
+    const estimatedHeight = estimateCodeBlockHeight(
+      this.source,
+      this.cachedMetaString,
+    );
     this.containerEl.style.minHeight = `${estimatedHeight}px`;
 
     // Render immediately on load, just like the original-plugin

@@ -44,7 +44,10 @@ export function getECTheme(
     : 'var(--pec-code-normal)';
 
   const gutterBorder = useThemeColors
-    ? themeColor('editorLineNumber.foreground', 'var(--pec-gutter-border-color)')
+    ? themeColor(
+        'editorLineNumber.foreground',
+        'var(--pec-gutter-border-color)',
+      )
     : 'var(--pec-gutter-border-color)';
 
   const gutterText = useThemeColors

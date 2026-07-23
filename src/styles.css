@@ -51,11 +51,6 @@ div.expressive-code code {
 
 div.expressive-code {
   margin-inline: 0 !important;
-  contain: layout paint;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 150px;
-  will-change: scroll-position;
-  transform: translateZ(0);
 
   & > figure {
     margin-inline: 0 !important;
@@ -112,7 +107,9 @@ span.pec-ul {
   min-width: 250px;
 }
 
-/* Hide empty closing fenced code block lines in Live Preview when active */
+/* Hide empty opening/closing fenced code block lines in Live Preview when not active (i.e. when preview widget is visible next to them) */
+.markdown-source-view.mod-cm6
+  div.HyperMD-codeblock-begin:has(+ .cm-preview-code-block),
 .markdown-source-view.mod-cm6
   div.cm-preview-code-block
   + div.HyperMD-codeblock-end {

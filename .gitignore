@@ -5,3 +5,5 @@ test-vault
 *.md
 
 Trace*.json
+scripts
+*.mp4

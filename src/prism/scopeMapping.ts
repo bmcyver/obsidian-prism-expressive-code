@@ -1,4 +1,5 @@
 import { LRUCache } from '../utils/LRUCache';
+import { cacheManager } from '../utils/CacheManager';
 
 export interface ThemeSetting {
   scope?: string | string[];
@@ -37,7 +38,6 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   'attr-name': ['entity.other.attribute-name'],
   string: ['string'],
   char: ['string.char'],
-  // builtin: 내장 함수를 타입보다 앞세워 make(), append() 등의 함수 색상 보호
   builtin: [
     'support.function.builtin',
     'support.function',
@@ -55,7 +55,6 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   regex: ['string.regexp'],
   'regex-flags': ['storage.modifier.regex', 'keyword.other.regex'],
   'regex-delimiter': ['punctuation.definition.string.regex', 'punctuation'],
-  // important: invalid(오류 빨간색) 오매핑 보정
   important: ['keyword.other.important.css', 'keyword.other', 'keyword'],
   bold: ['markup.bold', 'markup.bold.markdown', 'strong'],
   italic: ['markup.italic', 'markup.italic.markdown', 'emphasis'],
@@ -66,14 +65,12 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   unit: ['keyword.other.unit'],
   id: ['entity.other.attribute-name.id'],
   class: ['entity.other.attribute-name.class'],
-  // pseudo_element, pseudo_class: 하이픈/언더스코어 모두 호환 보정
   'pseudo-element': ['entity.other.attribute-name.pseudo-element'],
   'pseudo-class': ['entity.other.attribute-name.pseudo-class'],
   pseudo_element: ['entity.other.attribute-name.pseudo-element'],
   pseudo_class: ['entity.other.attribute-name.pseudo-class'],
   color: ['constant.other.color'],
   hexcode: ['constant.other.color.rgb-value', 'constant.other.color'],
-  // macro & macro-name: Rust/C/C++ 매크로를 함수/전처리기 색상(#61afef)으로 정밀하게 매핑
   macro: [
     'entity.name.function.macro',
     'entity.name.function',
@@ -118,10 +115,8 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   type: ['entity.name.type', 'support.type', 'storage.type'],
   datatype: ['support.type', 'storage.type'],
   lifetime: ['entity.name.type.lifetime', 'storage.modifier.lifetime'],
-  // attribute: entity.name.type.class 제거하여 클래스 색상 오염 방지
   attribute: ['meta.attribute', 'entity.other.attribute-name'],
   generics: ['entity.name.type'],
-  // decorator & annotation: Python/TS/Java 데코레이터/어노테이션 색상 보정
   decorator: [
     'entity.name.function.decorator',
     'meta.decorator',
@@ -174,7 +169,6 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   prefix: ['keyword.operator.prefix', 'keyword'],
   subroutine: ['entity.name.function', 'support.function'],
 
-  // === 추가: JS/TS 보간 및 JSX ===
   'template-string': ['string.template', 'string.quoted.template', 'string'],
   'template-literal': ['string.template', 'string.quoted.template', 'string'],
   interpolation: ['meta.template.expression'],
@@ -183,7 +177,6 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
     'punctuation',
   ],
 
-  // === 추가: Python f-string & docstring ===
   'f-string': ['string.interpolated', 'string.quoted.fstring', 'string'],
   'format-spec': ['meta.format.specifier', 'storage.type.format'],
   docstring: [
@@ -198,7 +191,6 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
     'string',
   ],
 
-  // === 추가: Java/Kotlin annotation & template-field ===
   'annotation-punctuation': [
     'punctuation.definition.annotation',
     'punctuation',
@@ -208,7 +200,6 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
     'entity.string.template.element',
   ],
 
-  // === 추가: Go package & import ===
   package: ['keyword.other.package', 'keyword'],
   import: ['keyword.control.import', 'keyword'],
   'package-name': ['entity.name.package', 'entity.name.namespace'],
@@ -237,13 +228,11 @@ function getOrCreateIndexedTheme(theme: ThemeLike): IndexedTheme {
   const scopeBuckets = new Map<string, AnalyzedRule[]>();
   const allRules: AnalyzedRule[] = [];
 
-  for (let i = 0; i < settings.length; i++) {
-    const rule = settings[i];
+  for (const rule of settings) {
     if (!rule || !rule.scope || !rule.settings) continue;
     const ruleScopes = Array.isArray(rule.scope) ? rule.scope : [rule.scope];
 
-    for (let j = 0; j < ruleScopes.length; j++) {
-      const rawScope = ruleScopes[j];
+    for (const rawScope of ruleScopes) {
       if (!rawScope) continue;
       const trimmed = rawScope.trim();
       if (!trimmed) continue;
@@ -282,8 +271,7 @@ export function getColorForScopes(
   let bestMatch: { color?: string; fontStyle?: string } | undefined = undefined;
   let bestScore = -1;
 
-  for (let s = 0; s < scopes.length; s++) {
-    const targetScope = scopes[s];
+  for (const targetScope of scopes) {
     if (!targetScope) continue;
 
     const dotIdx = targetScope.indexOf('.');
@@ -293,8 +281,7 @@ export function getColorForScopes(
     const candidateRules =
       indexedTheme.scopeBuckets.get(rootSegment) ?? indexedTheme.allRules;
 
-    for (let r = 0; r < candidateRules.length; r++) {
-      const rule = candidateRules[r];
+    for (const rule of candidateRules) {
       if (!rule) continue;
       const ruleScope = rule.ruleScope;
 
@@ -453,8 +440,6 @@ export enum FontStyle {
   Underline = 4,
   Strikethrough = 8,
 }
-
-import { cacheManager } from '../utils/CacheManager';
 
 const styleCache = cacheManager.register(
   new LRUCache<string, { color?: string; fontStyle?: FontStyle }>(2000),

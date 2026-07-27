@@ -42,11 +42,9 @@ export function extractMetaString(
   }
 
   // Count if there are more than 3 backticks/tildes
-  const markerChar = trimmed[markerIdx];
-  if (markerChar) {
-    while (trimmed[markerIdx + markerLength] === markerChar) {
-      markerLength++;
-    }
+  const markerChar = trimmed[markerIdx]!;
+  while (trimmed[markerIdx + markerLength] === markerChar) {
+    markerLength++;
   }
 
   const afterMarker = trimmed.slice(markerIdx + markerLength).trimStart();
@@ -82,9 +80,8 @@ export function stripCommonIndentation(source: string): string {
   // Find the minimum common indentation of non-empty lines
   let minIndent: string | null = null;
   for (const line of lines) {
-    if (line.trim() === '') {
-      continue;
-    }
+    if (line.trim() === '') continue;
+
     const match = /^[ \t]*/.exec(line);
     if (match) {
       const indent = match[0];
@@ -101,12 +98,7 @@ export function stripCommonIndentation(source: string): string {
   // Strip the common indentation from all lines
   const prefix = minIndent;
   return lines
-    .map((line) => {
-      if (line.startsWith(prefix)) {
-        return line.slice(prefix.length);
-      }
-      return line;
-    })
+    .map((line) => (line.startsWith(prefix) ? line.slice(prefix.length) : line))
     .join('\n');
 }
 

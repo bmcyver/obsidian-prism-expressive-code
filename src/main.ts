@@ -139,6 +139,12 @@ export default class PrismExpressiveCodePlugin extends Plugin {
       await this.loadData(),
     ) as Settings;
 
+    if (this.validateSettings()) {
+      await this.saveSettings();
+    }
+  }
+
+  private validateSettings(): boolean {
     let needsSave = false;
     if (!VALID_THEME_IDS.has(this.settings.darkTheme)) {
       this.settings.darkTheme = 'one-dark-pro';
@@ -148,10 +154,7 @@ export default class PrismExpressiveCodePlugin extends Plugin {
       this.settings.lightTheme = 'one-light';
       needsSave = true;
     }
-
-    if (needsSave) {
-      await this.saveSettings();
-    }
+    return needsSave;
   }
 
   async saveSettings(): Promise<void> {

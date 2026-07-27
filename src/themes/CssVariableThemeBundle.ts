@@ -29,24 +29,24 @@ export function createCssVariableThemeBundle(
     return placeholder;
   };
 
-  const mapThemeTokenColor = <
-    T extends { settings?: { foreground?: string; background?: string } },
-  >(
-    token: T,
-  ): T => {
-    if (!token.settings) {
+  const mapThemeTokenColor = (token: unknown): unknown => {
+    if (!token || typeof token !== 'object') {
+      return token;
+    }
+    const t = token as { settings?: { foreground?: string; background?: string } };
+    if (!t.settings) {
       return token;
     }
 
     return {
-      ...token,
+      ...t,
       settings: {
-        ...token.settings,
-        foreground: token.settings.foreground
-          ? toPlaceholder(token.settings.foreground)
+        ...t.settings,
+        foreground: t.settings.foreground
+          ? toPlaceholder(t.settings.foreground)
           : undefined,
-        background: token.settings.background
-          ? toPlaceholder(token.settings.background)
+        background: t.settings.background
+          ? toPlaceholder(t.settings.background)
           : undefined,
       },
     };
@@ -57,16 +57,8 @@ export function createCssVariableThemeBundle(
     newColors[key] = toPlaceholder(val);
   }
 
-  const newTokenColors = (theme.tokenColors ?? []).map((token) =>
-    mapThemeTokenColor(
-      token as { settings?: { foreground?: string; background?: string } },
-    ),
-  );
-  const newSettings = (theme.settings ?? []).map((token) =>
-    mapThemeTokenColor(
-      token as { settings?: { foreground?: string; background?: string } },
-    ),
-  );
+  const newTokenColors = (theme.tokenColors ?? []).map(mapThemeTokenColor);
+  const newSettings = (theme.settings ?? []).map(mapThemeTokenColor);
 
   const restoreCssVariables = (css: string): string => {
     let result = css;

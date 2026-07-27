@@ -1,10 +1,10 @@
 import type PrismExpressiveCodePlugin from '../main';
 import { TFile } from 'obsidian';
-import { type BaseCodeBlock } from './BaseCodeBlock';
+import { type CodeBlock } from './CodeBlock';
 
 export class CodeBlockManager {
   plugin: PrismExpressiveCodePlugin;
-  activeCodeBlocks: Map<string, Set<BaseCodeBlock>>;
+  activeCodeBlocks: Map<string, Set<CodeBlock>>;
 
   constructor(plugin: PrismExpressiveCodePlugin) {
     this.plugin = plugin;
@@ -40,7 +40,7 @@ export class CodeBlockManager {
     );
   }
 
-  public add(codeBlock: BaseCodeBlock): void {
+  public add(codeBlock: CodeBlock): void {
     const filePath = codeBlock.currentFilePath;
 
     if (!this.activeCodeBlocks.has(filePath)) {
@@ -50,7 +50,7 @@ export class CodeBlockManager {
     }
   }
 
-  public remove(codeBlock: BaseCodeBlock): void {
+  public remove(codeBlock: CodeBlock): void {
     const filePath = codeBlock.currentFilePath;
 
     if (this.activeCodeBlocks.has(filePath)) {

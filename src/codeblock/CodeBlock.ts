@@ -1,7 +1,9 @@
 import type PrismExpressiveCodePlugin from '../main';
-import { type MarkdownPostProcessorContext } from 'obsidian';
+import {
+  type MarkdownPostProcessorContext,
+  MarkdownRenderChild,
+} from 'obsidian';
 import { toDom } from 'hast-util-to-dom';
-import { BaseCodeBlock } from './BaseCodeBlock';
 import {
   extractMetaString,
   stripCommonIndentation,
@@ -9,7 +11,14 @@ import {
   estimateCodeBlockHeight,
 } from './CodeBlockUtils';
 
-export class CodeBlock extends BaseCodeBlock {
+export class CodeBlock extends MarkdownRenderChild {
+  plugin: PrismExpressiveCodePlugin;
+  source: string;
+  language: string;
+  ctx: MarkdownPostProcessorContext;
+  currentFilePath: string;
+  isLoaded = false;
+
   cachedMetaString: string;
   rendered = false;
   private renderedSource = '';
@@ -22,7 +31,14 @@ export class CodeBlock extends BaseCodeBlock {
     language: string,
     ctx: MarkdownPostProcessorContext,
   ) {
-    super(plugin, containerEl, source, language, ctx);
+    super(containerEl);
+
+    this.plugin = plugin;
+    this.source = source;
+    this.language = language;
+    this.ctx = ctx;
+    this.currentFilePath = ctx.sourcePath;
+
     this.cachedMetaString = this.getMetaString();
   }
 
@@ -125,6 +141,8 @@ export class CodeBlock extends BaseCodeBlock {
 
   public onload(): void {
     super.onload();
+    this.isLoaded = true;
+    this.plugin.codeBlockManager.add(this);
 
     // Estimate height to prevent Cumulative Layout Shift (CLS)
     const estimatedHeight = estimateCodeBlockHeight(
@@ -143,6 +161,9 @@ export class CodeBlock extends BaseCodeBlock {
 
   public onunload(): void {
     super.onunload();
+    this.isLoaded = false;
+    this.plugin.codeBlockManager.remove(this);
+    this.containerEl.empty();
     this.rendered = false;
   }
 }

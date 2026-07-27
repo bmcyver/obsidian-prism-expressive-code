@@ -20,8 +20,6 @@ export class CodeBlockHighlighter {
   supportedLanguages!: string[];
   safeLanguagesSet!: Set<string>;
 
-  private safeLanguagesArray: string[] = [];
-
   constructor(plugin: PrismExpressiveCodePlugin, themeMapper: ThemeMapper) {
     this.plugin = plugin;
     this.themeMapper = themeMapper;
@@ -46,7 +44,6 @@ export class CodeBlockHighlighter {
     this.safeLanguagesSet = new Set(
       this.supportedLanguages.filter((lang) => !LANGUAGE_BLACKLIST.has(lang)),
     );
-    this.safeLanguagesArray = Array.from(this.safeLanguagesSet);
 
     this.ec = new ExpressiveCodeEngine(
       createEcEngineConfig({
@@ -128,6 +125,6 @@ export class CodeBlockHighlighter {
    * All languages that are safe to use with Obsidian's `registerMarkdownCodeBlockProcessor`.
    */
   obsidianSafeLanguageNames(): string[] {
-    return this.safeLanguagesArray;
+    return Array.from(this.safeLanguagesSet ?? []);
   }
 }

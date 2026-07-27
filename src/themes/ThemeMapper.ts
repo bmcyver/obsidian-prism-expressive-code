@@ -36,10 +36,8 @@ export class ThemeMapper {
   }
 
   getThemeIdentifier(): string {
-    if (this.plugin.app.isDarkMode()) {
-      return this.plugin.loadedSettings.darkTheme;
-    } else {
-      return this.plugin.loadedSettings.lightTheme;
-    }
+    return this.plugin.app.isDarkMode()
+      ? this.plugin.loadedSettings.darkTheme
+      : this.plugin.loadedSettings.lightTheme;
   }
 }

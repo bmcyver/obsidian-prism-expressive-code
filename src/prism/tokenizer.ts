@@ -25,11 +25,9 @@ export function flattenTokens(
     } else {
       const currentTypes = [...parentTypes];
       if (token.alias) {
-        if (Array.isArray(token.alias)) {
-          currentTypes.push(...token.alias);
-        } else {
-          currentTypes.push(token.alias);
-        }
+        currentTypes.push(
+          ...(Array.isArray(token.alias) ? token.alias : [token.alias]),
+        );
       }
       currentTypes.push(token.type);
 

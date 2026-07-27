@@ -7,7 +7,6 @@ import {
 import {
   flattenTokens,
   splitTokensIntoLines,
-  type FlatToken,
 } from './tokenizer';
 import { getStyleForPrismTypes, FontStyle } from './scopeMapping';
 import { LANGUAGE_ALIASES } from './constants';
@@ -61,9 +60,12 @@ export function customPluginPrism(): ExpressiveCodePlugin {
           if (!variant) continue;
           const theme = variant.theme;
 
-          lines.forEach((line: FlatToken[], lineIndex: number) => {
+          for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+            const line = lines[lineIndex];
+            if (!line) continue;
+
             let charIndex = 0;
-            line.forEach((token: FlatToken) => {
+            for (const token of line) {
               const tokenLength = token.content.length;
               const tokenEndIndex = charIndex + tokenLength;
               const style = getStyleForPrismTypes(
@@ -91,8 +93,8 @@ export function customPluginPrism(): ExpressiveCodePlugin {
                 }),
               );
               charIndex = tokenEndIndex;
-            });
-          });
+            }
+          }
         }
       },
     },

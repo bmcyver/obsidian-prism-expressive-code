@@ -16,7 +16,6 @@ export interface Settings {
   darkTheme: string;
   lightTheme: string;
   preferThemeColors: boolean;
-  inlineHighlighting: boolean;
   ecDefaultShowLineNumbers: boolean;
   ecDefaultWrap: boolean;
   ecDefaultFrame: FrameType;
@@ -27,7 +26,6 @@ export const DEFAULT_SETTINGS: Settings = {
   darkTheme: 'one-dark-pro',
   lightTheme: 'one-light',
   preferThemeColors: true,
-  inlineHighlighting: true,
   ecDefaultShowLineNumbers: false,
   ecDefaultWrap: false,
   ecDefaultFrame: FrameType.Auto,

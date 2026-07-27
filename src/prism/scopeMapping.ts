@@ -486,15 +486,14 @@ export function getStyleForPrismTypes(
     if (!type) continue;
     const mappedScopes = getScopesForPrismType(type);
 
-    const scopesWithLang: string[] = [];
+    let style: { color?: string; fontStyle?: string } | undefined;
     if (lowerLang) {
-      for (const scope of mappedScopes) {
-        scopesWithLang.push(`${scope}.${lowerLang}`);
-      }
+      const scopesWithLang = mappedScopes.map((scope) => `${scope}.${lowerLang}`);
+      style = getColorForScopes(theme, scopesWithLang);
     }
-    const targetScopes = [...scopesWithLang, ...mappedScopes];
-
-    const style = getColorForScopes(theme, targetScopes);
+    if (!style || (!style.color && !style.fontStyle)) {
+      style = getColorForScopes(theme, mappedScopes);
+    }
     if (style) {
       if (!hasColor && style.color) {
         color = style.color;

@@ -8,10 +8,11 @@ export class LRUCache<K, V> {
   }
 
   get(key: K): V | undefined {
-    if (!this.cache.has(key)) return undefined;
-    const val = this.cache.get(key)!;
-    this.cache.delete(key);
-    this.cache.set(key, val);
+    const val = this.cache.get(key);
+    if (val !== undefined) {
+      this.cache.delete(key);
+      this.cache.set(key, val);
+    }
     return val;
   }
 

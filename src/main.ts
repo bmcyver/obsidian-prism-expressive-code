@@ -1,12 +1,9 @@
 import { debounce, loadPrism, Plugin } from 'obsidian';
-import { createLivePreviewPlugin } from './inline/InlineLivePreview';
 import { DEFAULT_SETTINGS, type Settings } from './settings/types';
 import { PrismExpressiveCodeSettingTab } from './settings/SettingsTab';
 import { CodeBlockHighlighter } from './codeblock/CodeBlockHighlighter';
 import { CodeBlockManager } from './codeblock/CodeBlockManager';
 import { CodeBlockProcessor } from './codeblock/CodeBlockProcessor';
-import { InlineProcessor } from './inline/InlineProcessor';
-import { InlineHighlighter } from './inline/InlineHighlighter';
 import { ThemeMapper } from './themes/ThemeMapper';
 import { VALID_THEME_IDS } from './themes/definitions';
 import {
@@ -23,7 +20,6 @@ import 'virtual:ec-runtime';
 
 export default class PrismExpressiveCodePlugin extends Plugin {
   highlighter!: CodeBlockHighlighter;
-  inlineHighlighter!: InlineHighlighter;
   codeBlockManager!: CodeBlockManager;
   declare settings: Settings;
   loadedSettings!: Settings;
@@ -41,7 +37,6 @@ export default class PrismExpressiveCodePlugin extends Plugin {
     this.addSettingTab(new PrismExpressiveCodeSettingTab(this));
 
     const themeMapper = new ThemeMapper(this);
-    this.inlineHighlighter = new InlineHighlighter(themeMapper);
     this.highlighter = new CodeBlockHighlighter(this, themeMapper);
     this.codeBlockManager = new CodeBlockManager(this);
     this.codeBlockManager.registerEvents();
@@ -55,11 +50,6 @@ export default class PrismExpressiveCodePlugin extends Plugin {
 
         const codeBlockProcessor = new CodeBlockProcessor(this);
         codeBlockProcessor.register();
-
-        const inlineProcessor = new InlineProcessor(this);
-        inlineProcessor.register();
-
-        this.registerEditorExtension([createLivePreviewPlugin(this)]);
 
         await this.registerPrismPlugin();
 

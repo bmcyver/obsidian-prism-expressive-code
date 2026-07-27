@@ -21,12 +21,15 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
 
     const themes = THEME_DISPLAY_NAMES;
 
+    new Setting(this.containerEl).setName('Highlighter Control').setHeading();
+
     new Setting(this.containerEl)
-      .setName('All setting changes require a reload of the highlighter')
+      .setName('Reload Highlighter Engine')
+      .setDesc('Applies setting changes immediately by reloading the Expressive Code engine.')
       .addButton((button) => {
         button
           .setCta()
-          .setButtonText('Reload highlighter')
+          .setButtonText('Reload Highlighter')
           .onClick(async () => {
             button.setDisabled(true);
             await this.plugin.reloadHighlighter();
@@ -34,25 +37,11 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(this.containerEl)
-      .setName('Inline syntax highlighting')
-      .setDesc(
-        'Enables syntax highlighting for inline code blocks via `code{:lang}`.',
-      )
-      .addToggle((toggle) => {
-        toggle
-          .setValue(this.plugin.settings.inlineHighlighting)
-          .onChange(async (value) => {
-            this.plugin.settings.inlineHighlighting = value;
-            await this.plugin.saveSettings();
-          });
-      });
-
-    new Setting(this.containerEl).setName('Ec defaults').setHeading();
+    new Setting(this.containerEl).setName('Code Block Defaults').setHeading();
 
     new Setting(this.containerEl)
       .setName('Show line numbers')
-      .setDesc('Controls whether line numbers are shown by default.')
+      .setDesc('Controls whether line numbers are shown by default on code blocks.')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.ecDefaultShowLineNumbers)
@@ -63,7 +52,7 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
       });
 
     new Setting(this.containerEl)
-      .setName('Wrap')
+      .setName('Wrap lines')
       .setDesc('Controls whether code block lines wrap by default.')
       .addToggle((toggle) => {
         toggle
@@ -75,7 +64,7 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
       });
 
     new Setting(this.containerEl)
-      .setName('Frame')
+      .setName('Frame style')
       .setDesc('Controls the default frame type for code blocks.')
       .addDropdown((dropdown) => {
         dropdown.addOptions({
@@ -94,7 +83,7 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
 
     new Setting(this.containerEl)
       .setName('Collapse style')
-      .setDesc('Controls how collapsible sections behave and are styled.')
+      .setDesc('Controls how collapsible code sections behave and are styled.')
       .addDropdown((dropdown) => {
         dropdown.addOptions({
           [CollapseStyle.Github]: 'GitHub (non-recollapsible)',
@@ -111,12 +100,12 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(this.containerEl).setName('Theme').setHeading();
+    new Setting(this.containerEl).setName('Themes & Appearance').setHeading();
 
     new Setting(this.containerEl)
       .setName('Dark theme')
       .setDesc(
-        "The theme for code blocks when Obsidian's base color scheme is dark.",
+        "The syntax theme for code blocks when Obsidian's base color scheme is dark.",
       )
       .addDropdown((dropdown) => {
         dropdown.addOptions(themes);
@@ -131,7 +120,7 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName('Light theme')
       .setDesc(
-        "The theme for code blocks when Obsidian's base color scheme is light.",
+        "The syntax theme for code blocks when Obsidian's base color scheme is light.",
       )
       .addDropdown((dropdown) => {
         dropdown.addOptions(themes);
@@ -144,9 +133,9 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
       });
 
     new Setting(this.containerEl)
-      .setName('Prefer theme colors')
+      .setName('Prefer theme background colors')
       .setDesc(
-        'When enabled the plugin will prefer theme colors over CSS variables for things like the code block background.',
+        'When enabled, prefers native theme background colors over Obsidian CSS variables.',
       )
       .addToggle((toggle) => {
         toggle

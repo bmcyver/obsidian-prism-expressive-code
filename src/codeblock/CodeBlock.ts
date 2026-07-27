@@ -53,17 +53,29 @@ export class CodeBlock extends BaseCodeBlock {
 
     const level = calculateListIndentationLevel(this.source);
 
-    // Maintain min-height to prevent container collapse / CLS during async rendering
+    // Maintain min-height and set estimated height CSS variable to prevent CLS / scroll jitter
     const estimatedHeight = estimateCodeBlockHeight(cleanedSource, metaString);
     this.containerEl.style.minHeight = `${estimatedHeight}px`;
+    this.containerEl.style.setProperty(
+      '--pec-estimated-height',
+      `${estimatedHeight}px`,
+    );
+
+    const win = this.containerEl.ownerDocument?.defaultView || window;
+    const isPrintMode = win.matchMedia('print').matches;
+
+    const props: Record<string, unknown> = {};
+    if (isPrintMode) {
+      props.wrap = true;
+    }
 
     const result = await this.plugin.highlighter.ec.render({
       code: cleanedSource,
       language: this.language,
       meta: metaString,
+      props,
     });
 
-    const win = this.containerEl.ownerDocument?.defaultView || window;
     win.requestAnimationFrame(() => {
       if (!this.isLoaded) return;
 
@@ -120,6 +132,10 @@ export class CodeBlock extends BaseCodeBlock {
       this.cachedMetaString,
     );
     this.containerEl.style.minHeight = `${estimatedHeight}px`;
+    this.containerEl.style.setProperty(
+      '--pec-estimated-height',
+      `${estimatedHeight}px`,
+    );
 
     // Render immediately on load, just like the original-plugin
     void this.startRender();

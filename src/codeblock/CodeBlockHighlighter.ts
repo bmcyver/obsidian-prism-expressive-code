@@ -48,8 +48,6 @@ export class CodeBlockHighlighter {
     );
     this.safeLanguagesArray = Array.from(this.safeLanguagesSet);
 
-    this.plugin.inlineHighlighter.initialize(this.safeLanguagesSet);
-
     this.ec = new ExpressiveCodeEngine(
       createEcEngineConfig({
         theme: await this.themeMapper.getThemeForEC(),

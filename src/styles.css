@@ -50,7 +50,9 @@ div.expressive-code code {
 }
 
 div.expressive-code {
-  contain: style;
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--pec-estimated-height, 200px);
+  contain: style layout;
   margin-inline: 0 !important;
 
   & > figure {
@@ -93,16 +95,6 @@ div.markdown-preview-view
   display: none;
 }
 
-span.pec-bold {
-  font-weight: var(--bold-weight, 600);
-}
-span.pec-italic {
-  font-style: italic;
-}
-span.pec-ul {
-  text-decoration: underline;
-}
-
 /* Settings tab  */
 .setting-item-control input.pec-custom-theme-folder {
   min-width: 250px;
@@ -131,4 +123,12 @@ div.cm-preview-code-block {
 /* Apply list indentation for code blocks in Live Preview */
 .markdown-source-view .pec-code-block[data-indent-level] {
   margin-left: calc(var(--pec-indent-level, 0) * var(--list-indent)) !important;
+}
+
+/* PDF Export / Print Rules */
+@media print {
+  div.expressive-code {
+    content-visibility: visible !important;
+    contain: none !important;
+  }
 }

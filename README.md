@@ -14,7 +14,7 @@
 
 ### 1. Github Releases
 
-[Github Releases](https://github.com/bmcyver/obsidian-all-in-one-toolkit/releases/latest) 에서 `main.js`, `manifest.json`, `styles.css`를 다운로드 받고 `.obsidian/plugins/obsidian-prism-expressive-code`에 저장합니다.
+[Github Releases](https://github.com/bmcyver/obsidian-prism-expressive-code/releases/latest) 에서 `main.js`, `manifest.json`, `styles.css`를 다운로드 받고 `.obsidian/plugins/obsidian-prism-expressive-code`에 저장합니다.
 
 ### 2. Build from source
 

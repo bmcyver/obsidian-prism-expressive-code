@@ -25,7 +25,9 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
 
     new Setting(this.containerEl)
       .setName('Reload Highlighter Engine')
-      .setDesc('Applies setting changes immediately by reloading the Expressive Code engine.')
+      .setDesc(
+        'Applies setting changes immediately by reloading the Expressive Code engine.',
+      )
       .addButton((button) => {
         button
           .setCta()
@@ -41,7 +43,9 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
 
     new Setting(this.containerEl)
       .setName('Show line numbers')
-      .setDesc('Controls whether line numbers are shown by default on code blocks.')
+      .setDesc(
+        'Controls whether line numbers are shown by default on code blocks.',
+      )
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.ecDefaultShowLineNumbers)

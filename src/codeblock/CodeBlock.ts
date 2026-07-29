@@ -43,7 +43,12 @@ export class CodeBlock extends MarkdownRenderChild {
   }
 
   private getMetaString(): string {
-    return extractMetaString(this.ctx, this.containerEl, this.language);
+    return extractMetaString(
+      this.ctx,
+      this.containerEl,
+      this.language,
+      this.source,
+    );
   }
 
   public async startRender(): Promise<void> {

@@ -20,6 +20,7 @@ export function extractMetaString(
   ctx: MarkdownPostProcessorContext,
   containerEl: HTMLElement,
   language: string,
+  source: string = '',
 ): string {
   const sectionInfo = ctx.getSectionInfo(containerEl);
 
@@ -27,35 +28,49 @@ export function extractMetaString(
     return '';
   }
 
-  const startLine = getLineAt(sectionInfo.text, sectionInfo.lineStart);
-  if (startLine === undefined) return '';
+  // Find the first non-empty line of the code block's source to uniquely identify this block
+  const firstSourceLine =
+    source
+      .split('\n')
+      .map((l) => l.trim())
+      .find((l) => l.length > 0) || '';
 
-  const trimmed = startLine.trim();
-  // Find where the block starts (either ``` or ~~~)
-  let markerIdx = trimmed.indexOf('```');
-  let markerLength = 3;
-  if (markerIdx === -1) {
-    markerIdx = trimmed.indexOf('~~~');
-  }
-  if (markerIdx === -1) {
-    return '';
-  }
+  // Scan lines from lineStart to lineEnd to find the fence marker for THIS specific block
+  for (let i = sectionInfo.lineStart; i <= sectionInfo.lineEnd; i++) {
+    const line = getLineAt(sectionInfo.text, i);
+    if (line === undefined) break;
 
-  // Count if there are more than 3 backticks/tildes
-  const markerChar = trimmed[markerIdx]!;
-  while (trimmed[markerIdx + markerLength] === markerChar) {
-    markerLength++;
-  }
+    const trimmed = line.trim();
+    let markerIdx = trimmed.indexOf('```');
+    let markerLength = 3;
+    if (markerIdx === -1) {
+      markerIdx = trimmed.indexOf('~~~');
+    }
 
-  const afterMarker = trimmed.slice(markerIdx + markerLength).trimStart();
-  const lowerAfterMarker = afterMarker.toLowerCase();
-  const lowerLanguage = language.toLowerCase();
+    if (markerIdx !== -1) {
+      const markerChar = trimmed[markerIdx]!;
+      while (trimmed[markerIdx + markerLength] === markerChar) {
+        markerLength++;
+      }
 
-  if (lowerAfterMarker.startsWith(lowerLanguage)) {
-    const afterLang = afterMarker.slice(lowerLanguage.length);
-    // There must be a space after the language name to have metadata
-    if (afterLang.startsWith(' ')) {
-      return afterLang.trimStart();
+      // Check if the next line after this fence marker matches our code block's source
+      const nextLine = getLineAt(sectionInfo.text, i + 1)?.trim() || '';
+      const isNextLineFence =
+        nextLine.startsWith('```') || nextLine.startsWith('~~~');
+
+      const isMatch =
+        firstSourceLine.length > 0
+          ? nextLine === firstSourceLine
+          : isNextLineFence || nextLine === '';
+
+      if (isMatch) {
+        const afterMarker = trimmed.slice(markerIdx + markerLength).trimStart();
+        const spaceIdx = afterMarker.indexOf(' ');
+        if (spaceIdx !== -1) {
+          return afterMarker.slice(spaceIdx + 1).trim();
+        }
+        return '';
+      }
     }
   }
 

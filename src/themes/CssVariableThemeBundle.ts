@@ -33,7 +33,9 @@ export function createCssVariableThemeBundle(
     if (!token || typeof token !== 'object') {
       return token;
     }
-    const t = token as { settings?: { foreground?: string; background?: string } };
+    const t = token as {
+      settings?: { foreground?: string; background?: string };
+    };
     if (!t.settings) {
       return token;
     }

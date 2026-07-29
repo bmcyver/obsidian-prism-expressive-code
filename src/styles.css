@@ -1,4 +1,7 @@
-body {
+/* Plugin Design Tokens & CSS Variables scoped to plugin containers */
+.markdown-source-view.mod-cm6,
+.markdown-preview-view,
+div.expressive-code {
   --pec-code-background: var(--code-background);
   --pec-code-normal: var(--text-muted);
   --pec-code-comment: var(--text-faint);
@@ -10,10 +13,9 @@ body {
   --pec-code-string: var(--color-yellow);
   --pec-code-value: var(--color-purple);
 
-  /*--pec-code-border-color: var(--background-modifier-border);*/
   --pec-code-block-border-color: transparent;
   --pec-code-block-border-radius: var(--code-radius);
-  --pec-code-block-border-width: 0px; /* this has to have a unit */
+  --pec-code-block-border-width: 0px;
   --pec-code-block-spacing: var(--p-spacing);
 
   --pec-highlight-red: rgba(var(--color-red-rgb), 0.5);
@@ -37,12 +39,9 @@ body {
   --pec-active-tab-border-color: var(--pec-highlight-neutral);
 }
 
-.edit-block-button {
+.edit-block-button,
+.edit-block-button > svg {
   pointer-events: all;
-
-  & > svg {
-    pointer-events: all;
-  }
 }
 
 div.expressive-code code {
@@ -52,41 +51,48 @@ div.expressive-code code {
 div.expressive-code {
   content-visibility: auto;
   contain-intrinsic-size: auto var(--pec-estimated-height, 200px);
-  contain: style layout;
+  contain: layout paint;
   margin-inline: 0 !important;
 
   & > figure {
     margin-inline: 0 !important;
-  }
 
-  & > figure > pre {
-    /* Fix for shimmering focus */
-    margin: 0 !important;
-  }
-
-  & > figure.frame {
-    &.has-title > figcaption.header::before {
-      pointer-events: all !important;
+    & > pre {
+      /* Fix for shimmering focus */
+      margin: 0 !important;
     }
 
-    & > figcaption.header {
-      z-index: unset;
-    }
+    &.frame {
+      &:not(.has-title):not(.is-terminal) > figcaption.header {
+        display: none !important;
+      }
 
-    & > div.copy {
-      /* Move the copy button to the bottom right */
-      inset-block-end: calc(var(--ec-brdWd) + var(--ec-uiPadInl) / 2);
+      &.has-title > figcaption.header,
+      &.is-terminal > figcaption.header {
+        display: flex !important;
+      }
+
+      &.has-title > figcaption.header::before {
+        pointer-events: all !important;
+      }
+
+      & > figcaption.header {
+        z-index: unset;
+      }
+
+      & > div.copy {
+        /* Move the copy button to the bottom right */
+        inset-block-end: calc(var(--ec-brdWd) + var(--ec-uiPadInl) / 2);
+      }
     }
   }
 }
 
-.markdown-preview-view {
-  div.expressive-code {
-    margin-block: var(--pec-code-block-spacing);
-  }
+.markdown-preview-view div.expressive-code {
+  margin-block: var(--pec-code-block-spacing);
 }
 
-/* Hide the frontmatter code block in reading view again */
+/* Hide frontmatter code block in reading view */
 div.markdown-preview-view
   > div
   > div.mod-header
@@ -95,17 +101,36 @@ div.markdown-preview-view
   display: none;
 }
 
-/* Settings tab  */
+/* Settings tab */
 .setting-item-control input.pec-custom-theme-folder {
   min-width: 250px;
 }
 
-/* Hide empty opening/closing fenced code block lines in Live Preview when not active */
-.markdown-source-view.mod-cm6 div.HyperMD-codeblock-begin.cm-hidden-codeblock,
-.markdown-source-view.mod-cm6 div.HyperMD-codeblock-begin.pec-hide-block-header,
+/* Remove default Obsidian CM6 codeblock line backgrounds */
 .markdown-source-view.mod-cm6
-  div.cm-preview-code-block
-  + div.HyperMD-codeblock-end {
+  :is(
+    .HyperMD-codeblock,
+    .HyperMD-codeblock-begin,
+    .HyperMD-codeblock-end,
+    .HyperMD-codeblock-bg,
+    .cm-line.HyperMD-codeblock,
+    .cm-line.HyperMD-list-line.HyperMD-codeblock
+  ) {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Hide empty opening/closing fenced code block lines in Live Preview when not active */
+.markdown-source-view.mod-cm6
+  :is(
+    div.HyperMD-codeblock-begin:is(
+        .cm-hidden-codeblock,
+        .pec-hide-block-header,
+        :has(+ div.cm-preview-code-block)
+      ),
+    div.HyperMD-codeblock-end:is(.cm-hidden-codeblock, .pec-hide-block-header),
+    div.cm-preview-code-block + div.HyperMD-codeblock-end
+  ) {
   background-color: transparent !important;
   border: none !important;
   height: 0px !important;
@@ -114,14 +139,37 @@ div.markdown-preview-view
   margin: 0 !important;
   overflow: hidden !important;
   box-shadow: none !important;
+  line-height: 0 !important;
+  font-size: 0 !important;
+
+  /* Suppress orphan vertical list indent guide lines */
+  & :is(.cm-indent, .cm-list-indent) {
+    display: none !important;
+    border: none !important;
+    background: none !important;
+    height: 0 !important;
+    width: 0 !important;
+  }
+
+  /* Suppress pseudo-elements on hidden fence lines */
+  &::before,
+  &::after,
+  & .cm-indent::before,
+  & .cm-indent::after {
+    display: none !important;
+    border: none !important;
+    background: none !important;
+    content: none !important;
+  }
 }
 
 div.cm-preview-code-block {
-  contain: style;
+  contain: layout paint;
 }
 
-/* Apply list indentation for code blocks in Live Preview */
-.markdown-source-view .pec-code-block[data-indent-level] {
+/* Apply list indentation for code blocks in Live Preview and Reading View */
+.markdown-source-view .pec-code-block[data-indent-level],
+.markdown-preview-view .pec-code-block[data-indent-level] {
   margin-left: calc(var(--pec-indent-level, 0) * var(--list-indent)) !important;
 }
 

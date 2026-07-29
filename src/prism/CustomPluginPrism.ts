@@ -4,10 +4,7 @@ import {
   type ExpressiveCodePlugin,
 } from '@expressive-code/core';
 
-import {
-  flattenTokens,
-  splitTokensIntoLines,
-} from './tokenizer';
+import { flattenTokens, splitTokensIntoLines } from './tokenizer';
 import { getStyleForPrismTypes, FontStyle } from './scopeMapping';
 import { LANGUAGE_ALIASES } from './constants';
 import { getPrism } from './getPrism';

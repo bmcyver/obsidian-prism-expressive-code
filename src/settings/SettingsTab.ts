@@ -1,6 +1,6 @@
 import { PluginSettingTab, Setting } from 'obsidian';
 import type PrismExpressiveCodePlugin from '../main';
-import { THEME_DISPLAY_NAMES } from '../themes/definitions';
+import { THEME_DISPLAY_NAMES } from '../config';
 import { FrameType, CollapseStyle } from './types';
 
 export class PrismExpressiveCodeSettingTab extends PluginSettingTab {

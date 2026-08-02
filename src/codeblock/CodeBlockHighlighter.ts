@@ -1,28 +1,25 @@
 import { ExpressiveCodeEngine } from '@expressive-code/core';
 
 import type PrismExpressiveCodePlugin from '../main';
-import { getPrism } from '../prism/getPrism';
-import {
-  LANGUAGE_ALIASES,
-  LANGUAGE_BLACKLIST,
-  LANGUAGE_SPECIAL,
-} from '../prism/constants';
+import { getPrism } from '../prism/prismUtils';
 import { clearStyleCache } from '../prism/scopeMapping';
-import { type ThemeMapper } from '../themes/ThemeMapper';
-import { createEcEngineConfig } from '../config';
+import { getThemeForEC } from '../themes/ThemeMapper';
+import {
+  createEcEngineConfig,
+  LANGUAGE_ALIASES,
+  LANGUAGE_SPECIAL,
+} from '../config';
 
 export class CodeBlockHighlighter {
   plugin: PrismExpressiveCodePlugin;
-  themeMapper: ThemeMapper;
 
   ec!: ExpressiveCodeEngine;
   ecStyleElements = new Map<Document, HTMLStyleElement>();
   supportedLanguages!: string[];
   safeLanguagesSet!: Set<string>;
 
-  constructor(plugin: PrismExpressiveCodePlugin, themeMapper: ThemeMapper) {
+  constructor(plugin: PrismExpressiveCodePlugin) {
     this.plugin = plugin;
-    this.themeMapper = themeMapper;
   }
 
   async load(): Promise<void> {
@@ -41,13 +38,11 @@ export class CodeBlockHighlighter {
         ...LANGUAGE_SPECIAL,
       ]),
     );
-    this.safeLanguagesSet = new Set(
-      this.supportedLanguages.filter((lang) => !LANGUAGE_BLACKLIST.has(lang)),
-    );
+    this.safeLanguagesSet = new Set(this.supportedLanguages);
 
     this.ec = new ExpressiveCodeEngine(
       createEcEngineConfig({
-        theme: await this.themeMapper.getThemeForEC(),
+        theme: await getThemeForEC(this.plugin.app, this.plugin.loadedSettings),
         settings: this.plugin.loadedSettings,
       }),
     );

@@ -1,43 +1,43 @@
+import { type App } from 'obsidian';
 import { type ThemeRegistration } from './types';
-import { THEME_IMPORTS } from './definitions';
-import type PrismExpressiveCodePlugin from '../main';
+import { THEMES } from '../config';
+import { type Settings } from '../settings/types';
 
-export class ThemeMapper {
-  plugin: PrismExpressiveCodePlugin;
-  private cachedThemeId?: string;
-  private cachedTheme?: ThemeRegistration;
+let cachedThemeId: string | null = null;
+let cachedTheme: ThemeRegistration | null = null;
 
-  constructor(plugin: PrismExpressiveCodePlugin) {
-    this.plugin = plugin;
+export function clearThemeCache(): void {
+  cachedThemeId = null;
+  cachedTheme = null;
+}
+
+/**
+ * Obsidian 앱의 다크/라이트 모드 및 사용자 설정에 적합한 테마를 불러오고 캐싱하는 단일 함수
+ */
+export async function getThemeForEC(
+  app: App,
+  settings: Settings,
+): Promise<ThemeRegistration> {
+  const activeThemeId = app.isDarkMode()
+    ? settings.darkTheme
+    : settings.lightTheme;
+
+  if (cachedThemeId === activeThemeId && cachedTheme) {
+    return cachedTheme;
   }
 
-  private async loadEssentialTheme(
-    activeTheme: string,
-  ): Promise<ThemeRegistration> {
-    const themeLoader = THEME_IMPORTS[activeTheme];
-    if (themeLoader) {
-      return ((await themeLoader()) as { default: ThemeRegistration }).default;
-    }
-    const fallbackLoader = THEME_IMPORTS['one-dark-pro'];
-    if (!fallbackLoader) {
-      throw new Error('Fallback theme not found');
-    }
-    return ((await fallbackLoader()) as { default: ThemeRegistration }).default;
-  }
+  const themeDef = THEMES.find((t) => t.id === activeThemeId) ?? THEMES[0]!;
 
-  async getThemeForEC(): Promise<ThemeRegistration> {
-    const activeTheme = this.getThemeIdentifier();
-    if (this.cachedThemeId === activeTheme && this.cachedTheme) {
-      return this.cachedTheme;
-    }
-    this.cachedTheme = await this.loadEssentialTheme(activeTheme);
-    this.cachedThemeId = activeTheme;
-    return this.cachedTheme;
-  }
-
-  getThemeIdentifier(): string {
-    return this.plugin.app.isDarkMode()
-      ? this.plugin.loadedSettings.darkTheme
-      : this.plugin.loadedSettings.lightTheme;
+  try {
+    const mod = (await themeDef.import()) as { default: ThemeRegistration };
+    cachedThemeId = themeDef.id;
+    cachedTheme = mod.default;
+    return mod.default;
+  } catch {
+    const fallbackDef = THEMES[0]!;
+    const mod = (await fallbackDef.import()) as { default: ThemeRegistration };
+    cachedThemeId = fallbackDef.id;
+    cachedTheme = mod.default;
+    return mod.default;
   }
 }

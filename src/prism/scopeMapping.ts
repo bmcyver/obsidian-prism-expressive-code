@@ -1,5 +1,4 @@
-import { LRUCache } from '../utils/LRUCache';
-import { cacheManager } from '../utils/CacheManager';
+import { LRUCache, cacheManager } from '../utils/cache';
 
 export interface ThemeSetting {
   scope?: string | string[];

@@ -3,16 +3,16 @@ import { DEFAULT_SETTINGS, type Settings } from './settings/types';
 import { PrismExpressiveCodeSettingTab } from './settings/SettingsTab';
 import { CodeBlockHighlighter } from './codeblock/CodeBlockHighlighter';
 import { CodeBlockManager } from './codeblock/CodeBlockManager';
-import { CodeBlockProcessor } from './codeblock/CodeBlockProcessor';
-import { ThemeMapper } from './themes/ThemeMapper';
-import { VALID_THEME_IDS } from './themes/definitions';
+import { registerCodeBlockProcessors } from './codeblock/CodeBlockProcessor';
+import { clearThemeCache } from './themes/ThemeMapper';
+import { VALID_THEME_IDS } from './config';
 import {
   registerPrismHook,
   unregisterPrismHook,
   filterExpressiveCodeElements,
-} from './prism/prismHook';
+} from './prism/prismUtils';
 
-import { cacheManager } from './utils/CacheManager';
+import { cacheManager } from './utils/cache';
 
 import 'src/styles.css';
 import 'virtual:ec-styles.css';
@@ -36,8 +36,7 @@ export default class PrismExpressiveCodePlugin extends Plugin {
     this.loadedSettings = structuredClone(this.settings);
     this.addSettingTab(new PrismExpressiveCodeSettingTab(this));
 
-    const themeMapper = new ThemeMapper(this);
-    this.highlighter = new CodeBlockHighlighter(this, themeMapper);
+    this.highlighter = new CodeBlockHighlighter(this);
     this.codeBlockManager = new CodeBlockManager(this);
     this.codeBlockManager.registerEvents();
 
@@ -48,8 +47,7 @@ export default class PrismExpressiveCodePlugin extends Plugin {
         await loadPrism();
         await this.highlighter.load();
 
-        const codeBlockProcessor = new CodeBlockProcessor(this);
-        codeBlockProcessor.register();
+        registerCodeBlockProcessors(this);
 
         await this.registerPrismPlugin();
 
@@ -107,6 +105,7 @@ export default class PrismExpressiveCodePlugin extends Plugin {
   async reloadHighlighter(): Promise<void> {
     this.lastDarkMode = this.app.isDarkMode();
     await this.highlighter.unload();
+    clearThemeCache();
     cacheManager.clearAllCaches();
 
     this.loadedSettings = structuredClone(this.settings);

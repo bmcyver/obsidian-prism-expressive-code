@@ -6,8 +6,8 @@ import {
 
 import { flattenTokens, splitTokensIntoLines } from './tokenizer';
 import { getStyleForPrismTypes, FontStyle } from './scopeMapping';
-import { LANGUAGE_ALIASES } from './constants';
-import { getPrism } from './getPrism';
+import { LANGUAGE_ALIASES } from '../config';
+import { getPrism } from './prismUtils';
 import type * as Prism from 'prismjs';
 
 export function customPluginPrism(): ExpressiveCodePlugin {

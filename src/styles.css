@@ -39,9 +39,29 @@ div.expressive-code {
   --pec-active-tab-border-color: var(--pec-highlight-neutral);
 }
 
-.edit-block-button,
+.edit-block-button {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  z-index: 99 !important;
+  pointer-events: all !important;
+  opacity: 0.7;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.edit-block-button:hover {
+  opacity: 1 !important;
+}
+
 .edit-block-button > svg {
-  pointer-events: all;
+  pointer-events: none !important;
+}
+
+/* Ensure edit block button parent has relative positioning */
+.cm-embed-block:has(.edit-block-button),
+.cm-preview-code-block:has(.edit-block-button),
+div.expressive-code {
+  position: relative !important;
 }
 
 div.expressive-code code {
@@ -118,6 +138,13 @@ div.markdown-preview-view
   ) {
   background-color: transparent !important;
   box-shadow: none !important;
+  font-family: var(--font-monospace) !important;
+  font-size: var(--code-size) !important;
+}
+
+.cm-prism-token {
+  font-family: var(--font-monospace);
+  font-size: var(--code-size);
 }
 
 /* Hide empty opening/closing fenced code block lines in Live Preview when not active */

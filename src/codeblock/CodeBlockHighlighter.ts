@@ -2,7 +2,8 @@ import { ExpressiveCodeEngine } from '@expressive-code/core';
 
 import type PrismExpressiveCodePlugin from '../main';
 import { getPrism } from '../prism/prismUtils';
-import { clearStyleCache } from '../prism/scopeMapping';
+import { clearStyleCache, type ThemeLike } from '../prism/scopeMapping';
+import { setCm6Theme } from '../prism/cm6PrismExtension';
 import { getThemeForEC } from '../themes/ThemeMapper';
 import {
   createEcEngineConfig,
@@ -40,9 +41,15 @@ export class CodeBlockHighlighter {
     );
     this.safeLanguagesSet = new Set(this.supportedLanguages);
 
+    const activeTheme = await getThemeForEC(
+      this.plugin.app,
+      this.plugin.loadedSettings,
+    );
+    setCm6Theme(activeTheme as ThemeLike);
+
     this.ec = new ExpressiveCodeEngine(
       createEcEngineConfig({
-        theme: await getThemeForEC(this.plugin.app, this.plugin.loadedSettings),
+        theme: activeTheme,
         settings: this.plugin.loadedSettings,
       }),
     );
@@ -113,6 +120,7 @@ export class CodeBlockHighlighter {
 
   async unload(): Promise<void> {
     this.clearAllStyles();
+    setCm6Theme(null);
     clearStyleCache();
   }
 

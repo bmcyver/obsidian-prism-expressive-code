@@ -78,57 +78,59 @@ export function extractMetaString(
 }
 
 export function stripCommonIndentation(source: string): string {
-  if (source.length === 0) return source;
+  return source;
+}
 
-  // Fast path: if source doesn't start with space/tab and contains no tab/space after newline, skip split
-  if (
-    source[0] !== ' ' &&
-    source[0] !== '\t' &&
-    !source.includes('\n ') &&
-    !source.includes('\n\t')
-  ) {
-    return source;
-  }
+export function extractFenceIndentationLevel(
+  ctx: MarkdownPostProcessorContext,
+  containerEl: HTMLElement,
+  source: string = '',
+): number {
+  const sectionInfo = ctx.getSectionInfo(containerEl);
+  if (!sectionInfo) return 0;
 
-  const lines = source.split('\n');
+  const firstSourceLine =
+    source
+      .split('\n')
+      .map((l) => l.trim())
+      .find((l) => l.length > 0) || '';
 
-  // Find the minimum common indentation of non-empty lines
-  let minIndent: string | null = null;
-  for (const line of lines) {
-    if (line.trim() === '') continue;
+  for (let i = sectionInfo.lineStart; i <= sectionInfo.lineEnd; i++) {
+    const line = getLineAt(sectionInfo.text, i);
+    if (line === undefined) break;
 
-    const match = /^[ \t]*/.exec(line);
-    if (match) {
-      const indent = match[0];
-      if (minIndent === null || indent.length < minIndent.length) {
-        minIndent = indent;
+    const trimmed = line.trim();
+    let markerIdx = trimmed.indexOf('```');
+    if (markerIdx === -1) {
+      markerIdx = trimmed.indexOf('~~~');
+    }
+
+    if (markerIdx !== -1) {
+      const nextLine = getLineAt(sectionInfo.text, i + 1)?.trim() || '';
+      const isNextLineFence =
+        nextLine.startsWith('```') || nextLine.startsWith('~~~');
+
+      const isMatch =
+        firstSourceLine.length > 0
+          ? nextLine === firstSourceLine
+          : isNextLineFence || nextLine === '';
+
+      if (isMatch) {
+        // Calculate indentation level of the code fence line itself
+        const match = /^[ \t]*/.exec(line);
+        const indent = match ? match[0] : '';
+        let spaces = 0;
+        let tabs = 0;
+        for (const char of indent) {
+          if (char === ' ') spaces++;
+          else if (char === '\t') tabs++;
+        }
+        return tabs + Math.floor(spaces / 4);
       }
     }
   }
 
-  if (!minIndent || minIndent.length === 0) {
-    return source;
-  }
-
-  // Strip the common indentation from all lines
-  const prefix = minIndent;
-  return lines
-    .map((line) => (line.startsWith(prefix) ? line.slice(prefix.length) : line))
-    .join('\n');
-}
-
-export function calculateListIndentationLevel(source: string): number {
-  const newlineIdx = source.indexOf('\n');
-  const firstLine = newlineIdx === -1 ? source : source.slice(0, newlineIdx);
-  const match = /^[ \t]*/.exec(firstLine);
-  const indent = match ? match[0] : '';
-  let spaces = 0;
-  let tabs = 0;
-  for (const char of indent) {
-    if (char === ' ') spaces++;
-    else if (char === '\t') tabs++;
-  }
-  return tabs + Math.floor(spaces / 4);
+  return 0;
 }
 
 export function estimateCodeBlockHeight(

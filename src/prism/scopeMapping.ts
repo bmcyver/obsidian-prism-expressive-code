@@ -13,7 +13,27 @@ export interface ThemeLike {
   type?: string;
   settings?: ThemeSetting[];
   tokenColors?: ThemeSetting[];
+  colors?: Record<string, string>;
   fg?: string;
+}
+
+export function getThemeDefaultFg(theme: ThemeLike | null): string | undefined {
+  if (!theme) return undefined;
+  if (theme.fg) return theme.fg;
+  if (theme.colors) {
+    const color =
+      theme.colors['editor.foreground'] ?? theme.colors['foreground'];
+    if (color) return color;
+  }
+  const settings = theme.tokenColors ?? theme.settings;
+  if (settings) {
+    for (const item of settings) {
+      if (!item.scope && item.settings?.foreground) {
+        return item.settings.foreground;
+      }
+    }
+  }
+  return undefined;
 }
 
 export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {

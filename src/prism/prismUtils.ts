@@ -20,16 +20,18 @@ export function registerPrismHook(callback: (env: unknown) => void): void {
   const prism = getPrism();
   if (prism?.hooks) {
     unregisterPrismHook(callback);
-    prism.hooks.add("before-all-elements-highlight", callback);
+    prism.hooks.add('before-all-elements-highlight', callback);
   }
 }
 
 export function unregisterPrismHook(callback: (env: unknown) => void): void {
   const prism = getPrism();
   if (prism?.hooks?.all) {
-    const hooks = prism.hooks.all["before-all-elements-highlight"];
+    const hooks = prism.hooks.all['before-all-elements-highlight'];
     if (hooks) {
-      prism.hooks.all["before-all-elements-highlight"] = hooks.filter((hook) => hook !== callback);
+      prism.hooks.all['before-all-elements-highlight'] = hooks.filter(
+        (hook) => hook !== callback,
+      );
     }
   }
 }

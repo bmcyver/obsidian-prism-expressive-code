@@ -7,7 +7,7 @@ import { toDom } from 'hast-util-to-dom';
 import {
   extractMetaString,
   stripCommonIndentation,
-  calculateListIndentationLevel,
+  extractFenceIndentationLevel,
   estimateCodeBlockHeight,
 } from './CodeBlockUtils';
 
@@ -72,7 +72,11 @@ export class CodeBlock extends MarkdownRenderChild {
       return;
     }
 
-    const level = calculateListIndentationLevel(this.source);
+    const level = extractFenceIndentationLevel(
+      this.ctx,
+      this.containerEl,
+      this.source,
+    );
 
     // Maintain min-height and set estimated height CSS variable to prevent CLS / scroll jitter
     const estimatedHeight = estimateCodeBlockHeight(cleanedSource, metaString);

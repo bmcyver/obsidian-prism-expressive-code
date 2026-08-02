@@ -11,6 +11,7 @@ import {
   unregisterPrismHook,
   filterExpressiveCodeElements,
 } from './prism/prismUtils';
+import { prismCm6Extension } from './prism/cm6PrismExtension';
 
 import { cacheManager } from './utils/cache';
 
@@ -39,6 +40,7 @@ export default class PrismExpressiveCodePlugin extends Plugin {
     this.highlighter = new CodeBlockHighlighter(this);
     this.codeBlockManager = new CodeBlockManager(this);
     this.codeBlockManager.registerEvents();
+    this.registerEditorExtension(prismCm6Extension);
 
     this.lastDarkMode = this.app.isDarkMode();
 

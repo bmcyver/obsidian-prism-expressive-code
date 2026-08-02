@@ -31,7 +31,7 @@ export function customPluginPrism(): ExpressiveCodePlugin {
           );
         }
 
-        if (!prism) {
+        if (!prism || !prism.languages) {
           return;
         }
 

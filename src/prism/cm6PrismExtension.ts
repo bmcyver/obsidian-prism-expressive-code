@@ -30,6 +30,15 @@ function createPrismDecorations(view: EditorView): DecorationSet {
   const prism = getPrism();
   if (!prism || !prism.languages) return Decoration.none;
 
+  const visibleRanges = view.visibleRanges;
+  if (visibleRanges.length === 0) return Decoration.none;
+
+  const minVisibleFrom = Math.max(0, visibleRanges[0]!.from - 500);
+  const maxVisibleTo = Math.min(
+    view.state.doc.length,
+    visibleRanges[visibleRanges.length - 1]!.to + 500,
+  );
+
   const builder = new RangeSetBuilder<Decoration>();
   const doc = view.state.doc;
   const theme = currentLoadedTheme;
@@ -60,8 +69,12 @@ function createPrismDecorations(view: EditorView): DecorationSet {
             prism.languages.text;
 
           if (grammar) {
-            // 개별 라인 단위 토큰화로 개행문자(\n) 오프셋 밀림 및 색상 꼬임 현상 완전 방지
+            // 개별 라인 단위 토큰화 (화면 보임 범위 밖 라인은 토큰화/데코레이션 생성 스킵하여 성능 극대화)
             for (const bLine of blockLines) {
+              const lineTo = bLine.from + bLine.text.length;
+              if (lineTo < minVisibleFrom || bLine.from > maxVisibleTo) {
+                continue;
+              }
               if (bLine.text.length === 0) continue;
 
               const lineTokens = prism.tokenize(bLine.text, grammar);
@@ -74,7 +87,12 @@ function createPrismDecorations(view: EditorView): DecorationSet {
                   const tokenFrom = bLine.from + charOffset;
                   const tokenTo = tokenFrom + tokenLen;
 
-                  if (tokenFrom < tokenTo && tokenTo <= doc.length) {
+                  if (
+                    tokenFrom >= minVisibleFrom &&
+                    tokenTo <= maxVisibleTo &&
+                    tokenFrom < tokenTo &&
+                    tokenTo <= doc.length
+                  ) {
                     let styleCss = '';
                     if (theme) {
                       const style = getStyleForPrismTypes(

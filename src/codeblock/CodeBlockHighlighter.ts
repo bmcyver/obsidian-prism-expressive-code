@@ -55,6 +55,7 @@ export class CodeBlockHighlighter {
     );
 
     this.clearAllStyles();
+    this.cachedThemeStyles = '';
 
     const docs = this.getAllDocuments();
     for (const doc of docs) {
@@ -78,10 +79,15 @@ export class CodeBlockHighlighter {
     return docs;
   }
 
+  private cachedThemeStyles = '';
+
   public async injectStyles(doc: Document): Promise<void> {
     if (!this.ec) return;
     try {
-      const themeStyles = await this.ec.getThemeStyles();
+      if (!this.cachedThemeStyles) {
+        this.cachedThemeStyles = await this.ec.getThemeStyles();
+      }
+      const themeStyles = this.cachedThemeStyles;
       let styleEl = doc.getElementById(
         'pec-theme-styles',
       ) as HTMLStyleElement | null;

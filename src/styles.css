@@ -58,8 +58,8 @@ div.expressive-code {
 }
 
 /* Ensure edit block button parent has relative positioning */
-.cm-embed-block:has(.edit-block-button),
-.cm-preview-code-block:has(.edit-block-button),
+.cm-embed-block,
+.cm-preview-code-block,
 div.expressive-code {
   position: relative !important;
 }
@@ -126,7 +126,7 @@ div.markdown-preview-view
   min-width: 250px;
 }
 
-/* Remove default Obsidian CM6 codeblock line backgrounds */
+/* Remove default Obsidian CM6 codeblock line backgrounds when not active */
 .markdown-source-view.mod-cm6
   :is(
     .HyperMD-codeblock,
@@ -136,10 +136,44 @@ div.markdown-preview-view
     .cm-line.HyperMD-codeblock,
     .cm-line.HyperMD-list-line.HyperMD-codeblock
   ) {
-  background-color: transparent !important;
-  box-shadow: none !important;
+  background-color: transparent;
+  box-shadow: none;
   font-family: var(--font-monospace) !important;
   font-size: var(--code-size) !important;
+}
+
+/* Distinct visual background and accent border when entering Codeblock Editing Mode in Live Preview */
+.markdown-source-view.mod-cm6
+  :is(
+    div.cm-line.HyperMD-codeblock,
+    div.cm-line.HyperMD-codeblock-begin,
+    div.cm-line.HyperMD-codeblock-end
+  ):not(.cm-hidden-codeblock):not(.pec-hide-block-header) {
+  background-color: var(--pec-code-background, var(--code-background)) !important;
+  padding-left: 12px !important;
+  transition: background-color 0.15s ease;
+}
+
+/* Opening fence header styling in Live Preview Editing Mode */
+.markdown-source-view.mod-cm6
+  div.cm-line.HyperMD-codeblock-begin:not(.cm-hidden-codeblock):not(.pec-hide-block-header) {
+  border-top-left-radius: var(--code-radius, 6px) !important;
+  border-top-right-radius: var(--code-radius, 6px) !important;
+  margin-top: 6px !important;
+  padding-top: 4px !important;
+  font-weight: 600;
+  color: var(--text-accent, var(--interactive-accent)) !important;
+  border-bottom: 1px solid var(--background-modifier-border) !important;
+}
+
+/* Closing fence footer styling in Live Preview Editing Mode */
+.markdown-source-view.mod-cm6
+  div.cm-line.HyperMD-codeblock-end:not(.cm-hidden-codeblock):not(.pec-hide-block-header) {
+  border-bottom-left-radius: var(--code-radius, 6px) !important;
+  border-bottom-right-radius: var(--code-radius, 6px) !important;
+  margin-bottom: 6px !important;
+  padding-bottom: 4px !important;
+  color: var(--text-faint) !important;
 }
 
 .cm-prism-token {
@@ -152,8 +186,7 @@ div.markdown-preview-view
   :is(
     div.HyperMD-codeblock-begin:is(
         .cm-hidden-codeblock,
-        .pec-hide-block-header,
-        :has(+ div.cm-preview-code-block)
+        .pec-hide-block-header
       ),
     div.HyperMD-codeblock-end:is(.cm-hidden-codeblock, .pec-hide-block-header),
     div.cm-preview-code-block + div.HyperMD-codeblock-end

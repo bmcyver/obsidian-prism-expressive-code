@@ -1,4 +1,7 @@
-import { type MarkdownPostProcessorContext } from 'obsidian';
+import {
+  type MarkdownPostProcessorContext,
+  type MarkdownSectionInformation,
+} from 'obsidian';
 
 function getLineAt(text: string, lineIndex: number): string | undefined {
   let startIdx = 0;
@@ -21,8 +24,12 @@ export function extractMetaString(
   containerEl: HTMLElement,
   language: string,
   source: string = '',
+  existingSectionInfo?: MarkdownSectionInformation | null,
 ): string {
-  const sectionInfo = ctx.getSectionInfo(containerEl);
+  const sectionInfo =
+    existingSectionInfo !== undefined
+      ? existingSectionInfo
+      : ctx.getSectionInfo(containerEl);
 
   if (sectionInfo === null) {
     return '';
@@ -77,17 +84,76 @@ export function extractMetaString(
   return '';
 }
 
-export function stripCommonIndentation(source: string): string {
+export function stripFenceIndentation(
+  source: string,
+  fenceIndent: string,
+): string {
+  if (!source || !fenceIndent) return source;
+
+  const lines = source.split('\n');
+  let fenceSpaces = 0;
+  for (const char of fenceIndent) {
+    if (char === ' ') fenceSpaces += 1;
+    else if (char === '\t') fenceSpaces += 4;
+  }
+
+  if (fenceSpaces === 0) return source;
+
+  return lines
+    .map((line) => {
+      if (line.trim().length === 0) return '';
+      if (line.startsWith(fenceIndent)) {
+        return line.slice(fenceIndent.length);
+      }
+      let stripped = 0;
+      let idx = 0;
+      while (idx < line.length && stripped < fenceSpaces) {
+        if (line[idx] === ' ') {
+          stripped += 1;
+          idx++;
+        } else if (line[idx] === '\t') {
+          if (stripped + 4 <= fenceSpaces) {
+            stripped += 4;
+            idx++;
+          } else {
+            break;
+          }
+        } else {
+          break;
+        }
+      }
+      return line.slice(idx);
+    })
+    .join('\n');
+}
+
+export function stripCommonIndentation(
+  source: string,
+  fenceIndent: string = '',
+): string {
+  if (!source) return source;
+  if (fenceIndent) {
+    return stripFenceIndentation(source, fenceIndent);
+  }
   return source;
 }
 
-export function extractFenceIndentationLevel(
+export interface FenceIndentationInfo {
+  level: number;
+  indent: string;
+}
+
+export function extractFenceIndentationInfo(
   ctx: MarkdownPostProcessorContext,
   containerEl: HTMLElement,
   source: string = '',
-): number {
-  const sectionInfo = ctx.getSectionInfo(containerEl);
-  if (!sectionInfo) return 0;
+  existingSectionInfo?: MarkdownSectionInformation | null,
+): FenceIndentationInfo {
+  const sectionInfo =
+    existingSectionInfo !== undefined
+      ? existingSectionInfo
+      : ctx.getSectionInfo(containerEl);
+  if (!sectionInfo) return { level: 0, indent: '' };
 
   const firstSourceLine =
     source
@@ -125,19 +191,29 @@ export function extractFenceIndentationLevel(
           if (char === ' ') spaces++;
           else if (char === '\t') tabs++;
         }
-        return tabs + Math.floor(spaces / 4);
+        const level = tabs + Math.floor(spaces / 4);
+        return { level, indent };
       }
     }
   }
 
-  return 0;
+  return { level: 0, indent: '' };
+}
+
+export function extractFenceIndentationLevel(
+  ctx: MarkdownPostProcessorContext,
+  containerEl: HTMLElement,
+  source: string = '',
+): number {
+  return extractFenceIndentationInfo(ctx, containerEl, source).level;
 }
 
 export function estimateCodeBlockHeight(
   source: string,
   metaString?: string,
+  fenceIndent: string = '',
 ): number {
-  const cleaned = stripCommonIndentation(source);
+  const cleaned = stripCommonIndentation(source, fenceIndent);
   const lineCount = cleaned.length === 0 ? 1 : cleaned.split('\n').length;
   const hasMetaOrTitle = Boolean(metaString && metaString.trim().length > 0);
   const headerHeight = hasMetaOrTitle ? 36 : 0;

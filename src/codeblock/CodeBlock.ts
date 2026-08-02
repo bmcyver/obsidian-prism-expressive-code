@@ -7,7 +7,7 @@ import { toDom } from 'hast-util-to-dom';
 import {
   extractMetaString,
   stripCommonIndentation,
-  extractFenceIndentationLevel,
+  extractFenceIndentationInfo,
   estimateCodeBlockHeight,
 } from './CodeBlockUtils';
 
@@ -42,12 +42,13 @@ export class CodeBlock extends MarkdownRenderChild {
     this.cachedMetaString = this.getMetaString();
   }
 
-  private getMetaString(): string {
+  private getMetaString(sectionInfo?: ReturnType<MarkdownPostProcessorContext['getSectionInfo']>): string {
     return extractMetaString(
       this.ctx,
       this.containerEl,
       this.language,
       this.source,
+      sectionInfo,
     );
   }
 
@@ -61,7 +62,16 @@ export class CodeBlock extends MarkdownRenderChild {
       return;
     }
 
-    const cleanedSource = stripCommonIndentation(this.source);
+    const sectionInfo = this.ctx.getSectionInfo(this.containerEl);
+
+    const { level, indent: fenceIndent } = extractFenceIndentationInfo(
+      this.ctx,
+      this.containerEl,
+      this.source,
+      sectionInfo,
+    );
+
+    const cleanedSource = stripCommonIndentation(this.source, fenceIndent);
 
     // Early return if already rendered with the exact same content & meta
     if (
@@ -72,22 +82,20 @@ export class CodeBlock extends MarkdownRenderChild {
       return;
     }
 
-    const level = extractFenceIndentationLevel(
-      this.ctx,
-      this.containerEl,
-      this.source,
-    );
+    const win = this.containerEl.ownerDocument?.defaultView || window;
+    const isPrintMode = win.matchMedia('print').matches;
 
     // Maintain min-height and set estimated height CSS variable to prevent CLS / scroll jitter
-    const estimatedHeight = estimateCodeBlockHeight(cleanedSource, metaString);
+    const estimatedHeight = estimateCodeBlockHeight(
+      cleanedSource,
+      metaString,
+      fenceIndent,
+    );
     this.containerEl.style.minHeight = `${estimatedHeight}px`;
     this.containerEl.style.setProperty(
       '--pec-estimated-height',
       `${estimatedHeight}px`,
     );
-
-    const win = this.containerEl.ownerDocument?.defaultView || window;
-    const isPrintMode = win.matchMedia('print').matches;
 
     const props: Record<string, unknown> = {};
     if (isPrintMode) {
@@ -131,7 +139,8 @@ export class CodeBlock extends MarkdownRenderChild {
   }
 
   public async rerenderOnNoteChange(): Promise<void> {
-    const newMetaString = this.getMetaString();
+    const sectionInfo = this.ctx.getSectionInfo(this.containerEl);
+    const newMetaString = this.getMetaString(sectionInfo);
     if (newMetaString !== this.cachedMetaString) {
       this.cachedMetaString = newMetaString;
       if (this.rendered) {
@@ -153,10 +162,19 @@ export class CodeBlock extends MarkdownRenderChild {
     this.isLoaded = true;
     this.plugin.codeBlockManager.add(this);
 
+    const sectionInfo = this.ctx.getSectionInfo(this.containerEl);
+    const { indent: fenceIndent } = extractFenceIndentationInfo(
+      this.ctx,
+      this.containerEl,
+      this.source,
+      sectionInfo,
+    );
+
     // Estimate height to prevent Cumulative Layout Shift (CLS)
     const estimatedHeight = estimateCodeBlockHeight(
       this.source,
       this.cachedMetaString,
+      fenceIndent,
     );
     this.containerEl.style.minHeight = `${estimatedHeight}px`;
     this.containerEl.style.setProperty(

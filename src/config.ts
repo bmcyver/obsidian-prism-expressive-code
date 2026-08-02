@@ -8,18 +8,11 @@ import { pluginFrames } from '@expressive-code/plugin-frames';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 import { pluginTextMarkers } from '@expressive-code/plugin-text-markers';
 import { customPluginPrism } from './prism/CustomPluginPrism';
-import { getECTheme } from './themes/ecStyleOverrides';
 import { type ThemeRegistration } from './themes/types';
 
-// Re-export for vite.config.mts backwards compatibility
-export {
-  createCssVariableThemeBundle,
-  type CssVariableThemeBundle,
-} from './themes/CssVariableThemeBundle';
 export type { ThemeRegistration } from './themes/types';
 
 export interface EcSettingsProps {
-  preferThemeColors: boolean;
   ecDefaultShowLineNumbers: boolean;
   ecDefaultWrap: boolean;
   ecDefaultFrame: 'code' | 'terminal' | 'none' | 'auto';
@@ -33,7 +26,6 @@ export interface EcConfigInput {
 }
 
 export const EC_VIRTUAL_SETTINGS: EcSettingsProps = {
-  preferThemeColors: true,
   ecDefaultShowLineNumbers: false,
   ecDefaultWrap: false,
   ecDefaultFrame: 'auto',
@@ -43,8 +35,6 @@ export const EC_VIRTUAL_SETTINGS: EcSettingsProps = {
 export function createEcEngineConfig(
   input: EcConfigInput,
 ): ExpressiveCodeEngineConfig {
-  const useThemeColors = input.settings.preferThemeColors;
-
   return {
     themes: [
       new ExpressiveCodeTheme(
@@ -58,7 +48,15 @@ export function createEcEngineConfig(
       pluginLineNumbers(),
       pluginFrames(),
     ].filter(Boolean),
-    styleOverrides: getECTheme(useThemeColors),
+    styleOverrides: {
+      codeFontFamily: 'var(--font-monospace)',
+      codeFontSize: 'var(--code-size)',
+      borderWidth: '0px',
+      borderColor: 'transparent',
+      frames: {
+        frameBoxShadowCssValue: 'none',
+      },
+    },
     minSyntaxHighlightingColorContrast: 0,
     themeCssRoot: 'div.expressive-code',
     defaultProps: {

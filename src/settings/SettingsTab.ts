@@ -135,19 +135,5 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
-
-    new Setting(this.containerEl)
-      .setName('Prefer theme background colors')
-      .setDesc(
-        'When enabled, prefers native theme background colors over Obsidian CSS variables.',
-      )
-      .addToggle((toggle) => {
-        toggle
-          .setValue(this.plugin.settings.preferThemeColors)
-          .onChange(async (value) => {
-            this.plugin.settings.preferThemeColors = value;
-            await this.plugin.saveSettings();
-          });
-      });
   }
 }

@@ -2,11 +2,7 @@ import path from 'node:path';
 import { builtinModules } from 'node:module';
 import { defineConfig, type UserConfig } from 'vite';
 import { ExpressiveCodeEngine } from '@expressive-code/core';
-import {
-  createCssVariableThemeBundle,
-  createEcEngineConfig,
-  EC_VIRTUAL_SETTINGS,
-} from './src/config';
+import { createEcEngineConfig, EC_VIRTUAL_SETTINGS } from './src/config';
 import oneDarkPro from 'shiki/themes/one-dark-pro.mjs';
 
 const entryFile = 'src/main.ts';
@@ -25,12 +21,9 @@ function expressiveCodeBundlePlugin() {
   }> => {
     if (!bundlePromise) {
       bundlePromise = (async () => {
-        const cssVariableTheme = createCssVariableThemeBundle(
-          oneDarkPro as any,
-        );
         const ec = new ExpressiveCodeEngine(
           createEcEngineConfig({
-            theme: cssVariableTheme.theme,
+            theme: oneDarkPro as any,
             settings: EC_VIRTUAL_SETTINGS,
           }),
         );
@@ -42,7 +35,7 @@ function expressiveCodeBundlePlugin() {
 
         return {
           runtimeModule: jsModules.join('\n'),
-          styles: cssVariableTheme.restoreCssVariables(baseStyles),
+          styles: baseStyles,
         };
       })();
     }

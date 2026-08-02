@@ -154,28 +154,6 @@ div.markdown-preview-view
   transition: background-color 0.15s ease;
 }
 
-/* Opening fence header styling in Live Preview Editing Mode */
-.markdown-source-view.mod-cm6
-  div.cm-line.HyperMD-codeblock-begin:not(.cm-hidden-codeblock):not(.pec-hide-block-header) {
-  border-top-left-radius: var(--code-radius, 6px) !important;
-  border-top-right-radius: var(--code-radius, 6px) !important;
-  margin-top: 6px !important;
-  padding-top: 4px !important;
-  font-weight: 600;
-  color: var(--text-accent, var(--interactive-accent)) !important;
-  border-bottom: 1px solid var(--background-modifier-border) !important;
-}
-
-/* Closing fence footer styling in Live Preview Editing Mode */
-.markdown-source-view.mod-cm6
-  div.cm-line.HyperMD-codeblock-end:not(.cm-hidden-codeblock):not(.pec-hide-block-header) {
-  border-bottom-left-radius: var(--code-radius, 6px) !important;
-  border-bottom-right-radius: var(--code-radius, 6px) !important;
-  margin-bottom: 6px !important;
-  padding-bottom: 4px !important;
-  color: var(--text-faint) !important;
-}
-
 .cm-prism-token {
   font-family: var(--font-monospace);
   font-size: var(--code-size);
@@ -186,7 +164,8 @@ div.markdown-preview-view
   :is(
     div.HyperMD-codeblock-begin:is(
         .cm-hidden-codeblock,
-        .pec-hide-block-header
+        .pec-hide-block-header,
+        :has(+ div.cm-preview-code-block)
       ),
     div.HyperMD-codeblock-end:is(.cm-hidden-codeblock, .pec-hide-block-header),
     div.cm-preview-code-block + div.HyperMD-codeblock-end

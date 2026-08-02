@@ -4,11 +4,11 @@
 > 이 플러그인은 AI 주도로 개발되었기 때문에 사용시 주의가 필요합니다.
 >
 > 번들 크기를 줄이기 위해 `one dark pro` 및 `one light` 테마만 포함하고 있습니다.
-> 다른 테마를 사용하고 싶다면, [src/themes/definitions.ts](./src/themes/definitions.ts) 파일을 수정해주세요.
+> 다른 테마를 사용하고 싶다면, [src/config.ts](./src/config.ts) 파일을 수정해주세요.
 
 
 [Shiki Highlighter](https://github.com/mProjectsCode/obsidian-shiki-plugin)을 포크하여 `shikijs`가 아닌 `prismjs`에서 동작하도록 수정된 플러그인입니다.
-또한, IME 및 렌더링 최적화를 통해 UI가 프리징 하는 현상들을 해결하였습니다.
+또한, IME 및 최적화를 통해 UI가 프리징 하는 현상들을 해결하였습니다.
 
 ## How to install
 
@@ -26,6 +26,19 @@ pnpm run build
 ```
 
 를 실행한 뒤 `dist`의 `main.js`, `manifest.json`, `styles.css`를 `.obsidian/plugins/obsidian-prism-expressive-code`에 저장합니다.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="./assets/l_1.png" width="100%"></td>
+    <td><img src="./assets/l_2.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="./assets/d_1.png" width="100%"></td>
+    <td><img src="./assets/d_2.png" width="100%"></td>
+  </tr>
+</table>
 
 
 ## Licenses

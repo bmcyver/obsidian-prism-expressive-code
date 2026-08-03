@@ -1,7 +1,6 @@
 export interface FlatToken {
   content: string;
   types: string[];
-  typeKey: string;
 }
 
 export interface PrismTokenLike {
@@ -20,7 +19,6 @@ export function flattenTokens(
       result.push({
         content: token,
         types: parentTypes,
-        typeKey: parentTypes.join(','),
       });
     } else {
       const currentTypes = [...parentTypes];
@@ -35,7 +33,6 @@ export function flattenTokens(
         result.push({
           content: token.content,
           types: currentTypes,
-          typeKey: currentTypes.join(','),
         });
       } else if (Array.isArray(token.content)) {
         flattenTokens(token.content, currentTypes, result);

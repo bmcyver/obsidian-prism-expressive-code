@@ -30,8 +30,7 @@
     "@expressive-code/plugin-text-markers": "^0.44.1",
     "@lezer/common": "^1.5.2",
     "hast-util-to-dom": "^4.0.1",
-    "obsidian": "^1.13.1",
-    "shiki": "^4.3.1"
+    "obsidian": "^1.13.1"
   },
   "devEngines": {
     "packageManager": {

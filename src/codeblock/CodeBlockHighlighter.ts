@@ -2,9 +2,9 @@ import { ExpressiveCodeEngine } from '@expressive-code/core';
 
 import type PrismExpressiveCodePlugin from '../main';
 import { getPrism } from '../prism/prismUtils';
-import { clearStyleCache, type ThemeLike } from '../prism/scopeMapping';
-import { setCm6Theme } from '../prism/cm6PrismExtension';
 import { getThemeForEC } from '../themes/ThemeMapper';
+import { getDynamicThemeCss } from '../themes/PrismThemeCss';
+import type { ThemeRegistration } from '../themes/types';
 import {
   createEcEngineConfig,
   LANGUAGE_ALIASES,
@@ -15,7 +15,9 @@ export class CodeBlockHighlighter {
   plugin: PrismExpressiveCodePlugin;
 
   ec!: ExpressiveCodeEngine;
+  activeTheme: ThemeRegistration | null = null;
   ecStyleElements = new Map<Document, HTMLStyleElement>();
+  ecScriptElements = new Map<Document, HTMLScriptElement>();
   supportedLanguages!: string[];
   safeLanguagesSet!: Set<string>;
 
@@ -41,21 +43,21 @@ export class CodeBlockHighlighter {
     );
     this.safeLanguagesSet = new Set(this.supportedLanguages);
 
-    const activeTheme = await getThemeForEC(
+    this.activeTheme = getThemeForEC(
       this.plugin.app,
       this.plugin.loadedSettings,
     );
-    setCm6Theme(activeTheme as ThemeLike);
 
     this.ec = new ExpressiveCodeEngine(
       createEcEngineConfig({
-        theme: activeTheme,
+        theme: this.activeTheme,
         settings: this.plugin.loadedSettings,
       }),
     );
 
     this.clearAllStyles();
     this.cachedThemeStyles = '';
+    this.cachedJsModules = '';
 
     const docs = this.getAllDocuments();
     for (const doc of docs) {
@@ -80,13 +82,25 @@ export class CodeBlockHighlighter {
   }
 
   private cachedThemeStyles = '';
+  private cachedJsModules = '';
 
   public async injectStyles(doc: Document): Promise<void> {
     if (!this.ec) return;
     try {
       if (!this.cachedThemeStyles) {
-        this.cachedThemeStyles = await this.ec.getThemeStyles();
+        const [ecBaseStyles, ecThemeStyles, jsModules] = await Promise.all([
+          this.ec.getBaseStyles(),
+          this.ec.getThemeStyles(),
+          this.ec.getJsModules(),
+        ]);
+        const themeName =
+          this.activeTheme?.name ??
+          (this.plugin.app.isDarkMode() ? 'dark' : 'light');
+        const prismDynamicStyles = getDynamicThemeCss(themeName);
+        this.cachedThemeStyles = `${ecBaseStyles}\n${ecThemeStyles}\n${prismDynamicStyles}`;
+        this.cachedJsModules = jsModules.join('\n');
       }
+
       const themeStyles = this.cachedThemeStyles;
       let styleEl = doc.getElementById(
         'pec-theme-styles',
@@ -104,6 +118,25 @@ export class CodeBlockHighlighter {
         styleEl.textContent = themeStyles;
       }
       this.ecStyleElements.set(doc, styleEl);
+
+      if (this.cachedJsModules) {
+        let scriptEl = doc.getElementById(
+          'pec-js-modules',
+        ) as HTMLScriptElement | null;
+        if (!scriptEl) {
+          scriptEl = (
+            doc as Document & {
+              win: Window & { createEl: (tag: string) => HTMLScriptElement };
+            }
+          ).win.createEl('script');
+          scriptEl.id = 'pec-js-modules';
+          scriptEl.textContent = this.cachedJsModules;
+          doc.head.appendChild(scriptEl);
+        } else if (scriptEl.textContent !== this.cachedJsModules) {
+          scriptEl.textContent = this.cachedJsModules;
+        }
+        this.ecScriptElements.set(doc, scriptEl);
+      }
     } catch (e) {
       console.warn('Failed to inject Expressive Code styles into document', e);
     }
@@ -115,6 +148,11 @@ export class CodeBlockHighlighter {
       styleEl.remove();
       this.ecStyleElements.delete(doc);
     }
+    const scriptEl = this.ecScriptElements.get(doc);
+    if (scriptEl) {
+      scriptEl.remove();
+      this.ecScriptElements.delete(doc);
+    }
   }
 
   private clearAllStyles(): void {
@@ -122,12 +160,15 @@ export class CodeBlockHighlighter {
       styleEl.remove();
     }
     this.ecStyleElements.clear();
+
+    for (const scriptEl of this.ecScriptElements.values()) {
+      scriptEl.remove();
+    }
+    this.ecScriptElements.clear();
   }
 
   async unload(): Promise<void> {
     this.clearAllStyles();
-    setCm6Theme(null);
-    clearStyleCache();
   }
 
   /**

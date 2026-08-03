@@ -42,7 +42,9 @@ export class CodeBlock extends MarkdownRenderChild {
     this.cachedMetaString = this.getMetaString();
   }
 
-  private getMetaString(sectionInfo?: ReturnType<MarkdownPostProcessorContext['getSectionInfo']>): string {
+  private getMetaString(
+    sectionInfo?: ReturnType<MarkdownPostProcessorContext['getSectionInfo']>,
+  ): string {
     return extractMetaString(
       this.ctx,
       this.containerEl,

@@ -1,20 +1,44 @@
 import {
-  InlineStyleAnnotation,
+  ExpressiveCodeAnnotation,
   definePlugin,
   type ExpressiveCodePlugin,
+  type AnnotationRenderOptions,
+  type ExpressiveCodeInlineRange,
 } from '@expressive-code/core';
+import { h } from '@expressive-code/core/hast';
 
 import { flattenTokens, splitTokensIntoLines } from './tokenizer';
-import { getStyleForPrismTypes, FontStyle } from './scopeMapping';
 import { LANGUAGE_ALIASES } from '../config';
 import { getPrism } from './prismUtils';
 import type * as Prism from 'prismjs';
+
+export class PrismClassAnnotation extends ExpressiveCodeAnnotation {
+  tokenClasses: string[];
+
+  constructor({
+    types,
+    inlineRange,
+  }: {
+    types: string[];
+    inlineRange: ExpressiveCodeInlineRange;
+  }) {
+    super({ inlineRange, renderPhase: 'earliest' });
+    this.tokenClasses = ['token', ...types];
+  }
+
+  render({ nodesToTransform }: AnnotationRenderOptions) {
+    const className = this.tokenClasses.join(' ');
+    return nodesToTransform.map((node) =>
+      h('span', { class: className }, node),
+    );
+  }
+}
 
 export function customPluginPrism(): ExpressiveCodePlugin {
   return definePlugin({
     name: 'Prism',
     hooks: {
-      performSyntaxAnalysis: async ({ codeBlock, styleVariants }) => {
+      performSyntaxAnalysis: async ({ codeBlock }) => {
         const codeLines = codeBlock.getLines();
         const code = codeBlock.code;
 
@@ -48,49 +72,28 @@ export function customPluginPrism(): ExpressiveCodePlugin {
 
         const lines = splitTokensIntoLines(flatTokens);
 
-        for (
-          let styleVariantIndex = 0;
-          styleVariantIndex < styleVariants.length;
-          styleVariantIndex++
-        ) {
-          const variant = styleVariants[styleVariantIndex];
-          if (!variant) continue;
-          const theme = variant.theme;
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+          const line = lines[lineIndex];
+          if (!line) continue;
 
-          for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-            const line = lines[lineIndex];
-            if (!line) continue;
+          let charIndex = 0;
+          for (const token of line) {
+            const tokenLength = token.content.length;
+            const tokenEndIndex = charIndex + tokenLength;
 
-            let charIndex = 0;
-            for (const token of line) {
-              const tokenLength = token.content.length;
-              const tokenEndIndex = charIndex + tokenLength;
-              const style = getStyleForPrismTypes(
-                theme,
-                token.types,
-                token.typeKey,
-                lowerLang,
-              );
-
-              const fs = style.fontStyle ?? FontStyle.None;
-
+            if (token.types.length > 0) {
               codeLines[lineIndex]?.addAnnotation(
-                new InlineStyleAnnotation({
-                  styleVariantIndex,
-                  color: style.color ?? theme.fg,
-                  italic: (fs & FontStyle.Italic) !== 0,
-                  bold: (fs & FontStyle.Bold) !== 0,
-                  underline: (fs & FontStyle.Underline) !== 0,
-                  strikethrough: (fs & FontStyle.Strikethrough) !== 0,
+                new PrismClassAnnotation({
+                  types: token.types,
                   inlineRange: {
                     columnStart: charIndex,
                     columnEnd: tokenEndIndex,
                   },
-                  renderPhase: 'earliest',
                 }),
               );
-              charIndex = tokenEndIndex;
             }
+
+            charIndex = tokenEndIndex;
           }
         }
       },

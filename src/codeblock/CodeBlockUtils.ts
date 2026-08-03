@@ -200,14 +200,6 @@ export function extractFenceIndentationInfo(
   return { level: 0, indent: '' };
 }
 
-export function extractFenceIndentationLevel(
-  ctx: MarkdownPostProcessorContext,
-  containerEl: HTMLElement,
-  source: string = '',
-): number {
-  return extractFenceIndentationInfo(ctx, containerEl, source).level;
-}
-
 export function estimateCodeBlockHeight(
   source: string,
   metaString?: string,

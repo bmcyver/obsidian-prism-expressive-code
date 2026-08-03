@@ -1,42 +1,7 @@
-/* Plugin Design Tokens & CSS Variables scoped to plugin containers */
 .markdown-source-view.mod-cm6,
 .markdown-preview-view,
 div.expressive-code {
-  --pec-code-background: var(--code-background);
-  --pec-code-normal: var(--text-muted);
-  --pec-code-comment: var(--text-faint);
-  --pec-code-function: var(--color-green);
-  --pec-code-important: var(--color-orange);
-  --pec-code-keyword: var(--color-pink);
-  --pec-code-property: var(--color-cyan);
-  --pec-code-punctuation: var(--text-muted);
-  --pec-code-string: var(--color-yellow);
-  --pec-code-value: var(--color-purple);
-
-  --pec-code-block-border-color: transparent;
-  --pec-code-block-border-radius: var(--code-radius);
-  --pec-code-block-border-width: 0px;
   --pec-code-block-spacing: var(--p-spacing);
-
-  --pec-highlight-red: rgba(var(--color-red-rgb), 0.5);
-  --pec-highlight-green: rgba(var(--color-green-rgb), 0.5);
-  --pec-highlight-neutral: var(--pec-code-normal);
-  --pec-highlight-red-background: rgba(var(--color-red-rgb), 0.1);
-  --pec-highlight-green-background: rgba(var(--color-green-rgb), 0.1);
-  --pec-highlight-neutral-background: rgba(var(--mono-rgb-100), 0.05);
-
-  --pec-terminal-dots-color: var(--text-faint);
-
-  --pec-tooltip-background: var(--background-modifier-message);
-  --pec-tooltip-text-color: #fafafa;
-
-  --pec-gutter-border-color: var(--background-modifier-border);
-  --pec-gutter-border-width: var(--border-width);
-  --pec-gutter-text-color: var(--text-faint);
-  --pec-gutter-text-color-highlight: var(--pec-code-normal);
-
-  --pec-active-tab-border-width: 2px;
-  --pec-active-tab-border-color: var(--pec-highlight-neutral);
 }
 
 .edit-block-button {
@@ -66,6 +31,15 @@ div.expressive-code {
 
 div.expressive-code code {
   font-variant-ligatures: no-contextual;
+}
+
+/* Ensure unified font across both Reading Mode and Live Preview Editing Mode */
+code[class*='language-'],
+pre[class*='language-'],
+div.expressive-code code,
+div.expressive-code pre,
+div.expressive-code .ec-line {
+  font-family: var(--font-monospace) !important;
 }
 
 div.expressive-code {
@@ -112,27 +86,12 @@ div.expressive-code {
   margin-block: var(--pec-code-block-spacing);
 }
 
-/* Hide frontmatter code block in reading view */
-div.markdown-preview-view
-  > div
-  > div.mod-header
-  + div
-  > div.block-language-yaml.pec-hide-in-reading-mode {
-  display: none;
-}
-
-/* Settings tab */
-.setting-item-control input.pec-custom-theme-folder {
-  min-width: 250px;
-}
-
 /* Remove default Obsidian CM6 codeblock line backgrounds when not active */
 .markdown-source-view.mod-cm6
   :is(
     .HyperMD-codeblock,
     .HyperMD-codeblock-begin,
     .HyperMD-codeblock-end,
-    .HyperMD-codeblock-bg,
     .cm-line.HyperMD-codeblock,
     .cm-line.HyperMD-list-line.HyperMD-codeblock
   ) {
@@ -148,8 +107,8 @@ div.markdown-preview-view
     div.cm-line.HyperMD-codeblock,
     div.cm-line.HyperMD-codeblock-begin,
     div.cm-line.HyperMD-codeblock-end
-  ):not(.cm-hidden-codeblock):not(.pec-hide-block-header) {
-  background-color: var(--pec-code-background, var(--code-background)) !important;
+  ):not(.cm-hidden-codeblock) {
+  background-color: var(--code-background) !important;
   padding-left: 12px !important;
   transition: background-color 0.15s ease;
 }
@@ -164,10 +123,9 @@ div.markdown-preview-view
   :is(
     div.HyperMD-codeblock-begin:is(
         .cm-hidden-codeblock,
-        .pec-hide-block-header,
         :has(+ div.cm-preview-code-block)
       ),
-    div.HyperMD-codeblock-end:is(.cm-hidden-codeblock, .pec-hide-block-header),
+    div.HyperMD-codeblock-end.cm-hidden-codeblock,
     div.cm-preview-code-block + div.HyperMD-codeblock-end
   ) {
   background-color: transparent !important;

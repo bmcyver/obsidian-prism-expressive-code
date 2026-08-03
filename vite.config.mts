@@ -1,82 +1,14 @@
 import path from 'node:path';
 import { builtinModules } from 'node:module';
 import { defineConfig, type UserConfig } from 'vite';
-import { ExpressiveCodeEngine } from '@expressive-code/core';
-import { createEcEngineConfig, EC_VIRTUAL_SETTINGS } from './src/config';
-import oneDarkPro from 'shiki/themes/one-dark-pro.mjs';
 
 const entryFile = 'src/main.ts';
-const EC_RUNTIME_MODULE_ID = 'virtual:ec-runtime';
-const EC_STYLES_MODULE_ID = 'virtual:ec-styles.css';
-const EC_RUNTIME_RESOLVED_ID = `\0${EC_RUNTIME_MODULE_ID}`;
-const EC_STYLES_RESOLVED_ID = `\0${EC_STYLES_MODULE_ID}`;
-
-function expressiveCodeBundlePlugin() {
-  let bundlePromise:
-    Promise<{ runtimeModule: string; styles: string }> | undefined;
-
-  const getBundle = async (): Promise<{
-    runtimeModule: string;
-    styles: string;
-  }> => {
-    if (!bundlePromise) {
-      bundlePromise = (async () => {
-        const ec = new ExpressiveCodeEngine(
-          createEcEngineConfig({
-            theme: oneDarkPro as any,
-            settings: EC_VIRTUAL_SETTINGS,
-          }),
-        );
-
-        const [baseStyles, jsModules] = await Promise.all([
-          ec.getBaseStyles(),
-          ec.getJsModules(),
-        ]);
-
-        return {
-          runtimeModule: jsModules.join('\n'),
-          styles: baseStyles,
-        };
-      })();
-    }
-
-    return bundlePromise;
-  };
-
-  return {
-    name: 'expressive-code-bundle',
-    resolveId(id: string): string | undefined {
-      if (id === EC_RUNTIME_MODULE_ID) {
-        return EC_RUNTIME_RESOLVED_ID;
-      }
-      if (id === EC_STYLES_MODULE_ID) {
-        return EC_STYLES_RESOLVED_ID;
-      }
-
-      return undefined;
-    },
-    async load(id: string): Promise<string | undefined> {
-      if (id !== EC_RUNTIME_RESOLVED_ID && id !== EC_STYLES_RESOLVED_ID) {
-        return undefined;
-      }
-
-      const bundle = await getBundle();
-
-      if (id === EC_RUNTIME_RESOLVED_ID) {
-        return bundle.runtimeModule;
-      }
-
-      return bundle.styles;
-    },
-  };
-}
 
 export default defineConfig(({ mode }) => {
   const prod = mode === 'production';
   const outDir = 'dist/';
 
   return {
-    plugins: [expressiveCodeBundlePlugin()],
     resolve: {
       alias: {
         src: path.resolve(__dirname, './src'),

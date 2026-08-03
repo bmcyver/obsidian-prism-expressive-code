@@ -1,7 +1,6 @@
 import {
   ExpressiveCodeTheme,
   type ExpressiveCodeEngineConfig,
-  type ExpressiveCodeThemeInput,
 } from '@expressive-code/core';
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { pluginFrames } from '@expressive-code/plugin-frames';
@@ -10,8 +9,6 @@ import { pluginTextMarkers } from '@expressive-code/plugin-text-markers';
 import { customPluginPrism } from './prism/CustomPluginPrism';
 import { type ThemeRegistration, type ThemeDefinition } from './themes/types';
 
-export type { ThemeRegistration, ThemeDefinition } from './themes/types';
-
 // ============================================================================
 // 1. 테마 설정 (Themes Configuration)
 // ============================================================================
@@ -19,12 +16,26 @@ export const THEMES: ThemeDefinition[] = [
   {
     id: 'one-dark-pro',
     displayName: 'One Dark Pro (dark)',
-    import: () => import('shiki/themes/one-dark-pro.mjs'),
+    theme: {
+      name: 'one-dark-pro',
+      type: 'dark',
+      colors: {
+        'editor.background': '#282c34',
+        'editor.foreground': '#abb2bf',
+      },
+    },
   },
   {
     id: 'one-light',
     displayName: 'One Light (light)',
-    import: () => import('shiki/themes/one-light.mjs'),
+    theme: {
+      name: 'one-light',
+      type: 'light',
+      colors: {
+        'editor.background': '#fafafa',
+        'editor.foreground': '#383a42',
+      },
+    },
   },
 ];
 
@@ -66,22 +77,11 @@ export interface EcConfigInput {
   settings: EcSettingsProps;
 }
 
-export const EC_VIRTUAL_SETTINGS: EcSettingsProps = {
-  ecDefaultShowLineNumbers: false,
-  ecDefaultWrap: false,
-  ecDefaultFrame: 'auto',
-  ecDefaultCollapseStyle: 'collapsible-auto',
-};
-
 export function createEcEngineConfig(
   input: EcConfigInput,
 ): ExpressiveCodeEngineConfig {
   return {
-    themes: [
-      new ExpressiveCodeTheme(
-        input.theme as unknown as ExpressiveCodeThemeInput,
-      ),
-    ],
+    themes: [new ExpressiveCodeTheme(input.theme)],
     plugins: [
       customPluginPrism(),
       pluginCollapsibleSections(),

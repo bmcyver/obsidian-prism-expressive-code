@@ -7,24 +7,12 @@ import {
 } from '@codemirror/view';
 import { RangeSetBuilder } from '@codemirror/state';
 import { getPrism } from './prismUtils';
-import { flattenTokens } from './tokenizer';
-import {
-  getStyleForPrismTypes,
-  getThemeDefaultFg,
-  FontStyle,
-  type ThemeLike,
-} from './scopeMapping';
+import { flattenTokens, splitTokensIntoLines } from './tokenizer';
 import { LANGUAGE_ALIASES } from '../config';
 
-let currentLoadedTheme: ThemeLike | null = null;
-
-export function setCm6Theme(theme: ThemeLike | null): void {
-  currentLoadedTheme = theme;
-}
-
 /**
- * Live Preview / Editing view 상에서 PrismJS 및 Expressive Code 테마 색상을 이용해
- * 토큰 색상 꼬임 없이 100% 라인 정확도로 하이라이팅하는 CodeMirror 6 Extension
+ * Live Preview / Editing view 상에서 PrismJS 전체 블록 단위 토큰화 기반으로
+ * Reading 모드(Expressive Code)와 100% 동일하게 하이라이팅을 제공하는 CodeMirror 6 Extension
  */
 function createPrismDecorations(view: EditorView): DecorationSet {
   const prism = getPrism();
@@ -41,12 +29,21 @@ function createPrismDecorations(view: EditorView): DecorationSet {
 
   const builder = new RangeSetBuilder<Decoration>();
   const doc = view.state.doc;
-  const theme = currentLoadedTheme;
-  const defaultFg = getThemeDefaultFg(theme);
 
+  interface BlockLine {
+    text: string;
+    from: number;
+  }
+
+  interface CodeBlockInfo {
+    lang: string;
+    lines: BlockLine[];
+  }
+
+  const codeBlocks: CodeBlockInfo[] = [];
   let inCodeBlock = false;
-  let codeBlockLang = '';
-  let blockLines: { text: string; from: number }[] = [];
+  let currentLang = '';
+  let currentLines: BlockLine[] = [];
 
   for (let i = 1; i <= doc.lines; i++) {
     const line = doc.line(i);
@@ -57,90 +54,90 @@ function createPrismDecorations(view: EditorView): DecorationSet {
         inCodeBlock = true;
         const afterFence = trimmed.slice(3).trim();
         const langMatch = afterFence.split(/\s+/)[0] || '';
-        let lang = langMatch.toLowerCase();
-        codeBlockLang = LANGUAGE_ALIASES[lang] ?? lang;
-        blockLines = [];
+        const lang = langMatch.toLowerCase();
+        currentLang = LANGUAGE_ALIASES[lang] ?? lang;
+        currentLines = [];
       } else {
         inCodeBlock = false;
-        if (codeBlockLang && blockLines.length > 0) {
-          const grammar =
-            prism.languages[codeBlockLang] ??
-            prism.languages.plaintext ??
-            prism.languages.text;
-
-          if (grammar) {
-            // 개별 라인 단위 토큰화 (화면 보임 범위 밖 라인은 토큰화/데코레이션 생성 스킵하여 성능 극대화)
-            for (const bLine of blockLines) {
-              const lineTo = bLine.from + bLine.text.length;
-              if (lineTo < minVisibleFrom || bLine.from > maxVisibleTo) {
-                continue;
-              }
-              if (bLine.text.length === 0) continue;
-
-              const lineTokens = prism.tokenize(bLine.text, grammar);
-              const flatTokens = flattenTokens(lineTokens);
-
-              let charOffset = 0;
-              for (const token of flatTokens) {
-                const tokenLen = token.content.length;
-                if (tokenLen > 0) {
-                  const tokenFrom = bLine.from + charOffset;
-                  const tokenTo = tokenFrom + tokenLen;
-
-                  if (
-                    tokenFrom >= minVisibleFrom &&
-                    tokenTo <= maxVisibleTo &&
-                    tokenFrom < tokenTo &&
-                    tokenTo <= doc.length
-                  ) {
-                    let styleCss = '';
-                    if (theme) {
-                      const style = getStyleForPrismTypes(
-                        theme,
-                        token.types,
-                        token.typeKey,
-                        codeBlockLang,
-                      );
-                      const colorToUse = style.color || defaultFg;
-                      if (colorToUse) {
-                        styleCss += `color: ${colorToUse} !important;`;
-                      }
-                      if (style.fontStyle) {
-                        if ((style.fontStyle & FontStyle.Italic) !== 0) {
-                          styleCss += 'font-style: italic;';
-                        }
-                        if ((style.fontStyle & FontStyle.Bold) !== 0) {
-                          styleCss += 'font-weight: bold;';
-                        }
-                        if ((style.fontStyle & FontStyle.Underline) !== 0) {
-                          styleCss += 'text-decoration: underline;';
-                        }
-                      }
-                    }
-
-                    const tokenClasses = token.types
-                      .map((t) => `token ${t}`)
-                      .join(' ');
-
-                    builder.add(
-                      tokenFrom,
-                      tokenTo,
-                      Decoration.mark({
-                        class: `cm-prism-token ${tokenClasses}`,
-                        attributes: styleCss ? { style: styleCss } : undefined,
-                      }),
-                    );
-                  }
-                }
-                charOffset += tokenLen;
-              }
-            }
-          }
+        if (currentLang && currentLines.length > 0) {
+          codeBlocks.push({
+            lang: currentLang,
+            lines: currentLines,
+          });
         }
-        blockLines = [];
+        currentLines = [];
       }
     } else if (inCodeBlock) {
-      blockLines.push({ text: line.text, from: line.from });
+      currentLines.push({ text: line.text, from: line.from });
+    } else if (line.from > maxVisibleTo) {
+      // 바깥 영역이고 코드블록 안이 아닌 경우에만 빠른 종료
+      break;
+    }
+  }
+
+  // 파일 끝까지 닫는 펜스가 없는 코드블록 처리
+  if (inCodeBlock && currentLang && currentLines.length > 0) {
+    codeBlocks.push({
+      lang: currentLang,
+      lines: currentLines,
+    });
+  }
+
+  for (const block of codeBlocks) {
+    const grammar =
+      prism.languages[block.lang] ??
+      prism.languages.plaintext ??
+      prism.languages.text;
+
+    if (!grammar) continue;
+
+    // Reading 모드(CustomPluginPrism)와 동일하게 전체 블록 코드를 한 번에 토큰화
+    const fullCode = block.lines.map((l) => l.text).join('\n');
+    const prismTokens = prism.tokenize(fullCode, grammar);
+    const flatTokens = flattenTokens(prismTokens);
+    const lineTokensArray = splitTokensIntoLines(flatTokens);
+
+    for (
+      let lineIdx = 0;
+      lineIdx < block.lines.length && lineIdx < lineTokensArray.length;
+      lineIdx++
+    ) {
+      const bLine = block.lines[lineIdx]!;
+      const lineTokens = lineTokensArray[lineIdx];
+      if (!lineTokens) continue;
+
+      const lineTo = bLine.from + bLine.text.length;
+      if (lineTo < minVisibleFrom || bLine.from > maxVisibleTo) {
+        continue;
+      }
+
+      let charOffset = 0;
+      for (const token of lineTokens) {
+        const tokenLen = token.content.length;
+        if (tokenLen > 0) {
+          const tokenFrom = bLine.from + charOffset;
+          const tokenTo = tokenFrom + tokenLen;
+
+          if (
+            tokenFrom >= minVisibleFrom &&
+            tokenTo <= maxVisibleTo &&
+            tokenFrom < tokenTo &&
+            tokenTo <= doc.length &&
+            token.types.length > 0
+          ) {
+            const tokenClasses = ['token', ...token.types].join(' ');
+
+            builder.add(
+              tokenFrom,
+              tokenTo,
+              Decoration.mark({
+                class: `cm-prism-token ${tokenClasses}`,
+              }),
+            );
+          }
+        }
+        charOffset += tokenLen;
+      }
     }
   }
 

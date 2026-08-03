@@ -17,79 +17,65 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
 
     const themes = THEME_DISPLAY_NAMES;
 
-    new Setting(this.containerEl).setName('Highlighter Control').setHeading();
+    new Setting(this.containerEl).setName('코드 블록 기본 설정').setHeading();
 
     new Setting(this.containerEl)
-      .setName('Reload Highlighter Engine')
-      .setDesc(
-        'Applies setting changes immediately by reloading the Expressive Code engine.',
-      )
-      .addButton((button) => {
-        button
-          .setCta()
-          .setButtonText('Reload Highlighter')
-          .onClick(async () => {
-            button.setDisabled(true);
-            await this.plugin.reloadHighlighter();
-            button.setDisabled(false);
-          });
-      });
-
-    new Setting(this.containerEl).setName('Code Block Defaults').setHeading();
-
-    new Setting(this.containerEl)
-      .setName('Show line numbers')
-      .setDesc(
-        'Controls whether line numbers are shown by default on code blocks.',
-      )
+      .setName('줄 번호 표시')
+      .setDesc('코드 블록에 기본적으로 줄 번호를 표시할지 여부를 설정합니다.')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.ecDefaultShowLineNumbers)
           .onChange(async (value) => {
             this.plugin.settings.ecDefaultShowLineNumbers = value;
             await this.plugin.saveSettings();
+            await this.plugin.reloadHighlighter();
           });
       });
 
     new Setting(this.containerEl)
-      .setName('Wrap lines')
-      .setDesc('Controls whether code block lines wrap by default.')
+      .setName('자동 줄 바꿈')
+      .setDesc(
+        '코드 블록의 긴 줄을 기본적으로 자동 줄 바꿈할지 여부를 설정합니다.',
+      )
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.ecDefaultWrap)
           .onChange(async (value) => {
             this.plugin.settings.ecDefaultWrap = value;
             await this.plugin.saveSettings();
+            await this.plugin.reloadHighlighter();
           });
       });
 
     new Setting(this.containerEl)
-      .setName('Frame style')
-      .setDesc('Controls the default frame type for code blocks.')
+      .setName('프레임 스타일')
+      .setDesc('코드 블록의 기본 프레임 형식을 설정합니다.')
       .addDropdown((dropdown) => {
         dropdown.addOptions({
-          [FrameType.Code]: 'Code',
-          [FrameType.Terminal]: 'Terminal',
-          [FrameType.None]: 'None',
-          [FrameType.Auto]: 'Auto',
+          [FrameType.Auto]: '자동 (Auto)',
+          [FrameType.Code]: '코드 (Code)',
+          [FrameType.Terminal]: '터미널 (Terminal)',
+          [FrameType.None]: '사용 안 함 (None)',
         });
         dropdown
           .setValue(this.plugin.settings.ecDefaultFrame)
           .onChange(async (value) => {
             this.plugin.settings.ecDefaultFrame = value as FrameType;
             await this.plugin.saveSettings();
+            await this.plugin.reloadHighlighter();
           });
       });
 
     new Setting(this.containerEl)
-      .setName('Collapse style')
-      .setDesc('Controls how collapsible code sections behave and are styled.')
+      .setName('접기 스타일')
+      .setDesc('접을 수 있는 코드 영역의 동작 및 스타일을 설정합니다.')
       .addDropdown((dropdown) => {
         dropdown.addOptions({
-          [CollapseStyle.Github]: 'GitHub (non-recollapsible)',
-          [CollapseStyle.CollapsibleStart]: 'Collapsible Start',
-          [CollapseStyle.CollapsibleEnd]: 'Collapsible End',
-          [CollapseStyle.CollapsibleAuto]: 'Collapsible Auto',
+          [CollapseStyle.CollapsibleAuto]: '자동 접기 (Collapsible Auto)',
+          [CollapseStyle.CollapsibleStart]:
+            '시작 위치 접기 (Collapsible Start)',
+          [CollapseStyle.CollapsibleEnd]: '끝 위치 접기 (Collapsible End)',
+          [CollapseStyle.Github]: 'GitHub 스타일 (다시 접기 불가)',
         });
         dropdown
           .setValue(this.plugin.settings.ecDefaultCollapseStyle)
@@ -97,15 +83,16 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
             this.plugin.settings.ecDefaultCollapseStyle =
               value as CollapseStyle;
             await this.plugin.saveSettings();
+            await this.plugin.reloadHighlighter();
           });
       });
 
-    new Setting(this.containerEl).setName('Themes & Appearance').setHeading();
+    new Setting(this.containerEl).setName('테마 및 외관').setHeading();
 
     new Setting(this.containerEl)
-      .setName('Dark theme')
+      .setName('다크 테마')
       .setDesc(
-        "The syntax theme for code blocks when Obsidian's base color scheme is dark.",
+        'Obsidian의 기본 색상 테마가 다크 모드일 때 사용할 구문 강조 테마입니다.',
       )
       .addDropdown((dropdown) => {
         dropdown.addOptions(themes);
@@ -114,13 +101,14 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.darkTheme = value;
             await this.plugin.saveSettings();
+            await this.plugin.reloadHighlighter();
           });
       });
 
     new Setting(this.containerEl)
-      .setName('Light theme')
+      .setName('라이트 테마')
       .setDesc(
-        "The syntax theme for code blocks when Obsidian's base color scheme is light.",
+        'Obsidian의 기본 색상 테마가 라이트 모드일 때 사용할 구문 강조 테마입니다.',
       )
       .addDropdown((dropdown) => {
         dropdown.addOptions(themes);
@@ -129,6 +117,7 @@ export class PrismExpressiveCodeSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.lightTheme = value;
             await this.plugin.saveSettings();
+            await this.plugin.reloadHighlighter();
           });
       });
   }

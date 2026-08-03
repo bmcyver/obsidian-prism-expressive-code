@@ -36,52 +36,72 @@ export function getThemeDefaultFg(theme: ThemeLike | null): string | undefined {
   return undefined;
 }
 
-export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
+// ============================================================================
+// 1. 일반 언어 통합 Scope 매핑 (General Prism -> TextMate Scope Mapping)
+// ============================================================================
+
+/** 주석, 리터럴, 변수, 함수 등 기본 공통 토큰 매핑 */
+const COMMON_SCOPE_MAP: Record<string, string[]> = {
   comment: ['comment'],
   prolog: ['comment'],
-  doctype: ['keyword.other.doctype', 'meta.tag.metadata', 'keyword'],
   cdata: ['comment'],
+  doctype: ['keyword.other.doctype', 'meta.tag.metadata', 'keyword'],
   punctuation: ['punctuation', 'meta.brace'],
-  property: [
-    'support.type.property-name',
-    'variable.other.property',
-    'support.type.property-name.css',
-  ],
-  tag: ['entity.name.tag'],
-  boolean: ['constant.language.boolean'],
-  number: ['constant.numeric'],
-  constant: ['constant'],
-  symbol: ['constant.other.symbol'],
-  deleted: ['markup.deleted'],
-  selector: ['meta.selector'],
-  'attr-name': ['entity.other.attribute-name'],
+  delimiter: ['punctuation.definition', 'punctuation'],
   string: ['string'],
   char: ['string.char'],
+  number: ['constant.numeric'],
+  boolean: ['constant.language.boolean'],
+  constant: ['constant'],
+  symbol: ['constant.other.symbol'],
+  null: ['constant.language.null', 'constant.language'],
+  keyword: ['keyword', 'storage.type'],
+  modifier: ['storage.modifier', 'keyword.other'],
+  operator: ['keyword.operator'],
   builtin: [
     'support.function.builtin',
     'support.function',
     'support.type',
     'support.class',
   ],
-  inserted: ['markup.inserted'],
-  operator: ['keyword.operator'],
-  entity: ['entity.name', 'constant.character.entity'],
-  url: ['markup.underline.link'],
   variable: ['variable'],
-  keyword: ['keyword', 'storage.type'],
-  'class-name': ['entity.name.type.class', 'support.class'],
+  parameter: ['variable.parameter', 'variable.other.argument', 'variable'],
+  'function-arg': ['variable.parameter', 'variable'],
+  property: [
+    'support.type.property-name',
+    'variable.other.property',
+    'support.type.property-name.css',
+  ],
+  'property-access': ['variable.other.property', 'support.type.property-name'],
   function: ['entity.name.function', 'support.function'],
-  regex: ['string.regexp'],
-  'regex-flags': ['storage.modifier.regex', 'keyword.other.regex'],
-  'regex-delimiter': ['punctuation.definition.string.regex', 'punctuation'],
-  important: ['keyword.other.important.css', 'keyword.other', 'keyword'],
-  bold: ['markup.bold', 'markup.bold.markdown', 'strong'],
-  italic: ['markup.italic', 'markup.italic.markdown', 'emphasis'],
+  'class-name': ['entity.name.type.class', 'support.class'],
+  type: ['entity.name.type', 'support.type', 'storage.type'],
+  datatype: ['support.type', 'storage.type'],
+  namespace: [
+    'entity.name.namespace',
+    'storage.type.namespace',
+    'support.other.namespace',
+  ],
+  entity: ['entity.name', 'constant.character.entity'],
+  key: [
+    'entity.name.tag.yaml',
+    'entity.name.tag',
+    'support.type.property-name',
+    'variable.other.property',
+    'variable.object.property',
+    'entity.name.variable',
+    'entity.name',
+  ],
+};
+
+/** HTML, CSS, Web 관련 토큰 매핑 */
+const WEB_SCOPE_MAP: Record<string, string[]> = {
+  tag: ['entity.name.tag'],
+  'tag-id': ['entity.name.tag'],
+  'attr-name': ['entity.other.attribute-name'],
   'attr-value': ['string'],
   'special-attr': ['entity.other.attribute-name'],
-  'tag-id': ['entity.name.tag'],
-  value: ['support.constant.property-value'],
-  unit: ['keyword.other.unit'],
+  selector: ['meta.selector'],
   id: ['entity.other.attribute-name.id'],
   class: ['entity.other.attribute-name.class'],
   'pseudo-element': ['entity.other.attribute-name.pseudo-element'],
@@ -90,6 +110,41 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   pseudo_class: ['entity.other.attribute-name.pseudo-class'],
   color: ['constant.other.color'],
   hexcode: ['constant.other.color.rgb-value', 'constant.other.color'],
+  unit: ['keyword.other.unit'],
+  atrule: ['keyword.control', 'keyword'],
+  important: ['keyword.other.important.css', 'keyword.other', 'keyword'],
+  value: ['support.constant.property-value'],
+  style: ['meta.embedded.block.css', 'source.css'],
+  script: ['meta.embedded.block.javascript', 'source.js'],
+  'language-css': ['meta.embedded.block.css', 'source.css'],
+  'language-javascript': ['meta.embedded.block.javascript', 'source.js'],
+};
+
+/** 마크다운 및 서식 관련 토큰 매핑 */
+const MARKDOWN_SCOPE_MAP: Record<string, string[]> = {
+  title: ['entity.name.section', 'markup.heading'],
+  code: ['markup.inline.raw'],
+  'code-block': ['markup.raw.block', 'markup.raw'],
+  strike: ['markup.strikethrough', 'markup.strikethrough.markdown'],
+  strikethrough: ['markup.strikethrough', 'markup.strikethrough.markdown'],
+  blockquote: ['markup.quote'],
+  list: ['markup.list'],
+  link: ['string.other.link'],
+  'url-link': ['markup.underline.link', 'string.other.link'],
+  url: ['markup.underline.link'],
+  bold: ['markup.bold', 'markup.bold.markdown', 'strong'],
+  italic: ['markup.italic', 'markup.italic.markdown', 'emphasis'],
+  deleted: ['markup.deleted'],
+  inserted: ['markup.inserted'],
+  table: ['markup.other'],
+  'table-header': ['entity.name.section', 'markup.heading'],
+  'table-data': ['markup.raw'],
+  hr: ['punctuation.definition.thematic-break', 'keyword.operator'],
+  coord: ['meta.diff.header', 'punctuation.definition.range.diff'],
+};
+
+/** 고급 언어 구조체, 패키지, 문자열 템플릿 매핑 */
+const ADVANCED_SCOPE_MAP: Record<string, string[]> = {
   macro: [
     'entity.name.function.macro',
     'entity.name.function',
@@ -121,18 +176,41 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   'directive-hash': ['punctuation.definition.directive', 'punctuation'],
   include: ['keyword.control.import.include', 'keyword.control.import'],
   'header-name': ['string.quoted.other.lt-gt.include', 'string'],
-  style: ['meta.embedded.block.css', 'source.css'],
-  script: ['meta.embedded.block.javascript', 'source.js'],
-  'language-css': ['meta.embedded.block.css', 'source.css'],
-  'language-javascript': ['meta.embedded.block.javascript', 'source.js'],
-  'double-colon': ['punctuation.accessor', 'punctuation'],
-  namespace: [
-    'entity.name.namespace',
-    'storage.type.namespace',
-    'support.other.namespace',
+  package: ['keyword.other.package', 'keyword'],
+  import: ['keyword.control.import', 'keyword'],
+  'package-name': ['entity.name.package', 'entity.name.namespace'],
+  'import-path': ['string.quoted.double', 'string'],
+  regex: ['string.regexp'],
+  'regex-flags': ['storage.modifier.regex', 'keyword.other.regex'],
+  'regex-delimiter': ['punctuation.definition.string.regex', 'punctuation'],
+  'template-string': ['string.template', 'string.quoted.template', 'string'],
+  'template-literal': ['string.template', 'string.quoted.template', 'string'],
+  interpolation: ['meta.template.expression'],
+  'interpolation-punctuation': [
+    'punctuation.definition.template-expression',
+    'punctuation',
   ],
-  type: ['entity.name.type', 'support.type', 'storage.type'],
-  datatype: ['support.type', 'storage.type'],
+  'f-string': ['string.interpolated', 'string.quoted.fstring', 'string'],
+  'format-spec': ['meta.format.specifier', 'storage.type.format'],
+  docstring: [
+    'comment.block.documentation',
+    'comment',
+    'string.quoted.docstring',
+  ],
+  'triple-quoted-string': [
+    'comment.block.documentation',
+    'comment',
+    'string.quoted.triple',
+    'string',
+  ],
+  'annotation-punctuation': [
+    'punctuation.definition.annotation',
+    'punctuation',
+  ],
+  'template-field': [
+    'meta.template.expression',
+    'entity.string.template.element',
+  ],
   lifetime: ['entity.name.type.lifetime', 'storage.modifier.lifetime'],
   attribute: ['meta.attribute', 'entity.other.attribute-name'],
   generics: ['entity.name.type'],
@@ -149,25 +227,6 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   ],
   'doctype-tag': ['entity.name.tag', 'keyword'],
   'built-in': ['support.function', 'support.type'],
-  key: [
-    'entity.name.tag.yaml',
-    'entity.name.tag',
-    'support.type.property-name',
-    'variable.other.property',
-    'variable.object.property',
-    'entity.name.variable',
-    'entity.name',
-  ],
-  atrule: ['keyword.control', 'keyword'],
-  title: ['entity.name.section', 'markup.heading'],
-  code: ['markup.inline.raw'],
-  'code-block': ['markup.raw.block', 'markup.raw'],
-  strike: ['markup.strikethrough', 'markup.strikethrough.markdown'],
-  strikethrough: ['markup.strikethrough', 'markup.strikethrough.markdown'],
-  blockquote: ['markup.quote'],
-  list: ['markup.list'],
-  link: ['string.other.link'],
-  'url-link': ['markup.underline.link', 'string.other.link'],
   environment: ['variable.other.constant'],
   file: ['string'],
   'data-type': ['support.type', 'storage.type'],
@@ -187,43 +246,38 @@ export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
   'file-descriptor': ['constant.numeric.file-descriptor', 'constant.numeric'],
   prefix: ['keyword.operator.prefix', 'keyword'],
   subroutine: ['entity.name.function', 'support.function'],
+  'double-colon': ['punctuation.accessor', 'punctuation'],
+};
 
-  'template-string': ['string.template', 'string.quoted.template', 'string'],
-  'template-literal': ['string.template', 'string.quoted.template', 'string'],
-  interpolation: ['meta.template.expression'],
-  'interpolation-punctuation': [
-    'punctuation.definition.template-expression',
-    'punctuation',
-  ],
+/** 전체 통합 Prism -> TextMate Scope 테이블 */
+export const PRISM_TO_SCOPE_MAP: Record<string, string[]> = {
+  ...COMMON_SCOPE_MAP,
+  ...WEB_SCOPE_MAP,
+  ...MARKDOWN_SCOPE_MAP,
+  ...ADVANCED_SCOPE_MAP,
+};
 
-  'f-string': ['string.interpolated', 'string.quoted.fstring', 'string'],
-  'format-spec': ['meta.format.specifier', 'storage.type.format'],
-  docstring: [
-    'comment.block.documentation',
-    'comment',
-    'string.quoted.docstring',
-  ],
-  'triple-quoted-string': [
-    'comment.block.documentation',
-    'comment',
-    'string.quoted.triple',
-    'string',
-  ],
-
-  'annotation-punctuation': [
-    'punctuation.definition.annotation',
-    'punctuation',
-  ],
-  'template-field': [
-    'meta.template.expression',
-    'entity.string.template.element',
-  ],
-
-  package: ['keyword.other.package', 'keyword'],
-  import: ['keyword.control.import', 'keyword'],
-  'package-name': ['entity.name.package', 'entity.name.namespace'],
-  'import-path': ['string.quoted.double', 'string'],
-  null: ['constant.language.null', 'constant.language'],
+// ============================================================================
+// 2. 언어별 격리(Isolated) Scope 매핑 (Language-Specific Overrides)
+// ============================================================================
+export const LANGUAGE_SPECIFIC_SCOPE_MAPS: Record<
+  string,
+  Record<string, string[]>
+> = {
+  http: {
+    'header-name': ['keyword.control', 'keyword', 'support.type.property-name'],
+    'header-value': ['string', 'string.unquoted', 'variable.other.property'],
+    'request-target': [
+      'string.other.link',
+      'markup.underline.link',
+      'variable.parameter',
+    ],
+    'http-version': ['keyword.other', 'keyword', 'constant.language'],
+    'status-code': ['constant.numeric', 'constant.language'],
+    'reason-phrase': ['string', 'entity.name.type'],
+    'request-line': ['meta.request.http'],
+    'response-status': ['meta.response.http'],
+  },
 };
 
 interface AnalyzedRule {
@@ -437,10 +491,22 @@ const FALLBACK_SCOPE_PATTERNS: [string[], string[]][] = [
   ],
 ];
 
-export function getScopesForPrismType(type: string): string[] {
+export function getScopesForPrismType(type: string, lang?: string): string[] {
+  const lowerLang = lang?.toLowerCase();
+
+  // 1. 특정 언어 전용 오버라이드 매핑 확인
+  if (lowerLang && LANGUAGE_SPECIFIC_SCOPE_MAPS[lowerLang]) {
+    const langMap = LANGUAGE_SPECIFIC_SCOPE_MAPS[lowerLang];
+    if (langMap && langMap[type]) {
+      return langMap[type];
+    }
+  }
+
+  // 2. 통합 일반 매핑 확인
   const mapped = PRISM_TO_SCOPE_MAP[type];
   if (mapped) return mapped;
 
+  // 3. 키워드 기반 Fallback 패턴 확인
   const lower = type.toLowerCase();
   for (const [keywords, scopes] of FALLBACK_SCOPE_PATTERNS) {
     if (keywords.some((kw) => lower.includes(kw))) {
@@ -488,7 +554,7 @@ export function getStyleForPrismTypes(
   for (let i = types.length - 1; i >= 0; i--) {
     const type = types[i];
     if (!type) continue;
-    const mappedScopes = getScopesForPrismType(type);
+    const mappedScopes = getScopesForPrismType(type, lowerLang);
 
     let style: { color?: string; fontStyle?: string } | undefined;
     if (lowerLang) {

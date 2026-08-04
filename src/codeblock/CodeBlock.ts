@@ -5,9 +5,8 @@ import {
 } from 'obsidian';
 import { toDom } from 'hast-util-to-dom';
 import {
-  extractMetaString,
+  findFenceInfo,
   stripCommonIndentation,
-  extractFenceIndentationInfo,
   estimateCodeBlockHeight,
 } from './CodeBlockUtils';
 
@@ -45,13 +44,8 @@ export class CodeBlock extends MarkdownRenderChild {
   private getMetaString(
     sectionInfo?: ReturnType<MarkdownPostProcessorContext['getSectionInfo']>,
   ): string {
-    return extractMetaString(
-      this.ctx,
-      this.containerEl,
-      this.language,
-      this.source,
-      sectionInfo,
-    );
+    return findFenceInfo(this.ctx, this.containerEl, this.source, sectionInfo)
+      .meta;
   }
 
   public async startRender(): Promise<void> {
@@ -65,8 +59,7 @@ export class CodeBlock extends MarkdownRenderChild {
     }
 
     const sectionInfo = this.ctx.getSectionInfo(this.containerEl);
-
-    const { level, indent: fenceIndent } = extractFenceIndentationInfo(
+    const { level, indent: fenceIndent } = findFenceInfo(
       this.ctx,
       this.containerEl,
       this.source,
@@ -152,11 +145,7 @@ export class CodeBlock extends MarkdownRenderChild {
   }
 
   public async forceRerender(): Promise<void> {
-    if (this.rendered) {
-      await this.render(this.cachedMetaString);
-    } else {
-      await this.startRender();
-    }
+    await this.render(this.cachedMetaString);
   }
 
   public onload(): void {
@@ -165,7 +154,7 @@ export class CodeBlock extends MarkdownRenderChild {
     this.plugin.codeBlockManager.add(this);
 
     const sectionInfo = this.ctx.getSectionInfo(this.containerEl);
-    const { indent: fenceIndent } = extractFenceIndentationInfo(
+    const { indent: fenceIndent } = findFenceInfo(
       this.ctx,
       this.containerEl,
       this.source,
@@ -184,7 +173,7 @@ export class CodeBlock extends MarkdownRenderChild {
       `${estimatedHeight}px`,
     );
 
-    // Render immediately on load, just like the original-plugin
+    // Render immediately on load
     void this.startRender();
   }
 

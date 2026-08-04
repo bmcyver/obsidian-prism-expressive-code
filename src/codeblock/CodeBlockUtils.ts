@@ -3,6 +3,12 @@ import {
   type MarkdownSectionInformation,
 } from 'obsidian';
 
+export interface FenceInfo {
+  meta: string;
+  level: number;
+  indent: string;
+}
+
 function getLineAt(text: string, lineIndex: number): string | undefined {
   let startIdx = 0;
   for (let i = 0; i < lineIndex; i++) {
@@ -19,30 +25,30 @@ function getLineAt(text: string, lineIndex: number): string | undefined {
   return text.slice(startIdx, endIdx);
 }
 
-export function extractMetaString(
+/**
+ * 코드 블록의 메타 문자열, 들여쓰기 레벨 및 들여쓰기 문자열을 단일 스캔으로 추출합니다.
+ */
+export function findFenceInfo(
   ctx: MarkdownPostProcessorContext,
   containerEl: HTMLElement,
-  language: string,
   source: string = '',
   existingSectionInfo?: MarkdownSectionInformation | null,
-): string {
+): FenceInfo {
   const sectionInfo =
     existingSectionInfo !== undefined
       ? existingSectionInfo
       : ctx.getSectionInfo(containerEl);
 
-  if (sectionInfo === null) {
-    return '';
+  if (!sectionInfo) {
+    return { meta: '', level: 0, indent: '' };
   }
 
-  // Find the first non-empty line of the code block's source to uniquely identify this block
   const firstSourceLine =
     source
       .split('\n')
       .map((l) => l.trim())
       .find((l) => l.length > 0) || '';
 
-  // Scan lines from lineStart to lineEnd to find the fence marker for THIS specific block
   for (let i = sectionInfo.lineStart; i <= sectionInfo.lineEnd; i++) {
     const line = getLineAt(sectionInfo.text, i);
     if (line === undefined) break;
@@ -60,7 +66,6 @@ export function extractMetaString(
         markerLength++;
       }
 
-      // Check if the next line after this fence marker matches our code block's source
       const nextLine = getLineAt(sectionInfo.text, i + 1)?.trim() || '';
       const isNextLineFence =
         nextLine.startsWith('```') || nextLine.startsWith('~~~');
@@ -71,17 +76,58 @@ export function extractMetaString(
           : isNextLineFence || nextLine === '';
 
       if (isMatch) {
+        // 메타 문자열 추출
+        let meta = '';
         const afterMarker = trimmed.slice(markerIdx + markerLength).trimStart();
         const spaceIdx = afterMarker.indexOf(' ');
         if (spaceIdx !== -1) {
-          return afterMarker.slice(spaceIdx + 1).trim();
+          meta = afterMarker.slice(spaceIdx + 1).trim();
         }
-        return '';
+
+        // 들여쓰기 정보 계산
+        const match = /^[ \t]*/.exec(line);
+        const indent = match ? match[0] : '';
+        let spaces = 0;
+        let tabs = 0;
+        for (const char of indent) {
+          if (char === ' ') spaces++;
+          else if (char === '\t') tabs++;
+        }
+        const level = tabs + Math.floor(spaces / 4);
+
+        return { meta, level, indent };
       }
     }
   }
 
-  return '';
+  return { meta: '', level: 0, indent: '' };
+}
+
+export function extractMetaString(
+  ctx: MarkdownPostProcessorContext,
+  containerEl: HTMLElement,
+  _language: string,
+  source: string = '',
+  existingSectionInfo?: MarkdownSectionInformation | null,
+): string {
+  return findFenceInfo(ctx, containerEl, source, existingSectionInfo).meta;
+}
+
+export type FenceIndentationInfo = Omit<FenceInfo, 'meta'>;
+
+export function extractFenceIndentationInfo(
+  ctx: MarkdownPostProcessorContext,
+  containerEl: HTMLElement,
+  source: string = '',
+  existingSectionInfo?: MarkdownSectionInformation | null,
+): FenceIndentationInfo {
+  const { level, indent } = findFenceInfo(
+    ctx,
+    containerEl,
+    source,
+    existingSectionInfo,
+  );
+  return { level, indent };
 }
 
 export function stripFenceIndentation(
@@ -90,7 +136,6 @@ export function stripFenceIndentation(
 ): string {
   if (!source || !fenceIndent) return source;
 
-  const lines = source.split('\n');
   let fenceSpaces = 0;
   for (const char of fenceIndent) {
     if (char === ' ') fenceSpaces += 1;
@@ -99,7 +144,8 @@ export function stripFenceIndentation(
 
   if (fenceSpaces === 0) return source;
 
-  return lines
+  return source
+    .split('\n')
     .map((line) => {
       if (line.trim().length === 0) return '';
       if (line.startsWith(fenceIndent)) {
@@ -131,73 +177,7 @@ export function stripCommonIndentation(
   source: string,
   fenceIndent: string = '',
 ): string {
-  if (!source) return source;
-  if (fenceIndent) {
-    return stripFenceIndentation(source, fenceIndent);
-  }
-  return source;
-}
-
-export interface FenceIndentationInfo {
-  level: number;
-  indent: string;
-}
-
-export function extractFenceIndentationInfo(
-  ctx: MarkdownPostProcessorContext,
-  containerEl: HTMLElement,
-  source: string = '',
-  existingSectionInfo?: MarkdownSectionInformation | null,
-): FenceIndentationInfo {
-  const sectionInfo =
-    existingSectionInfo !== undefined
-      ? existingSectionInfo
-      : ctx.getSectionInfo(containerEl);
-  if (!sectionInfo) return { level: 0, indent: '' };
-
-  const firstSourceLine =
-    source
-      .split('\n')
-      .map((l) => l.trim())
-      .find((l) => l.length > 0) || '';
-
-  for (let i = sectionInfo.lineStart; i <= sectionInfo.lineEnd; i++) {
-    const line = getLineAt(sectionInfo.text, i);
-    if (line === undefined) break;
-
-    const trimmed = line.trim();
-    let markerIdx = trimmed.indexOf('```');
-    if (markerIdx === -1) {
-      markerIdx = trimmed.indexOf('~~~');
-    }
-
-    if (markerIdx !== -1) {
-      const nextLine = getLineAt(sectionInfo.text, i + 1)?.trim() || '';
-      const isNextLineFence =
-        nextLine.startsWith('```') || nextLine.startsWith('~~~');
-
-      const isMatch =
-        firstSourceLine.length > 0
-          ? nextLine === firstSourceLine
-          : isNextLineFence || nextLine === '';
-
-      if (isMatch) {
-        // Calculate indentation level of the code fence line itself
-        const match = /^[ \t]*/.exec(line);
-        const indent = match ? match[0] : '';
-        let spaces = 0;
-        let tabs = 0;
-        for (const char of indent) {
-          if (char === ' ') spaces++;
-          else if (char === '\t') tabs++;
-        }
-        const level = tabs + Math.floor(spaces / 4);
-        return { level, indent };
-      }
-    }
-  }
-
-  return { level: 0, indent: '' };
+  return fenceIndent ? stripFenceIndentation(source, fenceIndent) : source;
 }
 
 export function estimateCodeBlockHeight(
@@ -213,3 +193,4 @@ export function estimateCodeBlockHeight(
   const lineHeight = 20;
   return Math.round(lineCount * lineHeight + paddingAndBorders + headerHeight);
 }
+

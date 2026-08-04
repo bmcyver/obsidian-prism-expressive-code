@@ -8,8 +8,7 @@ import {
 import { h } from '@expressive-code/core/hast';
 
 import { flattenTokens, splitTokensIntoLines } from './tokenizer';
-import { LANGUAGE_ALIASES } from '../config';
-import { getPrism } from './prismUtils';
+import { getPrism, resolvePrismGrammar } from './prismUtils';
 import type * as Prism from 'prismjs';
 
 export class PrismClassAnnotation extends ExpressiveCodeAnnotation {
@@ -60,12 +59,7 @@ export function customPluginPrism(): ExpressiveCodePlugin {
         }
 
         const rawLanguage = codeBlock.language;
-        let lowerLang = rawLanguage.toLowerCase();
-        lowerLang = LANGUAGE_ALIASES[lowerLang] ?? lowerLang;
-        const grammar = prism.languages[lowerLang];
-
-        const finalGrammar =
-          grammar ?? prism.languages.plaintext ?? prism.languages.text;
+        const finalGrammar = resolvePrismGrammar(prism, rawLanguage);
         if (!finalGrammar) return;
         const prismTokens = prism.tokenize(code, finalGrammar);
         const flatTokens = flattenTokens(prismTokens);

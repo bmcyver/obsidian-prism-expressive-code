@@ -11,6 +11,25 @@ import {
   LANGUAGE_SPECIAL,
 } from '../config';
 
+function createHeadElement<K extends keyof HTMLElementTagNameMap>(
+  doc: Document,
+  tag: K,
+): HTMLElementTagNameMap[K] {
+  const win = (
+    doc as Document & {
+      win?: Window & {
+        createEl?: <T extends keyof HTMLElementTagNameMap>(
+          tag: T,
+        ) => HTMLElementTagNameMap[T];
+      };
+    }
+  ).win;
+
+  return win?.createEl
+    ? win.createEl(tag)
+    : doc.createElement(tag);
+}
+
 export class CodeBlockHighlighter {
   plugin: PrismExpressiveCodePlugin;
 
@@ -106,11 +125,7 @@ export class CodeBlockHighlighter {
         'pec-theme-styles',
       ) as HTMLStyleElement | null;
       if (!styleEl) {
-        styleEl = (
-          doc as Document & {
-            win: Window & { createEl: (tag: string) => HTMLStyleElement };
-          }
-        ).win.createEl('style');
+        styleEl = createHeadElement(doc, 'style');
         styleEl.id = 'pec-theme-styles';
         doc.head.appendChild(styleEl);
       }
@@ -124,11 +139,7 @@ export class CodeBlockHighlighter {
           'pec-js-modules',
         ) as HTMLScriptElement | null;
         if (!scriptEl) {
-          scriptEl = (
-            doc as Document & {
-              win: Window & { createEl: (tag: string) => HTMLScriptElement };
-            }
-          ).win.createEl('script');
+          scriptEl = createHeadElement(doc, 'script');
           scriptEl.id = 'pec-js-modules';
           scriptEl.textContent = this.cachedJsModules;
           doc.head.appendChild(scriptEl);

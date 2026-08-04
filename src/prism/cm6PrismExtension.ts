@@ -6,7 +6,7 @@ import {
   type ViewUpdate,
 } from '@codemirror/view';
 import { RangeSetBuilder } from '@codemirror/state';
-import { getPrism } from './prismUtils';
+import { getPrism, resolvePrismGrammar } from './prismUtils';
 import { flattenTokens, splitTokensIntoLines } from './tokenizer';
 import { LANGUAGE_ALIASES } from '../config';
 
@@ -84,10 +84,7 @@ function createPrismDecorations(view: EditorView): DecorationSet {
   }
 
   for (const block of codeBlocks) {
-    const grammar =
-      prism.languages[block.lang] ??
-      prism.languages.plaintext ??
-      prism.languages.text;
+    const grammar = resolvePrismGrammar(prism, block.lang);
 
     if (!grammar) continue;
 

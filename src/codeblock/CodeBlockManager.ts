@@ -14,11 +14,9 @@ export class CodeBlockManager {
   public registerEvents(): void {
     this.plugin.registerEvent(
       this.plugin.app.metadataCache.on('changed', (file) => {
-        if (file instanceof TFile) {
-          if (this.activeCodeBlocks.has(file.path)) {
-            for (const codeBlock of this.activeCodeBlocks.get(file.path)!) {
-              void codeBlock.rerenderOnNoteChange();
-            }
+        if (file instanceof TFile && this.activeCodeBlocks.has(file.path)) {
+          for (const codeBlock of this.activeCodeBlocks.get(file.path)!) {
+            void codeBlock.rerenderOnNoteChange();
           }
         }
       }),
@@ -26,14 +24,12 @@ export class CodeBlockManager {
 
     this.plugin.registerEvent(
       this.plugin.app.vault.on('rename', (file, oldPath) => {
-        if (file instanceof TFile) {
-          if (this.activeCodeBlocks.has(oldPath)) {
-            const blocks = this.activeCodeBlocks.get(oldPath)!;
-            this.activeCodeBlocks.delete(oldPath);
-            this.activeCodeBlocks.set(file.path, blocks);
-            for (const block of blocks) {
-              block.currentFilePath = file.path;
-            }
+        if (file instanceof TFile && this.activeCodeBlocks.has(oldPath)) {
+          const blocks = this.activeCodeBlocks.get(oldPath)!;
+          this.activeCodeBlocks.delete(oldPath);
+          this.activeCodeBlocks.set(file.path, blocks);
+          for (const block of blocks) {
+            block.currentFilePath = file.path;
           }
         }
       }),
@@ -42,32 +38,22 @@ export class CodeBlockManager {
 
   public add(codeBlock: CodeBlock): void {
     const filePath = codeBlock.currentFilePath;
-
-    if (!this.activeCodeBlocks.has(filePath)) {
-      this.activeCodeBlocks.set(filePath, new Set([codeBlock]));
-    } else {
-      this.activeCodeBlocks.get(filePath)!.add(codeBlock);
+    let set = this.activeCodeBlocks.get(filePath);
+    if (!set) {
+      set = new Set();
+      this.activeCodeBlocks.set(filePath, set);
     }
+    set.add(codeBlock);
   }
 
   public remove(codeBlock: CodeBlock): void {
-    const filePath = codeBlock.currentFilePath;
-
-    if (this.activeCodeBlocks.has(filePath)) {
-      const set = this.activeCodeBlocks.get(filePath)!;
-      set.delete(codeBlock);
-      if (set.size === 0) {
-        this.activeCodeBlocks.delete(filePath);
-      }
-    } else {
-      for (const [path, set] of this.activeCodeBlocks.entries()) {
-        if (set.has(codeBlock)) {
-          set.delete(codeBlock);
-          if (set.size === 0) {
-            this.activeCodeBlocks.delete(path);
-          }
-          break;
+    for (const [path, set] of this.activeCodeBlocks.entries()) {
+      if (set.has(codeBlock)) {
+        set.delete(codeBlock);
+        if (set.size === 0) {
+          this.activeCodeBlocks.delete(path);
         }
+        break;
       }
     }
   }
